@@ -1,7 +1,7 @@
-package com.softserve.orm;
+package com.softserve.easy.jdbc;
 
-import com.softserve.orm.cfg.Environment;
-import com.softserve.orm.exception.OrmException;
+import com.softserve.easy.cfg.Environment;
+import com.softserve.easy.exception.OrmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Properties;
 
-import static com.softserve.orm.cfg.ConfigPropertyConstant.*;
+import static com.softserve.easy.cfg.ConfigPropertyConstant.*;
 
 /**----SINGLETON-----*/
 public class ConnectionFactory {

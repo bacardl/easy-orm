@@ -1,6 +1,6 @@
-package com.softserve.orm.client;
+package com.softserve.easy.client;
 
-import com.softserve.orm.ConnectionFactory;
+import com.softserve.easy.jdbc.ConnectionFactory;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

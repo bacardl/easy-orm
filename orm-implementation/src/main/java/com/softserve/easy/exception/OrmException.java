@@ -1,4 +1,4 @@
-package com.softserve.orm.exception;
+package com.softserve.easy.exception;
 
 public class OrmException extends RuntimeException {
     public OrmException() {

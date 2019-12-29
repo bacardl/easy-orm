@@ -1,4 +1,4 @@
-package com.softserve.orm.client;
+package com.softserve.easy.client;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package com.softserve.orm.annotation;
+package com.softserve.easy.annotation;
 
 public enum GenerationType {
 

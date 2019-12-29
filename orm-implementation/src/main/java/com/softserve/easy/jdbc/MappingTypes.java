@@ -1,4 +1,4 @@
-package com.softserve.orm;
+package com.softserve.easy.jdbc;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -10,8 +10,8 @@ public enum MappingTypes {
     FLOAT(Float.class, "FLOAT"),
     DOUBLE(Double.class, "DOUBLE"),
     BIG_DECIMAL(BigDecimal.class, "NUMERIC"),
-    CHARACTER(Long.class, "CHAR(1)"),
-    STRING(Long.class, "VARCHAR"),
+    CHARACTER(Character.class, "CHAR(1)"),
+    STRING(String.class, "VARCHAR"),
     DATE(Date.class,"DATE" );
 
     private Class<?> javaClass;

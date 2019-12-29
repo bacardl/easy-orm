@@ -1,4 +1,4 @@
-package com.softserve.orm.cfg;
+package com.softserve.easy.cfg;
 
 public class Configuration {
 }

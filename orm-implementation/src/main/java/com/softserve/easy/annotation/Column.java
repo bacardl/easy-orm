@@ -1,4 +1,4 @@
-package com.softserve.orm.annotation;
+package com.softserve.easy.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

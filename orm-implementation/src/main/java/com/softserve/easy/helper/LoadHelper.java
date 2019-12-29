@@ -1,10 +1,9 @@
-package com.softserve.orm.helper;
+package com.softserve.easy.helper;
 
-import com.softserve.orm.exception.OrmException;
+import com.softserve.easy.exception.OrmException;
 
 import java.io.InputStream;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 public class LoadHelper {
     public static InputStream getResourceAsStream(String resource) {

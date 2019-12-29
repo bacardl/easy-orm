@@ -1,4 +1,4 @@
-package com.softserve.orm;
+package com.softserve.easy;
 
 public class SessionFactory {
 }

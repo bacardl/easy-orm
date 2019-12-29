@@ -1,4 +1,4 @@
-package com.softserve.orm;
+package com.softserve.easy;
 
 import config.DBUnitConfig;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
