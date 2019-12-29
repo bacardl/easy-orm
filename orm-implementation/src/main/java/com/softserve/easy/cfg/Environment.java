@@ -11,15 +11,15 @@ public class Environment {
     private static final Logger LOG = LoggerFactory.getLogger(Environment.class);
     private static final Properties GLOBAL_PROPERTIES;
 
-    private static final String ORM_PROPERTIES = "orm.properties";
+    private static final String ORM_PROPERTIES = "easy.properties";
 
     static {
         GLOBAL_PROPERTIES = new Properties();
         try (InputStream stream = LoadHelper.getResourceAsStream(ORM_PROPERTIES)) {
             GLOBAL_PROPERTIES.load(stream);
-            LOG.info("orm.properties has been loaded successfully.");
+            LOG.info("easy.properties has been loaded successfully.");
         } catch (Exception he) {
-            LOG.error("Couldn't load orm.properties.");
+            LOG.error("Couldn't load easy.properties.");
         }
     }
 
