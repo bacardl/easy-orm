@@ -27,6 +27,9 @@
         <!--plugin-->
         <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
         <!--plugin-->
+        <hsqldb.version>2.5.0</hsqldb.version>
+        <rider-core.version>1.9.1</rider-core.version>
+        <h2.version>1.4.200</h2.version>
     </properties>
 
     <dependencies>
@@ -64,6 +67,24 @@
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>${reflections.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+            <version>${hsqldb.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.database-rider</groupId>
+            <artifactId>rider-core</artifactId>
+            <version>${rider-core.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

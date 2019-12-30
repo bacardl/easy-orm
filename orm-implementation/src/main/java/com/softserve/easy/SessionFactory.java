@@ -1,4 +1,8 @@
 package com.softserve.easy;
 
-public class SessionFactory {
+public interface SessionFactory {
+    Session openSession();
+    Session getCurrentSession();
+    boolean isClosed();
+    void close();
 }
