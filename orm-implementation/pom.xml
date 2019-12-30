@@ -19,6 +19,9 @@
         <reflections.version>0.9.11</reflections.version>
         <dbunit.version>2.4.9</dbunit.version>
         <junit.jupiter.version>5.5.2</junit.jupiter.version>
+        <hsqldb.version>2.5.0</hsqldb.version>
+        <rider-core.version>1.9.1</rider-core.version>
+        <assertj-core.version>3.14.0</assertj-core.version>
         <!--EndLib-->
         <!--https://junit.org/junit5/docs/current/user-guide/#running-tests-ide-->
         <junit-platform-launcher.version>1.5.2</junit-platform-launcher.version>
@@ -27,9 +30,6 @@
         <!--plugin-->
         <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
         <!--plugin-->
-        <hsqldb.version>2.5.0</hsqldb.version>
-        <rider-core.version>1.9.1</rider-core.version>
-        <h2.version>1.4.200</h2.version>
     </properties>
 
     <dependencies>
@@ -64,9 +64,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>${reflections.version}</version>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj-core.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.hsqldb</groupId>
@@ -75,17 +76,17 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>${h2.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.github.database-rider</groupId>
             <artifactId>rider-core</artifactId>
             <version>${rider-core.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>${reflections.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>

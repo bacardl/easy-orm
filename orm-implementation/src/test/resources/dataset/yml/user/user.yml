@@ -1,5 +1,24 @@
-USER:
+COUNTRIES:
+  - CODE: 100
+    NAME: "USA"
+
+PERSONS:
   - ID: 1
-    NAME: "@realpestano"
+    FIRST_NAME: "Fred"
+    LAST_NAME: "Phillips"
+    DATE_OF_BIRTH: "1990-01-20"
   - ID: 2
-    NAME: "@dbunit"
+    FIRST_NAME: "Calvin"
+    LAST_NAME: "Henry"
+    DATE_OF_BIRTH: "1995-02-25"
+USERS:
+  - PERSON_ID: 1
+    USERNAME: "Youghoss1978"
+    PASSWORD: "$2y$10$RXyt4zu9H3PVKv5hE4Sln.FLsTgAakX5Ig7csH.0K58SwAwHVN8DG"
+    EMAIL: "FredJPhillips@teleworm.us"
+    COUNTRY_CODE: 100
+  - PERSON_ID: 2
+    USERNAME: "Shom1995"
+    PASSWORD: "$2y$10$RXyt4zu9H3PVKv5hE4Sln.FLsTgAakX5Ig7csH.0K58SwAwHVN8DG"
+    EMAIL: "CalvinDHenry@teleworm.us"
+    COUNTRY_CODE: 100
