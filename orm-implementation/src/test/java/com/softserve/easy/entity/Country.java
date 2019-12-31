@@ -1,22 +1,24 @@
 package com.softserve.easy.entity;
 
+import com.softserve.easy.annotation.Entity;
+
 import java.util.StringJoiner;
 
-// @Entity(name = "Country")
+@Entity(name = "Country")
 // @Table(name = "countries")
 public class Country {
 
     // @Id
     // @GeneratedValue
     // @Column(name = "code")
-    private int id;
+    private Integer id;
     private String name;
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

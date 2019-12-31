@@ -7,15 +7,15 @@ import java.util.StringJoiner;
 public class OrderProductId {
 
     //@Column(name = "order_id")
-    private long orderId;
+    private Long orderId;
 
     //@Column(name = "product_id")
-    private long productId;
+    private Long productId;
 
     private OrderProductId() {
     }
 
-    public OrderProductId(long orderId, long productId) {
+    public OrderProductId(Long orderId, Long productId) {
         this.orderId = orderId;
         this.productId = productId;
     }

@@ -1,16 +1,18 @@
 package com.softserve.easy.entity;
 
+import com.softserve.easy.annotation.Entity;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-// @Entity(name = "Order")
+@Entity(name = "Order")
 // @Table(name = "orders")
 public class Order {
     // @Id
     // @GeneratedValue
-    private long id;
+    private Long id;
 
     // @Column(name = "")
     // @ManyToOne
@@ -35,11 +37,11 @@ public class Order {
         this.createdAt = createdAt;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

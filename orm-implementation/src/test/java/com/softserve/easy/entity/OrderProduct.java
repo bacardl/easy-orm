@@ -1,9 +1,11 @@
 package com.softserve.easy.entity;
 
+import com.softserve.easy.annotation.Entity;
+
 import java.util.Objects;
 import java.util.StringJoiner;
 
-// @Entity(name = "OrderProduct")
+@Entity(name = "OrderProduct")
 // @Table(name = "order_items")
 public class OrderProduct {
 
@@ -19,9 +21,9 @@ public class OrderProduct {
     private Product product;
 
     // @Column(name = "quantity")
-    private int quantity;
+    private Integer quantity;
 
-    public OrderProduct(Order order, int quantity) {
+    public OrderProduct(Order order, Integer quantity) {
         this.order = order;
         this.quantity = quantity;
         this.id = new OrderProductId(order.getId(), product.getId());
@@ -51,11 +53,11 @@ public class OrderProduct {
         this.product = product;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 

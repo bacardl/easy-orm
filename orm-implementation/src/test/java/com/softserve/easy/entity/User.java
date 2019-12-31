@@ -12,7 +12,8 @@ public class User {
 
     // @Id
     // @GeneratedValue
-    private long id;
+    // @Column(name = id_person)
+    private Long id;
     private String username;
     private String password;
     private String email;
@@ -23,11 +24,11 @@ public class User {
     // @OneToMany
     private Set<Order> orders;
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
