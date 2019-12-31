@@ -1,7 +1,14 @@
 COUNTRIES:
   - CODE: 100
-    NAME: "USA"
-
+    NAME: "United States"
+  - CODE: 200
+    NAME: "United Kingdom"
+  - CODE: 300
+    NAME: "Ukraine"
+  - CODE: 400
+    NAME: "Zambia"
+  - CODE: 500
+    NAME: "Australia"
 PERSONS:
   - ID: 1
     FIRST_NAME: "Fred"
@@ -11,6 +18,18 @@ PERSONS:
     FIRST_NAME: "Calvin"
     LAST_NAME: "Henry"
     DATE_OF_BIRTH: "1995-02-25"
+  - ID: 3
+    FIRST_NAME: "Virginia"
+    LAST_NAME: "Cook"
+    DATE_OF_BIRTH: "1980-12-14"
+  - ID: 4
+    FIRST_NAME: "Walter"
+    LAST_NAME: "Alvarado"
+    DATE_OF_BIRTH: "1999-09-27"
+  - ID: 5
+    FIRST_NAME: "Kelly"
+    LAST_NAME: "Stoller"
+    DATE_OF_BIRTH: "1999-06-26"
 USERS:
   - PERSON_ID: 1
     USERNAME: "Youghoss1978"
@@ -19,6 +38,70 @@ USERS:
     COUNTRY_CODE: 100
   - PERSON_ID: 2
     USERNAME: "Shom1995"
-    PASSWORD: "$2y$10$RXyt4zu9H3PVKv5hE4Sln.FLsTgAakX5Ig7csH.0K58SwAwHVN8DG"
+    PASSWORD: "$2y$10$aweUAddEdQodJoxB2/ajEePYg4ZZuDewc1riewCnebR2MG9jT2tTy"
     EMAIL: "CalvinDHenry@teleworm.us"
+    COUNTRY_CODE: 200
+  - PERSON_ID: 3
+    USERNAME: "Wittiould1980"
+    PASSWORD: "$2y$10$pRmUEPJMB0/CR5uCuqCA2ODdE0iOJswpXFdIIhZmuZyiZIMe.OCl2"
+    EMAIL: "VirginiaDCook@armyspy.com"
     COUNTRY_CODE: 100
+  - PERSON_ID: 4
+    USERNAME: "Ralithaten"
+    PASSWORD: "$2y$10$rvQQK4YS7MRMZPkGN32bSOiwiXsi8xwQ4bEY7JzpzJtZlO3TZ.g7i"
+    EMAIL: "WalterTAlvarado@armyspy.com"
+    COUNTRY_CODE: 500
+  - PERSON_ID: 5
+    USERNAME: "Witeasteme1999"
+    PASSWORD: "$2y$10$6zQ1d7RuE.bnnlCCN4JVC.fZMGzIAMSoqw0/wJT5rTsEHhxwOcEM."
+    EMAIL: "KellyRStoller@rhyta.com"
+    COUNTRY_CODE: 300
+PRODUCTS:
+  - ID: 1
+    NAME: "Apple MacBook Pro 13"
+    PRICE: 698.99
+    DESCRIPTION: "Core i5 Retina 2.7GHz (MF840LL/A), 8GB Memory, 256GB Solid State"
+  - ID: 2
+    NAME: "Apple MacBook Pro MGXA2LL/A"
+    PRICE: 830.00
+    DESCRIPTION: "15-Inch Laptop with Retina Display (2.2 GHz Intel Core i7 Processor, 16GB RAM, 256GB SSD) (Renewed)"
+  - ID: 3
+    NAME: "Apple iPad Pro 3rd Gen "
+    PRICE: 1499.77
+    DESCRIPTION: "(12.9-inch, Wi-Fi + Cellular, 1TB) - Silver (Renewed)"
+  - ID: 4
+    NAME: "Apple iPhone 11 Pro Max"
+    PRICE: 1470.00
+    DESCRIPTION: "256GB, Fully Unlocked - Silver (Renewed)"
+ORDERS:
+  - ID: 1
+    USER_ID: 3
+    STATUS: "DELIVERED"
+    CREATED_AT: "2019-09-20 02:20:31"
+  - ID: 2
+    USER_ID: 2
+    STATUS: "TRANSIT"
+    CREATED_AT: "2019-11-13 22:52:03"
+  - ID: 3
+    USER_ID: 4
+    STATUS: "PENDING"
+    CREATED_AT: "2019-12-20 16:24:34"
+ORDER_ITEMS:
+  - ORDER_ID: 1
+    PRODUCT_ID: 2
+    QUANTITY: 2
+  - ORDER_ID: 1
+    PRODUCT_ID: 3
+    QUANTITY: 1
+  - ORDER_ID: 2
+    PRODUCT_ID: 1
+    QUANTITY: 5
+  - ORDER_ID: 3
+    PRODUCT_ID: 4
+    QUANTITY: 2
+  - ORDER_ID: 3
+    PRODUCT_ID: 2
+    QUANTITY: 1
+  - ORDER_ID: 3
+    PRODUCT_ID: 1
+    QUANTITY: 1
