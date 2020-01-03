@@ -1,6 +1,7 @@
 package com.softserve.easy.cfg;
 
 import com.softserve.easy.MetaData;
+import com.softserve.easy.MetaDataBuilder;
 import com.softserve.easy.SessionFactory;
 import com.softserve.easy.SessionFactoryBuilder;
 
@@ -12,15 +13,17 @@ public class Configuration {
     private Properties properties;
 
     public Configuration() {
+        // TODO: load all marked classes using ClassScanner
     }
 
-    public void addAnnotatedClass(Class<?> annotatedClass) {
+    public Configuration addAnnotatedClass(Class<?> annotatedClass) {
         if (!metaData.containsKey(annotatedClass))
         {
             // TODO: check if annotated class has @Enity annotation
             // TODO: validate annotated class
             // TODO: create metadata and append to map
         }
+        return this;
     }
 
     public Configuration setProperty(String propertyName, String value) {
@@ -39,5 +42,9 @@ public class Configuration {
 
     public SessionFactory buildSessionFactory() {
         return new SessionFactoryBuilder(metaData).build();
+    }
+    private MetaData analyzeClass(Class<?> clazz) {
+        MetaDataBuilder metaDataBuilder = new MetaDataBuilder();
+        return metaDataBuilder.build();
     }
 }

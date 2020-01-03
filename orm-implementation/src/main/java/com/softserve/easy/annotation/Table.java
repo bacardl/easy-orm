@@ -9,6 +9,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({FIELD})
 @Retention(RUNTIME)
 public @interface Table {
+    String name();
     String appliesTo();
     String comment() default "";
 //    ForeignKey foreignKey() default @ForeignKey( name="" );

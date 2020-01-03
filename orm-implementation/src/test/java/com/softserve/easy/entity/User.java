@@ -11,12 +11,15 @@ public class User {
     // TODO: resolve @OneToOne relation to Person entity
 
     // @Id
-    // @GeneratedValue
-    // @Column(name = id_person)
+    // @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String username;
     private String password;
     private String email;
+
+    // OneToOne
+    // PrimaryKeyJoinColumn
+    private Person person;
 
     // @ManyToOne
     private Country country;

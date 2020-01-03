@@ -7,15 +7,21 @@ import java.util.StringJoiner;
 
 @Entity(name = "Person")
 // @Table(name = "persons")
+// @GenericGenerator(name = "custom-generator", strategy = "foreign",
+// parameters = { @Parameter(name = "property", value = "user")})
 public class Person {
 
     // @Id
-    // @GeneratedValue
+    // @GeneratedValue(generator = "custom-generator")
     private Long id;
 
     private String firstName;
     private String lastName;
     private Date dateOfBirth;
+
+    // @OneToOne
+    // PrimaryKeyJoinColumn
+    private User user;
 
     public Long getId() {
         return id;
