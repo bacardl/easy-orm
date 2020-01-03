@@ -1,4 +1,4 @@
-package com.softserve.easy;
+package com.softserve.easy.core;
 
 public interface SessionFactory {
     Session openSession();

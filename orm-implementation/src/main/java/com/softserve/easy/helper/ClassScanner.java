@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Set;
 
 public class ClassScanner {
-    public static final Logger LOG = LoggerFactory.getLogger(ClassScanner.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClassScanner.class);
     public static Set<Class<?>> getAnnotatedClasses(Class<? extends Annotation> annotation) {
         Reflections reflections = new Reflections("");
         Set<Class<?>> annotatedClassesList = reflections.getTypesAnnotatedWith(annotation);
