@@ -17,6 +17,7 @@
         <!--Lib-->
         <logback.version>1.2.3</logback.version>
         <reflections.version>0.9.11</reflections.version>
+        <HikariCP.version>3.4.1</HikariCP.version>
         <dbunit.version>2.4.9</dbunit.version>
         <junit.jupiter.version>5.5.2</junit.jupiter.version>
         <hsqldb.version>2.5.0</hsqldb.version>
@@ -30,6 +31,7 @@
         <!--plugin-->
         <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
         <!--plugin-->
+        <junit-platform-runner.version>1.5.2</junit-platform-runner.version>
     </properties>
 
     <dependencies>
@@ -47,6 +49,12 @@
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-runner</artifactId>
+            <version>${junit-platform-runner.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
             <version>${junit-platform-launcher.version}</version>
             <scope>test</scope>
@@ -55,6 +63,12 @@
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
             <version>${junit-vintage-engine.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <version>2.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -86,7 +100,11 @@
             <artifactId>reflections</artifactId>
             <version>${reflections.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${HikariCP.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
