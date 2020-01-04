@@ -17,8 +17,8 @@ public class User {
     private String password;
     private String email;
 
-    // OneToOne
-    // PrimaryKeyJoinColumn
+    // @OneToOne
+    // @PrimaryKeyJoinColumn
     private Person person;
 
     // @ManyToOne
