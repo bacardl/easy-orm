@@ -1,13 +1,11 @@
 package com.softserve.orm.queryhelper;
 
+import java.util.List;
+
 public interface QueryBuilder {
 
     String prepareSelectQuery();
-    String prepareUpdateQuery();
+    String prepareUpdateQuery(List<String> columnNames, List<Object> values);
     String prepareDeleteQuery();
-    QueryBuilder where();
-    QueryBuilder like(LikeType likeType, Object requiredObj, String columnName);
-    QueryBuilder and();
-    QueryBuilder or();
-    QueryBuilder eqls(String columnName, Object requiredOdj);
+    String prepareInsertQuery(List<String> columnNames, List<Object> values);
 }

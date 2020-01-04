@@ -1,5 +1,8 @@
 package com.softserve.orm.queryhelper;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class QueryBuilderImpl implements QueryBuilder {
     private String tableName;
     private StringBuilder query;
@@ -11,26 +14,40 @@ public class QueryBuilderImpl implements QueryBuilder {
 
     @Override
     public String prepareSelectQuery() {
-        return "SELECT * FROM " + tableName + query;
+        return "SELECT * FROM " + tableName + query + ";";
     }
 
     @Override
-    public String prepareUpdateQuery() {
-        return null;
+    public String prepareUpdateQuery(List<String> columnNames, List<Object> values) {
+        String columns = String.join(",", columnNames);
+        String vals = values.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+        return "UPDATE " + tableName + " SET (" + columns + ") = (" + vals + ")" + query + ";";
     }
 
     @Override
     public String prepareDeleteQuery() {
-        return null;
+        return "DELETE FROM " + tableName + query;
     }
 
     @Override
+    public String prepareInsertQuery(List<String> columnNames, List<Object> values) {
+        String columns = String.join(",", columnNames);
+        String vals = values.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+        query.setLength(0);
+        query.append("INSERT INTO ").append(tableName).append(" (");
+        query.append(columns).append(") VALUES(").append(vals).append(");");
+        return query.toString();
+    }
+
     public QueryBuilder where() {
         query.append(" WHERE");
         return this;
     }
 
-    @Override
     public QueryBuilder like(LikeType likeType, Object requiredObj, String columnName) {
         query.append("'").append(columnName).append("'").append(" LIKE ");
         if (likeType == LikeType.STARTS_WITH) {
@@ -46,20 +63,16 @@ public class QueryBuilderImpl implements QueryBuilder {
         return this;
     }
 
-
-    @Override
     public QueryBuilder and() {
         query.append(" AND");
         return this;
     }
 
-    @Override
     public QueryBuilder or() {
         query.append(" OR");
         return this;
     }
 
-    @Override
     public QueryBuilder eqls(String columnName, Object requiredOdj) {
         query.append(" `").append(columnName).append("`=").append(requiredOdj);
         return this;
