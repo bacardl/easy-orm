@@ -158,6 +158,8 @@ public class DependencyGraph {
                     }
                 }
             }
+            // return values exclude root's value
+            visited.remove(root);
             return visited;
         }
 
