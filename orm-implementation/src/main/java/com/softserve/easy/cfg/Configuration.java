@@ -32,6 +32,7 @@ public class Configuration {
         for (Class<?> observedClass : observedClasses) {
             classConfig.put(observedClass, MetaDataParser.analyzeClass(observedClass));
         }
+        this.dependencyGraph = new DependencyGraph(observedClasses);
     }
 
     public Configuration addAnnotatedClass(Class<?> annotatedClass) {
@@ -49,8 +50,7 @@ public class Configuration {
         } else {
             LOG.info("Class {} has already been mapped from classpath", annotatedClass.getSimpleName());
         }
-
-        // TODO: recompute the metaData and graphDependency fields
+        this.dependencyGraph = new DependencyGraph(observedClasses);
         return this;
     }
 
