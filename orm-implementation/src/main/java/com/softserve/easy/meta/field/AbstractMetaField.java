@@ -15,16 +15,6 @@ public abstract class AbstractMetaField {
         this.fieldName = fieldName;
     }
 
-    protected Class<?> runtimeType;
-
-    public void setRuntimeType(Class<?> runtimeType) {
-        this.runtimeType = runtimeType;
-    }
-
-    public Class<?> getRuntimeType() {
-        return runtimeType;
-    }
-
     public Class<?> getFieldType() {
         return fieldType;
     }
@@ -40,4 +30,5 @@ public abstract class AbstractMetaField {
     public String getFieldName() {
         return fieldName;
     }
+
 }

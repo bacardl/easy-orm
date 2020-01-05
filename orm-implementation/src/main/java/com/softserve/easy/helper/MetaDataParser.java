@@ -1,6 +1,7 @@
 package com.softserve.easy.helper;
 
 import com.softserve.easy.annotation.*;
+import com.softserve.easy.exception.ClassValidationException;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.MappingType;
 import com.softserve.easy.meta.field.AbstractMetaField;
@@ -10,10 +11,7 @@ import com.softserve.easy.meta.field.InternalMetaField;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class MetaDataParser {
     public static Optional<Field> getPrimaryKeyField(Class<?> clazz) {
@@ -44,12 +42,15 @@ public class MetaDataParser {
         return Optional.empty();
     }
 
+    /**
+     * @throws OrmException
+     */
     public static Map<Field, AbstractMetaField> createMetaFields(Class<?> clazz) {
         Objects.requireNonNull(clazz);
         Map<Field, AbstractMetaField> metaFields = new LinkedHashMap<>();
         for (Field field : clazz.getDeclaredFields()) {
             Class<?> fieldType = field.getType();
-            MappingType mappingType = MappingType.getMappingType(clazz);
+            MappingType mappingType = MappingType.getMappingType(fieldType);
             boolean transitionable = isTransientField(field);
             String fieldName = field.getName();
             Optional<String> dbColumnName = getDbColumnName(field);
@@ -62,8 +63,8 @@ public class MetaDataParser {
                     );
                     break;
                 case EXTERNAL:
-                    if (hasOneToOneAnnotation(field) ^ hasManyToOneAnnotation(field)) {
-                        throw new OrmException(String.format("EXTERNAL field %s must have either @OneToOne or @ManyToOne annotation", field));
+                    if (hasOneToOneAnnotation(field) == hasManyToOneAnnotation(field)) {
+                        throw new ClassValidationException(String.format("EXTERNAL field %s must have either @OneToOne or @ManyToOne annotation", field));
                     }
                     metaFields.put(field,
                             new ExternalMetaField(fieldType, mappingType, transitionable, fieldName,
@@ -71,14 +72,14 @@ public class MetaDataParser {
                     );
                     break;
                 case COLLECTION:
-                    if (hasManyToManyAnnotation(field) ^ hasOneToManyAnnotation(field)) {
-                        throw new OrmException(String.format("COLLECTION field %s must have either @ManyToMany or @OneToMany annotation", field));
+                    if (hasManyToManyAnnotation(field) == hasOneToManyAnnotation(field)) {
+                        throw new ClassValidationException((String.format("COLLECTION field %s must have either @ManyToMany or @OneToMany annotation", field)));
                     }
                     Optional<Class<?>> genericTypeOptional = getGenericType(field);
                     Class<?> genericType = genericTypeOptional.orElseThrow(
-                            () -> new OrmException(String.format("COLLECTION field %s must be parametrized", field)));
+                            () -> new ClassValidationException(String.format("COLLECTION field %s must be parametrized", field)));
                     metaFields.put(field,
-                            new CollectionMetaField(fieldType, mappingType, transitionable, fieldName, genericType)
+                            new CollectionMetaField((Class<? extends Collection>) fieldType, mappingType, transitionable, fieldName, genericType)
                     );
                     break;
                 default:
