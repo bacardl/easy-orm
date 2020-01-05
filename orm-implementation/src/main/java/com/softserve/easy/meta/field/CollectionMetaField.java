@@ -1,9 +1,9 @@
 package com.softserve.easy.meta.field;
 
+import com.google.common.base.MoreObjects;
 import com.softserve.easy.meta.MappingType;
 
 import java.util.Collection;
-import java.util.StringJoiner;
 
 public class CollectionMetaField  extends AbstractMetaField {
     private final Class<?> genericType;
@@ -14,14 +14,18 @@ public class CollectionMetaField  extends AbstractMetaField {
         this.genericType = genericType;
     }
 
+    public Class<?> getGenericType() {
+        return genericType;
+    }
+
     @Override
     public String toString() {
-        return new StringJoiner(", ", CollectionMetaField.class.getSimpleName() + "[", "]")
-                .add("genericType=" + genericType)
-                .add("fieldType=" + fieldType)
-                .add("mappingType=" + mappingType)
-                .add("transitionable=" + transitionable)
-                .add("fieldName='" + fieldName + "'")
+        return MoreObjects.toStringHelper(this)
+                .add("fieldName", fieldName)
+                .add("fieldType", fieldType)
+                .add("mappingType", mappingType)
+                .add("transitionable", transitionable)
+                .add("genericType", genericType)
                 .toString();
     }
 }

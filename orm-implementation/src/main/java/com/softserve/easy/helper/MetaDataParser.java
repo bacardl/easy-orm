@@ -37,7 +37,9 @@ public class MetaDataParser {
         Objects.requireNonNull(field);
         Column column = field.getAnnotation(Column.class);
         if (Objects.nonNull(column)) {
-            return Optional.of(column.name());
+            if (!column.name().isEmpty()) {
+                return Optional.of(column.name());
+            }
         }
         return Optional.empty();
     }

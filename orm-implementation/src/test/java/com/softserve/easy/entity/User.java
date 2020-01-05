@@ -1,7 +1,6 @@
 package com.softserve.easy.entity;
 
-import com.softserve.easy.annotation.Entity;
-import com.softserve.easy.annotation.Table;
+import com.softserve.easy.annotation.*;
 
 import java.util.Set;
 import java.util.StringJoiner;
@@ -11,22 +10,39 @@ import java.util.StringJoiner;
 public class User {
     // TODO: resolve @OneToOne relation to Person entity
 
-    // @Id
-    // @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id // @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @Column(name = "login")
     private String username;
     private String password;
     private String email;
 
-    // @OneToOne
+    @OneToOne
     // @PrimaryKeyJoinColumn
     private Person person;
 
-    // @ManyToOne
+    @ManyToOne
     private Country country;
 
-    // @OneToMany
+    @OneToMany
     private Set<Order> orders;
+
+    public Person getPerson() {
+        return person;
+    }
+
+    public void setPerson(Person person) {
+        this.person = person;
+    }
+
+    public Set<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(Set<Order> orders) {
+        this.orders = orders;
+    }
 
     public Long getId() {
         return id;

@@ -1,8 +1,7 @@
 package com.softserve.easy.meta.field;
 
+import com.google.common.base.MoreObjects;
 import com.softserve.easy.meta.MappingType;
-
-import java.util.StringJoiner;
 
 public class InternalMetaField extends AbstractMetaField {
     private final String dbFieldName;
@@ -13,14 +12,18 @@ public class InternalMetaField extends AbstractMetaField {
         this.dbFieldName = dbFieldName;
     }
 
+    public String getDbFieldName() {
+        return dbFieldName;
+    }
+
     @Override
     public String toString() {
-        return new StringJoiner(", ", InternalMetaField.class.getSimpleName() + "[", "]")
-                .add("dbFieldName='" + dbFieldName + "'")
-                .add("fieldType=" + fieldType)
-                .add("mappingType=" + mappingType)
-                .add("transitionable=" + transitionable)
-                .add("fieldName='" + fieldName + "'")
+        return MoreObjects.toStringHelper(this)
+                .add("fieldName", fieldName)
+                .add("fieldType", fieldType)
+                .add("mappingType", mappingType)
+                .add("transitionable", transitionable)
+                .add("dbFieldName", dbFieldName)
                 .toString();
     }
 }

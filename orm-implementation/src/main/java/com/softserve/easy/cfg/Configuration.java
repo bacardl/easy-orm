@@ -23,17 +23,17 @@ import static com.softserve.easy.cfg.ConfigPropertyConstant.*;
 public class Configuration {
     private static final Logger LOG = LoggerFactory.getLogger(Configuration.class);
     private Set<Class<?>> observedClasses;
-    private Map<Class<?>, MetaData> metaData;
+    private Map<Class<?>, MetaData> classConfig;
     private DependencyGraph dependencyGraph;
     private Properties properties;
 
     public Configuration() {
         this.properties = Environment.getProperties();
         this.observedClasses = ClassScanner.getAnnotatedClasses(Entity.class);
-        this.metaData = new HashMap<>();
+        this.classConfig = new HashMap<>();
 
         for (Class<?> observedClass : observedClasses) {
-            // metaData.put(observedClass, analyzeClass(observedClass));
+            classConfig.put(observedClass, analyzeClass(observedClass));
         }
     }
 
@@ -41,11 +41,11 @@ public class Configuration {
         if (Objects.isNull(annotatedClass)) {
             throw new IllegalArgumentException("The annotatedClass value must be not Null");
         }
-        if (!metaData.containsKey(annotatedClass))
+        if (!classConfig.containsKey(annotatedClass))
         {
             if (isEntityAnnotatedClass(annotatedClass))
             {
-                // metadata.put(observedClass, analyzeClass(annotatedClass))
+                classConfig.put(annotatedClass, analyzeClass(annotatedClass));
             } else {
                 throw new IllegalArgumentException("annotatedClass must be annotated by @Entity");
             }
@@ -84,7 +84,7 @@ public class Configuration {
         DataSource dataSource = initDataSource();
         return new SessionFactoryBuilder()
                 .setDataSource(dataSource)
-                .setMetaDataMap(metaData)
+                .setMetaDataMap(classConfig)
                 .setDependencyGraph(dependencyGraph)
                 .build();
     }
@@ -99,20 +99,19 @@ public class Configuration {
     }
 
     /**
-     * @throws ClassValidationException if class doesn't have field marked @Id annotation
+     * @throws ClassValidationException
      */
     private MetaData analyzeClass(Class<?> clazz) {
-        final MetaDataBuilder metaDataBuilder = new MetaDataBuilder(clazz);
+        MetaDataBuilder metaDataBuilder = new MetaDataBuilder(clazz);
 
-        final Optional<Field> primaryKeyField = MetaDataParser.getPrimaryKeyField(clazz);
+        Optional<Field> primaryKeyField = MetaDataParser.getPrimaryKeyField(clazz);
         metaDataBuilder.setPrimaryKey(primaryKeyField
                 .orElseThrow(() -> new ClassValidationException(
                         String.format("Class %s must have field marked with @Id", clazz))));
-
-        final Optional<String> entityName = MetaDataParser.getDbTableName(clazz);
+        Optional<String> entityName = MetaDataParser.getDbTableName(clazz);
         entityName.ifPresent(s -> metaDataBuilder.setEntityDbName(entityName.get()));
 
-
+        metaDataBuilder.setMetaFields(MetaDataParser.createMetaFields(clazz));
         return metaDataBuilder.build();
     }
 }
