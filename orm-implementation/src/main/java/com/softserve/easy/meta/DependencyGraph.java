@@ -35,6 +35,7 @@ public class DependencyGraph {
     public Set<Class<?>> getImplicitDependencies(Class<?> clazz) {
         return classGraph.breadthFirstTraversal(clazz);
     }
+
     public List<Set<Class<?>>> getLayeredDependencies(Class<?> clazz) {
         return classGraph.layeredBreadthFirstTraversal(clazz);
     }
@@ -55,10 +56,13 @@ public class DependencyGraph {
             LOG.debug("Class {} has following declared fields: {}", aClass.toString(), Arrays.toString(declaredFields));
             for (Field declaredField : declaredFields) {
                 Class<?> type = declaredField.getType();
-                LOG.debug("Analyzed field {} which has type {}", declaredField.toString(), type.toString());
-                if (!MappingType.isInternalType(type)) {
-                    LOG.debug("Analyzed field {} refers to non internal types", declaredField.toString());
-                    if (MappingType.isCollectionType(type)) {
+                FieldType fieldType = MappingType.getFieldType(type);
+                switch (fieldType) {
+                    case INTERNAL: {
+                        LOG.debug("Analyzed field {} is internal type", declaredField.toString());
+                        break;
+                    }
+                    case COLLECTION: {
                         LOG.debug("Analyzed field {} is an array or collection", declaredField.toString());
                         ParameterizedType generic = (ParameterizedType) declaredField.getGenericType();
                         if (Objects.nonNull(generic)) {
@@ -71,14 +75,17 @@ public class DependencyGraph {
                                 LOG.debug("Added to graph vertex with value {}", genericActualTypeArgument);
                             }
                         }
-                    } else {
-                        LOG.debug("Analyzed field {} isn't an array or collection", declaredField.toString());
+                        break;
+                    }
+                    case EXTERNAL: {
+                        LOG.debug("Analyzed field {} is external type", declaredField.toString());
                         graph.addVertex(type);
                         graph.addEdge(aClass, type);
                         LOG.debug("Added to graph vertex with value {}", type);
+                        break;
                     }
-                } else {
-                    LOG.debug("The field {} has been skipped.", declaredField.toString());
+                    default:
+                        LOG.debug("The field {} has been skipped.", declaredField.toString());
                 }
             }
         }
