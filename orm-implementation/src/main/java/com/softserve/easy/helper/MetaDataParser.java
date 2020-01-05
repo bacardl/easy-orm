@@ -4,6 +4,8 @@ import com.softserve.easy.annotation.*;
 import com.softserve.easy.exception.ClassValidationException;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.MappingType;
+import com.softserve.easy.meta.MetaData;
+import com.softserve.easy.meta.MetaDataBuilder;
 import com.softserve.easy.meta.field.AbstractMetaField;
 import com.softserve.easy.meta.field.CollectionMetaField;
 import com.softserve.easy.meta.field.ExternalMetaField;
@@ -14,6 +16,11 @@ import java.lang.reflect.ParameterizedType;
 import java.util.*;
 
 public class MetaDataParser {
+    public static boolean isEntityAnnotatedClass(Class<?> annotatedClass) {
+        Entity annotation = annotatedClass.getAnnotation(Entity.class);
+        return Objects.nonNull(annotation);
+    }
+
     public static Optional<Field> getPrimaryKeyField(Class<?> clazz) {
         Objects.requireNonNull(clazz);
         for (Field declaredField : clazz.getDeclaredFields()) {
@@ -42,6 +49,23 @@ public class MetaDataParser {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * @throws ClassValidationException
+     */
+    public static MetaData analyzeClass(Class<?> clazz) {
+        MetaDataBuilder metaDataBuilder = new MetaDataBuilder(clazz);
+
+        Optional<Field> primaryKeyField = MetaDataParser.getPrimaryKeyField(clazz);
+        metaDataBuilder.setPrimaryKey(primaryKeyField
+                .orElseThrow(() -> new ClassValidationException(
+                        String.format("Class %s must have field marked with @Id", clazz))));
+        Optional<String> entityName = MetaDataParser.getDbTableName(clazz);
+        entityName.ifPresent(s -> metaDataBuilder.setEntityDbName(entityName.get()));
+
+        metaDataBuilder.setMetaFields(MetaDataParser.createMetaFields(clazz));
+        return metaDataBuilder.build();
     }
 
     /**

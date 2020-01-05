@@ -3,19 +3,16 @@ package com.softserve.easy.cfg;
 import com.softserve.easy.annotation.Entity;
 import com.softserve.easy.core.SessionFactory;
 import com.softserve.easy.core.SessionFactoryBuilder;
-import com.softserve.easy.exception.ClassValidationException;
 import com.softserve.easy.helper.ClassScanner;
 import com.softserve.easy.helper.MetaDataParser;
 import com.softserve.easy.meta.DependencyGraph;
 import com.softserve.easy.meta.MetaData;
-import com.softserve.easy.meta.MetaDataBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.lang.reflect.Field;
 import java.util.*;
 
 import static com.softserve.easy.cfg.ConfigPropertyConstant.*;
@@ -33,7 +30,7 @@ public class Configuration {
         this.classConfig = new HashMap<>();
 
         for (Class<?> observedClass : observedClasses) {
-            classConfig.put(observedClass, analyzeClass(observedClass));
+            classConfig.put(observedClass, MetaDataParser.analyzeClass(observedClass));
         }
     }
 
@@ -43,9 +40,9 @@ public class Configuration {
         }
         if (!classConfig.containsKey(annotatedClass))
         {
-            if (isEntityAnnotatedClass(annotatedClass))
+            if (MetaDataParser.isEntityAnnotatedClass(annotatedClass))
             {
-                classConfig.put(annotatedClass, analyzeClass(annotatedClass));
+                classConfig.put(annotatedClass, MetaDataParser.analyzeClass(annotatedClass));
             } else {
                 throw new IllegalArgumentException("annotatedClass must be annotated by @Entity");
             }
@@ -57,10 +54,7 @@ public class Configuration {
         return this;
     }
 
-    private boolean isEntityAnnotatedClass(Class<?> annotatedClass) {
-        Entity annotation = annotatedClass.getAnnotation(Entity.class);
-        return Objects.nonNull(annotation);
-    }
+
 
     public Configuration setProperty(String propertyName, String value) {
         properties.setProperty( propertyName, value );
@@ -98,20 +92,5 @@ public class Configuration {
         return new HikariDataSource(config);
     }
 
-    /**
-     * @throws ClassValidationException
-     */
-    private MetaData analyzeClass(Class<?> clazz) {
-        MetaDataBuilder metaDataBuilder = new MetaDataBuilder(clazz);
 
-        Optional<Field> primaryKeyField = MetaDataParser.getPrimaryKeyField(clazz);
-        metaDataBuilder.setPrimaryKey(primaryKeyField
-                .orElseThrow(() -> new ClassValidationException(
-                        String.format("Class %s must have field marked with @Id", clazz))));
-        Optional<String> entityName = MetaDataParser.getDbTableName(clazz);
-        entityName.ifPresent(s -> metaDataBuilder.setEntityDbName(entityName.get()));
-
-        metaDataBuilder.setMetaFields(MetaDataParser.createMetaFields(clazz));
-        return metaDataBuilder.build();
-    }
 }
