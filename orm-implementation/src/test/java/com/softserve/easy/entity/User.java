@@ -1,12 +1,13 @@
 package com.softserve.easy.entity;
 
 import com.softserve.easy.annotation.Entity;
+import com.softserve.easy.annotation.Table;
 
 import java.util.Set;
 import java.util.StringJoiner;
 
 @Entity(name = "User")
-// @Table(name = "users")
+@Table(name = "users")
 public class User {
     // TODO: resolve @OneToOne relation to Person entity
 

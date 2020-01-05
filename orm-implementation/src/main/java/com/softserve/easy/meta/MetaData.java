@@ -17,16 +17,16 @@ public class MetaData {
     private final String entityDbName;
 
     private final Field primaryKey;
-    private final Map<Field, AbstractMetaField> columns;
+    private final Map<Field, AbstractMetaField> metaFields;
 
     public MetaData(Class<?> entityClass, String entityClassName, List<Field> fields, List<Annotation> annotations,
-                    String entityDbName, Field primaryKey, Map<Field, AbstractMetaField> columns) {
+                    String entityDbName, Field primaryKey, Map<Field, AbstractMetaField> metaFields) {
         this.entityClass = entityClass;
         this.entityClassName = entityClassName;
         this.fields = fields;
         this.annotations = annotations;
         this.entityDbName = entityDbName;
         this.primaryKey = primaryKey;
-        this.columns = columns;
+        this.metaFields = metaFields;
     }
 }

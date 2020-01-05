@@ -3,7 +3,9 @@ package com.softserve.easy.cfg;
 import com.softserve.easy.annotation.Entity;
 import com.softserve.easy.core.SessionFactory;
 import com.softserve.easy.core.SessionFactoryBuilder;
+import com.softserve.easy.exception.ClassValidationException;
 import com.softserve.easy.helper.ClassScanner;
+import com.softserve.easy.helper.MetaDataParser;
 import com.softserve.easy.meta.DependencyGraph;
 import com.softserve.easy.meta.MetaData;
 import com.softserve.easy.meta.MetaDataBuilder;
@@ -13,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Field;
 import java.util.*;
 
 import static com.softserve.easy.cfg.ConfigPropertyConstant.*;
@@ -95,8 +98,21 @@ public class Configuration {
         return new HikariDataSource(config);
     }
 
+    /**
+     * @throws ClassValidationException if class doesn't have field marked @Id annotation
+     */
     private MetaData analyzeClass(Class<?> clazz) {
-        MetaDataBuilder metaDataBuilder = new MetaDataBuilder();
+        final MetaDataBuilder metaDataBuilder = new MetaDataBuilder(clazz);
+
+        final Optional<Field> primaryKeyField = MetaDataParser.getPrimaryKeyField(clazz);
+        metaDataBuilder.setPrimaryKey(primaryKeyField
+                .orElseThrow(() -> new ClassValidationException(
+                        String.format("Class %s must have field marked with @Id", clazz))));
+
+        final Optional<String> entityName = MetaDataParser.getDbTableName(clazz);
+        entityName.ifPresent(s -> metaDataBuilder.setEntityDbName(entityName.get()));
+
+
         return metaDataBuilder.build();
     }
 }

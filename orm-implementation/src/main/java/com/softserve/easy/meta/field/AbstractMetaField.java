@@ -2,51 +2,42 @@ package com.softserve.easy.meta.field;
 
 import com.softserve.easy.meta.MappingType;
 
-import java.lang.annotation.Annotation;
-import java.util.List;
-
 public abstract class AbstractMetaField {
-    protected MappingType mappingType;
-    protected boolean transitionable;
-    protected String nameOfField;
-    protected List<Annotation> annotations;
+    protected final Class<?> fieldType;
+    protected final MappingType mappingType;
+    protected final boolean transitionable;
+    protected final String fieldName;
 
-    public AbstractMetaField(MappingType mappingType, boolean transitionable, String nameOfField, List<Annotation> annotations) {
+    protected AbstractMetaField(Class<?> fieldType, MappingType mappingType, boolean transitionable, String fieldName) {
+        this.fieldType = fieldType;
         this.mappingType = mappingType;
         this.transitionable = transitionable;
-        this.nameOfField = nameOfField;
-        this.annotations = annotations;
+        this.fieldName = fieldName;
+    }
+
+    protected Class<?> runtimeType;
+
+    public void setRuntimeType(Class<?> runtimeType) {
+        this.runtimeType = runtimeType;
+    }
+
+    public Class<?> getRuntimeType() {
+        return runtimeType;
+    }
+
+    public Class<?> getFieldType() {
+        return fieldType;
     }
 
     public MappingType getMappingType() {
         return mappingType;
     }
 
-    public void setMappingType(MappingType mappingType) {
-        this.mappingType = mappingType;
-    }
-
     public boolean isTransitionable() {
         return transitionable;
     }
 
-    public void setTransitionable(boolean transitionable) {
-        this.transitionable = transitionable;
-    }
-
-    public String getNameOfField() {
-        return nameOfField;
-    }
-
-    public void setNameOfField(String nameOfField) {
-        this.nameOfField = nameOfField;
-    }
-
-    public List<Annotation> getAnnotations() {
-        return annotations;
-    }
-
-    public void setAnnotations(List<Annotation> annotations) {
-        this.annotations = annotations;
+    public String getFieldName() {
+        return fieldName;
     }
 }

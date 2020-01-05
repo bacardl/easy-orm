@@ -45,13 +45,17 @@ public enum MappingType {
         this.fieldType = fieldType;
     }
 
-    public static FieldType getFieldType(Class<?> clazz) {
+    public static MappingType getMappingType(Class<?> clazz) {
         for (MappingType value : MappingType.values()) {
             if (value.getJavaClass().isAssignableFrom(clazz)) {
-                return value.getFieldType();
+                return value;
             }
         }
         throw new OrmException(String.format("Type %s is not supported!", clazz));
+    }
+
+    public static FieldType getFieldType(Class<?> clazz) {
+        return getMappingType(clazz).getFieldType();
     }
 
 }
