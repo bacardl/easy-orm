@@ -1,13 +1,11 @@
 package com.softserve.easy.meta;
 
-import com.softserve.easy.meta.field.CollectionMetaField;
-import com.softserve.easy.meta.field.ExternalMetaField;
-import com.softserve.easy.meta.field.InternalMetaField;
+import com.softserve.easy.meta.field.AbstractMetaField;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,9 +18,7 @@ public class MetaDataBuilder {
     private String entityDbName;
 
     private Field primaryKey;
-    private Map<Field, InternalMetaField> columns;
-    private Map<Field, ExternalMetaField> foreignKeys;
-    private Map<Field, CollectionMetaField> collectionFields;
+    private Map<Field, AbstractMetaField> columns;
 
     public MetaDataBuilder(Class<?> entityClass) {
         this.entityClass = entityClass;
@@ -31,9 +27,7 @@ public class MetaDataBuilder {
         this.annotations = Arrays.asList(entityClass.getAnnotations());
 
         this.entityDbName = entityClassName;
-        this.columns = new HashMap<>();
-        this.foreignKeys = new HashMap<>();
-        this.collectionFields = new HashMap<>();
+        this.columns = new LinkedHashMap<>();
     }
 
     public MetaDataBuilder setEntityDbName(String entityDbName) {
@@ -46,18 +40,8 @@ public class MetaDataBuilder {
         return this;
     }
 
-    public MetaDataBuilder setColumns(Map<Field, InternalMetaField> columns) {
+    public MetaDataBuilder setColumns(Map<Field, AbstractMetaField> columns) {
         this.columns = columns;
-        return this;
-    }
-
-    public MetaDataBuilder setForeignKeys(Map<Field, ExternalMetaField> foreignKeys) {
-        this.foreignKeys = foreignKeys;
-        return this;
-    }
-
-    public MetaDataBuilder setCollectionFields(Map<Field, CollectionMetaField> collectionFields) {
-        this.collectionFields = collectionFields;
         return this;
     }
 
@@ -85,17 +69,10 @@ public class MetaDataBuilder {
         return primaryKey;
     }
 
-    public Map<Field, InternalMetaField> getColumns() {
+    public Map<Field, AbstractMetaField> getColumns() {
         return columns;
     }
 
-    public Map<Field, ExternalMetaField> getForeignKeys() {
-        return foreignKeys;
-    }
-
-    public Map<Field, CollectionMetaField> getCollectionFields() {
-        return collectionFields;
-    }
 
     public MetaData build() {
         return new MetaData(
@@ -105,9 +82,7 @@ public class MetaDataBuilder {
                 this.annotations,
                 this.entityDbName,
                 this.primaryKey,
-                this.columns,
-                this.foreignKeys,
-                this.collectionFields
+                this.columns
         );
     }
 }

@@ -1,8 +1,6 @@
 package com.softserve.easy.meta;
 
-import com.softserve.easy.meta.field.CollectionMetaField;
-import com.softserve.easy.meta.field.ExternalMetaField;
-import com.softserve.easy.meta.field.InternalMetaField;
+import com.softserve.easy.meta.field.AbstractMetaField;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -19,13 +17,10 @@ public class MetaData {
     private final String entityDbName;
 
     private final Field primaryKey;
-    private final Map<Field, InternalMetaField> columns;
-    private final Map<Field, ExternalMetaField> foreignKeys;
-    private final Map<Field, CollectionMetaField> collectionFields;
+    private final Map<Field, AbstractMetaField> columns;
 
     public MetaData(Class<?> entityClass, String entityClassName, List<Field> fields, List<Annotation> annotations,
-                    String entityDbName, Field primaryKey, Map<Field, InternalMetaField> columns,
-                    Map<Field, ExternalMetaField> foreignKeys, Map<Field, CollectionMetaField> collectionFields) {
+                    String entityDbName, Field primaryKey, Map<Field, AbstractMetaField> columns) {
         this.entityClass = entityClass;
         this.entityClassName = entityClassName;
         this.fields = fields;
@@ -33,7 +28,5 @@ public class MetaData {
         this.entityDbName = entityDbName;
         this.primaryKey = primaryKey;
         this.columns = columns;
-        this.foreignKeys = foreignKeys;
-        this.collectionFields = collectionFields;
     }
 }
