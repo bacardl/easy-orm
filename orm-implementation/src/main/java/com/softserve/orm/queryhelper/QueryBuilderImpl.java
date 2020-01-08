@@ -22,7 +22,7 @@ public class QueryBuilderImpl implements QueryBuilder {
         String columns = String.join(",", columnNames);
         String vals = values.stream()
                 .map(String::valueOf)
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining("', '","'","'"));
         return "UPDATE " + tableName + " SET (" + columns + ") = (" + vals + ")" + query + ";";
     }
 
@@ -36,44 +36,44 @@ public class QueryBuilderImpl implements QueryBuilder {
         String columns = String.join(",", columnNames);
         String vals = values.stream()
                 .map(String::valueOf)
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(",","'","'"));;
         query.setLength(0);
         query.append("INSERT INTO ").append(tableName).append(" (");
         query.append(columns).append(") VALUES(").append(vals).append(");");
         return query.toString();
     }
 
-    public QueryBuilder where() {
+    public QueryBuilderImpl where() {
         query.append(" WHERE");
         return this;
     }
 
-    public QueryBuilder like(LikeType likeType, Object requiredObj, String columnName) {
+    public QueryBuilderImpl like(LikeType likeType, Object requiredObj, String columnName) {
         query.append("'").append(columnName).append("'").append(" LIKE ");
         if (likeType == LikeType.STARTS_WITH) {
-            query.append(requiredObj).append("% ");
+            query.append("'").append(requiredObj).append("% ").append("'");
         }
         if (likeType == LikeType.CONTAINS) {
-            query.append("%").append(requiredObj).append("% ");
+            query.append("'").append("%").append(requiredObj).append("% ").append("'");
         }
         if (likeType == LikeType.ENDS_WITH) {
-            query.append("%").append(requiredObj);
+            query.append("'").append("%").append(requiredObj).append("'");
         }
 
         return this;
     }
 
-    public QueryBuilder and() {
+    public QueryBuilderImpl and() {
         query.append(" AND");
         return this;
     }
 
-    public QueryBuilder or() {
+    public QueryBuilderImpl or() {
         query.append(" OR");
         return this;
     }
 
-    public QueryBuilder eqls(String columnName, Object requiredOdj) {
+    public QueryBuilderImpl eqls(String columnName, Object requiredOdj) {
         query.append(" `").append(columnName).append("`=").append(requiredOdj);
         return this;
     }
