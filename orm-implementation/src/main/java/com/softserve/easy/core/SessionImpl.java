@@ -23,31 +23,31 @@ public class SessionImpl implements Session {
 
     @Override
     public void update(Object object) {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void delete(Object object) {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void clear() {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void flush() {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void close() {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Transaction beginTransaction() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 }

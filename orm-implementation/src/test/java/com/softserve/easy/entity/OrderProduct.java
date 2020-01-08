@@ -23,8 +23,9 @@ public class OrderProduct {
     // @Column(name = "quantity")
     private Integer quantity;
 
-    public OrderProduct(Order order, Integer quantity) {
+    public OrderProduct(Order order, Product product, Integer quantity) {
         this.order = order;
+        this.product = product;
         this.quantity = quantity;
         this.id = new OrderProductId(order.getId(), product.getId());
     }

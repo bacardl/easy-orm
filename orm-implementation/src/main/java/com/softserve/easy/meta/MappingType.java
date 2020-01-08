@@ -1,27 +1,31 @@
 package com.softserve.easy.meta;
 
+import com.softserve.easy.exception.OrmException;
+
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Set;
+
+import static com.softserve.easy.meta.FieldType.*;
 
 public enum MappingType {
-    INTEGER(Integer.class, "INTEGER"),
-    LONG(Long.class, "BIGINT"),
-    SHORT(Short.class, "SMALLINT"),
-    FLOAT(Float.class, "FLOAT"),
-    DOUBLE(Double.class, "DOUBLE"),
-    BIG_DECIMAL(BigDecimal.class, "NUMERIC"),
-    CHARACTER(Character.class, "CHAR(1)"),
-    STRING(String.class, "VARCHAR"),
-    DATE(Date.class,"DATE" ),
-    COLLECTION(Collection.class, "TABLE"),
-    OBJECT(Object.class, "TABLE");
+    INTEGER(Integer.class, "INTEGER", INTERNAL),
+    LONG(Long.class, "BIGINT", INTERNAL),
+    SHORT(Short.class, "SMALLINT", INTERNAL),
+    FLOAT(Float.class, "FLOAT", INTERNAL),
+    DOUBLE(Double.class, "DOUBLE", INTERNAL),
+    BIG_DECIMAL(BigDecimal.class, "NUMERIC", INTERNAL),
+    CHARACTER(Character.class, "CHAR(1)", INTERNAL),
+    STRING(String.class, "VARCHAR", INTERNAL),
+    DATE(Date.class,"DATE", INTERNAL),
+    LIST(List.class, "TABLE", COLLECTION),
+    SET(Set.class, "TABLE", COLLECTION),
+    OBJECT(Object.class, "TABLE", EXTERNAL);
 
     private Class<?> javaClass;
     private String sqlType ;
+    private FieldType fieldType;
 
     public Class<?> getJavaClass() {
         return javaClass;
@@ -31,32 +35,27 @@ public enum MappingType {
         return sqlType;
     }
 
-    MappingType(Class<?> javaClass, String sqlType) {
+    public FieldType getFieldType() {
+        return fieldType;
+    }
+
+    MappingType(Class<?> javaClass, String sqlType, FieldType fieldType) {
         this.javaClass = javaClass;
         this.sqlType = sqlType;
-    }
-    public static boolean isInternalType(Class<?> clazz) {
-        return getInternalTypes().stream().anyMatch(aClass -> aClass.isAssignableFrom(clazz));
+        this.fieldType = fieldType;
     }
 
-    public static List<Class<?>> getInternalTypes() {
-        return Stream.of(INTEGER, LONG, SHORT, FLOAT, DOUBLE, BIG_DECIMAL, CHARACTER, STRING, DATE)
-                .map(MappingType::getJavaClass).collect(Collectors.toList());
+    public static MappingType getMappingType(Class<?> clazz) {
+        for (MappingType value : MappingType.values()) {
+            if (value.getJavaClass().isAssignableFrom(clazz)) {
+                return value;
+            }
+        }
+        throw new OrmException(String.format("Type %s is not supported!", clazz));
     }
 
-    public static boolean isCollectionType(Class<?> clazz) {
-        return getCollectionTypes().stream().anyMatch(aClass -> aClass.isAssignableFrom(clazz));
+    public static FieldType getFieldType(Class<?> clazz) {
+        return getMappingType(clazz).getFieldType();
     }
 
-    public static List<Class<?>> getCollectionTypes() {
-        return Stream.of(COLLECTION).map(MappingType::getJavaClass).collect(Collectors.toList());
-    }
-
-    public static boolean isExternalType(Class<?> clazz) {
-        return getExternalTypes().stream().anyMatch(aClass -> aClass.isAssignableFrom(clazz));
-    }
-
-    public static List<Class<?>> getExternalTypes() {
-        return Stream.of(OBJECT).map(MappingType::getJavaClass).collect(Collectors.toList());
-    }
 }

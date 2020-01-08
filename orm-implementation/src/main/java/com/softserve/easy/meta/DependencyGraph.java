@@ -1,11 +1,11 @@
 package com.softserve.easy.meta;
 
 
+import com.softserve.easy.helper.MetaDataParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -35,6 +35,7 @@ public class DependencyGraph {
     public Set<Class<?>> getImplicitDependencies(Class<?> clazz) {
         return classGraph.breadthFirstTraversal(clazz);
     }
+
     public List<Set<Class<?>>> getLayeredDependencies(Class<?> clazz) {
         return classGraph.layeredBreadthFirstTraversal(clazz);
     }
@@ -55,30 +56,30 @@ public class DependencyGraph {
             LOG.debug("Class {} has following declared fields: {}", aClass.toString(), Arrays.toString(declaredFields));
             for (Field declaredField : declaredFields) {
                 Class<?> type = declaredField.getType();
-                LOG.debug("Analyzed field {} which has type {}", declaredField.toString(), type.toString());
-                if (!MappingType.isInternalType(type)) {
-                    LOG.debug("Analyzed field {} refers to non internal types", declaredField.toString());
-                    if (MappingType.isCollectionType(type)) {
+                FieldType fieldType = MappingType.getFieldType(type);
+                switch (fieldType) {
+                    case INTERNAL:
+                        LOG.debug("Analyzed field {} is internal type", declaredField.toString());
+                        break;
+                    case COLLECTION:
                         LOG.debug("Analyzed field {} is an array or collection", declaredField.toString());
-                        ParameterizedType generic = (ParameterizedType) declaredField.getGenericType();
-                        if (Objects.nonNull(generic)) {
-                            Class<?> genericActualTypeArgument = (Class<?>) generic.getActualTypeArguments()[0];
-                            if (Objects.nonNull(genericActualTypeArgument)) {
-                                LOG.debug("Analyzed field {} has generic type: {}",
-                                        declaredField.toString(), genericActualTypeArgument);
-                                graph.addVertex(genericActualTypeArgument);
-                                graph.addEdge(aClass, genericActualTypeArgument);
-                                LOG.debug("Added to graph vertex with value {}", genericActualTypeArgument);
-                            }
+                        Optional<Class<?>> generic = MetaDataParser.getGenericType(declaredField);
+                        if(generic.isPresent()) {
+                            LOG.debug("Analyzed field {} has generic type: {}",
+                                    declaredField.toString(), generic.get());
+                            graph.addVertex(generic.get());
+                            graph.addEdge(aClass, generic.get());
+                            LOG.debug("Added to graph vertex with value {}", generic.get());
                         }
-                    } else {
-                        LOG.debug("Analyzed field {} isn't an array or collection", declaredField.toString());
+                        break;
+                    case EXTERNAL:
+                        LOG.debug("Analyzed field {} is external type", declaredField.toString());
                         graph.addVertex(type);
                         graph.addEdge(aClass, type);
                         LOG.debug("Added to graph vertex with value {}", type);
-                    }
-                } else {
-                    LOG.debug("The field {} has been skipped.", declaredField.toString());
+                        break;
+                    default:
+                        LOG.debug("The field {} has been skipped.", declaredField.toString());
                 }
             }
         }

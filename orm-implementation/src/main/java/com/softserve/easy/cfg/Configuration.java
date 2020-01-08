@@ -4,9 +4,9 @@ import com.softserve.easy.annotation.Entity;
 import com.softserve.easy.core.SessionFactory;
 import com.softserve.easy.core.SessionFactoryBuilder;
 import com.softserve.easy.helper.ClassScanner;
+import com.softserve.easy.helper.MetaDataParser;
 import com.softserve.easy.meta.DependencyGraph;
 import com.softserve.easy.meta.MetaData;
-import com.softserve.easy.meta.MetaDataBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
@@ -20,44 +20,41 @@ import static com.softserve.easy.cfg.ConfigPropertyConstant.*;
 public class Configuration {
     private static final Logger LOG = LoggerFactory.getLogger(Configuration.class);
     private Set<Class<?>> observedClasses;
-    private Map<Class<?>, MetaData> metaData;
+    private Map<Class<?>, MetaData> classConfig;
     private DependencyGraph dependencyGraph;
     private Properties properties;
 
     public Configuration() {
         this.properties = Environment.getProperties();
         this.observedClasses = ClassScanner.getAnnotatedClasses(Entity.class);
-        this.metaData = new HashMap<>();
+        this.classConfig = new HashMap<>();
 
         for (Class<?> observedClass : observedClasses) {
-            // metaData.put(observedClass, analyzeClass(observedClass));
+            classConfig.put(observedClass, MetaDataParser.analyzeClass(observedClass));
         }
+        this.dependencyGraph = new DependencyGraph(observedClasses);
     }
 
     public Configuration addAnnotatedClass(Class<?> annotatedClass) {
         if (Objects.isNull(annotatedClass)) {
             throw new IllegalArgumentException("The annotatedClass value must be not Null");
         }
-        if (!metaData.containsKey(annotatedClass))
+        if (!classConfig.containsKey(annotatedClass))
         {
-            if (isEntityAnnotatedClass(annotatedClass))
+            if (MetaDataParser.isEntityAnnotatedClass(annotatedClass))
             {
-                // metadata.put(observedClass, analyzeClass(annotatedClass))
+                classConfig.put(annotatedClass, MetaDataParser.analyzeClass(annotatedClass));
             } else {
                 throw new IllegalArgumentException("annotatedClass must be annotated by @Entity");
             }
         } else {
             LOG.info("Class {} has already been mapped from classpath", annotatedClass.getSimpleName());
         }
-
-        // TODO: recompute the metaData and graphDependency fields
+        this.dependencyGraph = new DependencyGraph(observedClasses);
         return this;
     }
 
-    private boolean isEntityAnnotatedClass(Class<?> annotatedClass) {
-        Entity annotation = annotatedClass.getAnnotation(Entity.class);
-        return Objects.nonNull(annotation);
-    }
+
 
     public Configuration setProperty(String propertyName, String value) {
         properties.setProperty( propertyName, value );
@@ -81,7 +78,7 @@ public class Configuration {
         DataSource dataSource = initDataSource();
         return new SessionFactoryBuilder()
                 .setDataSource(dataSource)
-                .setMetaDataMap(metaData)
+                .setMetaDataMap(classConfig)
                 .setDependencyGraph(dependencyGraph)
                 .build();
     }
@@ -95,8 +92,5 @@ public class Configuration {
         return new HikariDataSource(config);
     }
 
-    private MetaData analyzeClass(Class<?> clazz) {
-        MetaDataBuilder metaDataBuilder = new MetaDataBuilder();
-        return metaDataBuilder.build();
-    }
+
 }
