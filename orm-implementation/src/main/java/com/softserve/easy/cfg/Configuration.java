@@ -50,7 +50,7 @@ public class Configuration {
         } else {
             LOG.info("Class {} has already been mapped from classpath", annotatedClass.getSimpleName());
         }
-        this.dependencyGraph = new DependencyGraph(observedClasses);
+        dependencyGraph = new DependencyGraph(observedClasses);
         return this;
     }
 
