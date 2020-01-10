@@ -62,7 +62,7 @@ public class MetaDataParser {
                 .orElseThrow(() -> new ClassValidationException(
                         String.format("Class %s must have field marked with @Id", clazz))));
         Optional<String> entityName = MetaDataParser.getDbTableName(clazz);
-        entityName.ifPresent(s -> metaDataBuilder.setEntityDbName(entityName.get()));
+        entityName.ifPresent(s -> metaDataBuilder.setEntityDbTableName(entityName.get()));
 
         metaDataBuilder.setMetaFields(MetaDataParser.createMetaFields(clazz));
         return metaDataBuilder.build();

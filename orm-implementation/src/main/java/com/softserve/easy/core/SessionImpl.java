@@ -1,25 +1,23 @@
 package com.softserve.easy.core;
 
-import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.DependencyGraph;
 import com.softserve.easy.meta.MetaData;
+import com.softserve.easy.meta.field.ExternalMetaField;
 
 import java.io.Serializable;
 import java.sql.Connection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.*;
 
 public class SessionImpl implements Session {
     private Connection connection;
-    private Map<Class<?>, MetaData> metaDataMap;
-    private DependencyGraph dependencyGraph;
+    private  Map<Class<?>, MetaData> metaDataMap;
     private Transaction transaction;
+    private DependencyGraph dependencyGraph;
 
-    public SessionImpl(Connection connection, Map<Class<?>, MetaData> metaDataMap, DependencyGraph dependencyGraph) {
+    public SessionImpl(Connection connection) {
         this.connection = connection;
-        this.metaDataMap = metaDataMap;
-        this.dependencyGraph = dependencyGraph;
     }
 
     @Override
@@ -29,24 +27,7 @@ public class SessionImpl implements Session {
 
     @Override
     public <T> T get(Class<T> entityType, Serializable id) {
-        MetaData metaData = metaDataMap.get(entityType);
-        if (metaData.checkTypeCompatibility(entityType)) {
-            throw new OrmException(String.format("The %s class isn't mapped by Orm", entityType.getSimpleName()));
-        }
-        if (metaData.checkIdCompatibility(id.getClass())) {
-            throw new OrmException("Wrong type of ID object.");
-        }
-        String sqlQuery = buildSelectSqlQuery(entityType);
         return null;
-    }
-
-    private String buildSelectSqlQuery(Class<?> entityType) {
-        StringBuilder stringBuilder = new StringBuilder();
-        List<Set<Class<?>>> dependencies = dependencyGraph.getLayeredDependencies(entityType);
-        for (Set<Class<?>> dependency : dependencies) {
-
-        }
-        return stringBuilder.toString();
     }
 
     @Override
@@ -56,7 +37,43 @@ public class SessionImpl implements Session {
 
     @Override
     public void delete(Object object) {
-        throw new UnsupportedOperationException();
+      Stack<String> deleteQueries = new Stack<>();
+      Set<Class<?>> traversedClasses = new HashSet<>();
+      recursiveDelete(deleteQueries,traversedClasses,object);
+      while (!deleteQueries.isEmpty()){
+          try {
+              Statement statement = connection.createStatement();
+              statement.executeUpdate(deleteQueries.pop());
+          } catch (SQLException e) {
+              e.printStackTrace();
+          }
+      }
+    }
+
+    private void recursiveDelete(Stack<String> query, Set<Class<?>> traversedClasses, Object object) {
+        Class<?> currentClass = object.getClass();
+        List<ExternalMetaField> externalFields = metaDataMap.get(object.getClass()).getExternalMetaField();
+        try {
+            query.push("DELETE FROM " + metaDataMap.get(currentClass).getEntityDbTableName()
+                    + " WHERE " + metaDataMap.get(currentClass).getPrimaryKey()
+                    + " = " + metaDataMap.get(currentClass).getPrimaryKey().get(object));
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        traversedClasses.add(currentClass);
+        if (externalFields.size() != 0) {
+            for (ExternalMetaField externalField : externalFields) {
+                if (!traversedClasses.contains(externalField.getFieldType())) {
+                    Object externalObject = null;
+                    try {
+                        externalObject = currentClass.getDeclaredField(externalField.getFieldName()).get(object);
+                    } catch (IllegalAccessException | NoSuchFieldException e) {
+                        e.printStackTrace();
+                    }
+                    recursiveDelete(query, traversedClasses, externalObject);
+                }
+            }
+        }
     }
 
     @Override

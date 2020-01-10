@@ -48,6 +48,32 @@ class SessionImplTest {
 
         assertThat(session.get(USER_CLASS, USER_ID), Matchers.is(user));
     }
+    @Test
+    void deleteCascadeRecords() throws ParseException {
+        Country country = new Country();
+        country.setId(101);
+        country.setName("Ukraine");
+
+        Person person = new Person();
+        person.setId(12L);
+        person.setFirstName("John");
+        person.setLastName("Doe");
+        person.setDateOfBirth(new SimpleDateFormat("yyyy-mm-dd").parse("1950-10-22"));
+
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("JohnDoe112");
+        user.setPassword("password");
+        user.setEmail("johnD@post.com");
+        user.setCountry(country);
+        user.setPerson(person);
+        session.delete(person);
+        assertThat(session.get(USER_CLASS, USER_ID), Matchers.not(user));
+    }
+    @Test
+    void updateEntity(){
+        
+    }
 
     private static Configuration initTestConfiguration() {
         return new Configuration();

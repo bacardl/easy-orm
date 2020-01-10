@@ -4,9 +4,16 @@ package com.softserve.easy;
 import com.github.database.rider.core.DBUnitRule;
 import com.github.database.rider.core.api.dataset.DataSet;
 import com.github.database.rider.core.api.dataset.SeedStrategy;
+//import com.softserve.easy.jdbc.ConnectionFactory;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 @RunWith(JUnit4.class)
 @DataSet(
@@ -30,18 +37,18 @@ public class DBTest {
 //        throw new UnsupportedOperationException();
 //    }
 
-//    @Test
-////    @ExpectedDataSet(value = "dataset/yml/user/user-create.yml")
-//    public void createUserUsingJdbc() {
+    @Test
+//    @ExpectedDataSet(value = "dataset/yml/user/user-create.yml")
+    public void createUserUsingJdbc() {
 //        ConnectionFactory connectionFactory = ConnectionFactory.getInstance();
 //        Connection connection = connectionFactory.getConnection();
-////        try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO USER (NAME) VALUES (?)")) {
-////            preparedStatement.setString(1, "@test");
-////            preparedStatement.execute();
-////        } catch (SQLException e) {
-////            throw new RuntimeException(e);
-////        }
-//
+//        try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO USER (NAME) VALUES (?)")) {
+//            preparedStatement.setString(1, "@test");
+//            preparedStatement.execute();
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+
 //        try (Statement statement = connection.createStatement()) {
 //            ResultSet resultSet = statement.executeQuery("SELECT * FROM USERS");
 //            while (resultSet.next()) {
@@ -63,7 +70,7 @@ public class DBTest {
 //        } catch (SQLException e) {
 //            throw new RuntimeException(e);
 //        }
-//    }
+    }
 //
 //    @Test
 //    @ExpectedDataSet(value = "dataset/yml/user/user-create.yml")

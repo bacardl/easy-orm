@@ -18,18 +18,18 @@ public class MetaData {
     private final List<Field> fields;
 
     private final List<Annotation> annotations;
-    private final String entityDbName;
+    private final String entityDbTableName;
 
     private final Field primaryKey;
     private final Map<Field, AbstractMetaField> metaFields;
 
     public MetaData(Class<?> entityClass, String entityClassName, List<Field> fields, List<Annotation> annotations,
-                    String entityDbName, Field primaryKey, Map<Field, AbstractMetaField> metaFields) {
+                    String entityDbTableName, Field primaryKey, Map<Field, AbstractMetaField> metaFields) {
         this.entityClass = entityClass;
         this.entityClassName = entityClassName;
         this.fields = fields;
         this.annotations = annotations;
-        this.entityDbName = entityDbName;
+        this.entityDbTableName = entityDbTableName;
         this.primaryKey = primaryKey;
         this.metaFields = metaFields;
     }
@@ -79,8 +79,8 @@ public class MetaData {
         return annotations;
     }
 
-    public String getEntityDbName() {
-        return entityDbName;
+    public String getEntityDbTableName() {
+        return entityDbTableName;
     }
 
     public Field getPrimaryKey() {
@@ -90,4 +90,5 @@ public class MetaData {
     public Map<Field, AbstractMetaField> getMetaFields() {
         return metaFields;
     }
+
 }

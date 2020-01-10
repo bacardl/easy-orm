@@ -15,7 +15,7 @@ public class MetaDataBuilder {
     private final List<Field> fields;
     private final List<Annotation> annotations;
 
-    private String entityDbName;
+    private String entityDbTableName;
 
     private Field primaryKey;
     private Map<Field, AbstractMetaField> metaFields;
@@ -26,12 +26,12 @@ public class MetaDataBuilder {
         this.fields = Arrays.asList(entityClass.getDeclaredFields());
         this.annotations = Arrays.asList(entityClass.getAnnotations());
 
-        this.entityDbName = entityClassName;
+        this.entityDbTableName = entityClassName;
         this.metaFields = new LinkedHashMap<>();
     }
 
-    public MetaDataBuilder setEntityDbName(String entityDbName) {
-        this.entityDbName = entityDbName;
+    public MetaDataBuilder setEntityDbTableName(String entityDbTableName) {
+        this.entityDbTableName = entityDbTableName;
         return this;
     }
 
@@ -61,8 +61,8 @@ public class MetaDataBuilder {
         return annotations;
     }
 
-    public String getEntityDbName() {
-        return entityDbName;
+    public String getEntityDbTableName() {
+        return entityDbTableName;
     }
 
     public Field getPrimaryKey() {
@@ -80,7 +80,7 @@ public class MetaDataBuilder {
                 this.entityClassName,
                 this.fields,
                 this.annotations,
-                this.entityDbName,
+                this.entityDbTableName,
                 this.primaryKey,
                 this.metaFields
         );

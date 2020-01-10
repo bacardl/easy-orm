@@ -32,7 +32,7 @@ public class DependencyGraph {
         return VERTEX_L_TO_VALUE_S.apply(classGraph.getAdjVertices(clazz));
     }
 
-    public Set<Class<?>> getImplicitDependencies(Class<?> clazz) {
+    public Set<Class<?>> getAllDependencies(Class<?> clazz) {
         return classGraph.breadthFirstTraversal(clazz);
     }
 

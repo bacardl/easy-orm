@@ -7,6 +7,8 @@ import com.softserve.easy.entity.User;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -21,6 +23,7 @@ public class DependencyGraphTest {
     private static final Class<Country> COUNTRY_CLASS = Country.class;
     private static final Class<Order> ORDER_CLASS = Order.class;
     private static final int NUMBER_OF_ALL_CLASSES = 4;
+    private static final Logger LOG = LoggerFactory.getLogger(DependencyGraphTest.class);
 
     private Set<Class<?>> classes;
     private DependencyGraph dependencyGraph;
@@ -49,7 +52,7 @@ public class DependencyGraphTest {
 
     @Test
     void checkImplicitDependencies() {
-        assertThat(dependencyGraph.getImplicitDependencies(USER_CLASS), not(empty()));
+        assertThat(dependencyGraph.getAllDependencies(USER_CLASS), not(empty()));
         checkImplicitDependenciesByClass(dependencyGraph, USER_CLASS, PERSON_CLASS, ORDER_CLASS, COUNTRY_CLASS);
         checkImplicitDependenciesByClass(dependencyGraph, PERSON_CLASS, USER_CLASS, COUNTRY_CLASS, ORDER_CLASS);
         checkImplicitDependenciesByClass(dependencyGraph, COUNTRY_CLASS);
@@ -70,7 +73,7 @@ public class DependencyGraphTest {
 
     private static void checkImplicitDependenciesByClass(DependencyGraph classGraph,
                                                          Class<?> checkedClass, Class<?>... connectedClasses) {
-        Set<Class<?>> verticesByClass = classGraph.getImplicitDependencies(checkedClass);
+        Set<Class<?>> verticesByClass = classGraph.getAllDependencies(checkedClass);
         assertThat(verticesByClass, Matchers.notNullValue());
         assertThat(checkedClass.getSimpleName()
                         + "'s vertices list should contain "
