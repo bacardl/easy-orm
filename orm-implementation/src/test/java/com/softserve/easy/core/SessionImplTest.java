@@ -15,6 +15,7 @@ import static org.hamcrest.Matchers.is;
 class SessionImplTest {
     private static final Class<User> USER_CLASS = User.class;
     private static final long USER_ID = 1L;
+    private static final String ID_FIELD_NAME = "id";
     private static SessionImpl session;
 
     @BeforeAll
@@ -26,8 +27,14 @@ class SessionImplTest {
 
     @Test
     void getSelectSqlStringForUserClass() {
-        assertThat(cleanUpString(session.buildSelectSqlQuery(User.class)),
+        assertThat(cleanUpString(session.buildSelectSqlQuery(USER_CLASS)),
                 equalToIgnoringCase(cleanUpString(QueryConstant.SELECT_USERS_QUERY_WITHOUT_SCHEMA_NAME)));
+    }
+
+    @Test
+    void getSelectSqlStringForUserClassById() {
+        assertThat(cleanUpString(session.buildSelectSqlQueryWithWhereClause(USER_CLASS, ID_FIELD_NAME)),
+                equalToIgnoringCase(cleanUpString(QueryConstant.SELECT_USER_BY_ID_WITHOUT_SCHEMA_NAME)));
     }
 
     @Test
@@ -57,7 +64,7 @@ class SessionImplTest {
     }
 
     private static String cleanUpString(String input) {
-        return input.replaceAll("[\\s\\n\\t\\r\\f\\v]+", "");
+        return input.replaceAll("[\\s\\n\\t\\r\\f\\v]+", "").trim();
     }
 
 }

@@ -49,7 +49,7 @@ public class SessionImplTestWithConnection {
         Connection connection = getClientConnection();
         PreparedStatement preparedStatement
                 = connection.prepareStatement(QueryConstant.SELECT_USER_BY_ID_WITHOUT_SCHEMA_NAME);
-        preparedStatement.setLong(1, 1L);
+        preparedStatement.setObject(1, new Long(1L));
 
         ResultSet resultSet = preparedStatement.executeQuery();
 

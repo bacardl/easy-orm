@@ -14,10 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class SessionImpl implements Session {
     private static final Logger LOG = LoggerFactory.getLogger(SessionImpl.class);
@@ -51,6 +48,7 @@ public class SessionImpl implements Session {
 
         ResultSet resultSet = null;
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
+            preparedStatement.setObject(1, id);
             resultSet = preparedStatement.executeQuery();
             // check if it's one row
             // if it's has zero rows then return null
@@ -75,14 +73,15 @@ public class SessionImpl implements Session {
             if (resultSet.next()) {
                 for (InternalMetaField metaField : internalMetaField) {
                     Field field = metaField.getField();
+
                     boolean accessible = field.isAccessible();
-                    if(!accessible)
+                    if (!accessible)
                         field.setAccessible(true);
 
                     field.set(instance, resultSet.getObject(metaField.getDbFieldName(), metaField.getFieldType()));
 
                     // return value back
-                    if(!accessible)
+                    if (!accessible)
                         field.setAccessible(false);
                 }
                 return Optional.of(instance);
@@ -97,6 +96,11 @@ public class SessionImpl implements Session {
     }
 
     public String buildSelectSqlQuery(Class<?> rootType) {
+        return buildSelectSqlQueryWithWhereClause(rootType, null);
+    }
+
+    // it could be expanded
+    public String buildSelectSqlQueryWithWhereClause(Class<?> rootType, String fieldName) {
         MetaData rootMetaData = metaDataMap.get(rootType);
         Set<Class<?>> implicitDependencies = dependencyGraph.getImplicitDependencies(rootType);
         List<ExternalMetaField> externalMetaField = rootMetaData.getExternalMetaField();
@@ -126,6 +130,20 @@ public class SessionImpl implements Session {
                 }
         );
         // #/JOIN CLAUSE
+
+        // #WHERE CLAUSE
+        if (Objects.nonNull(fieldName))
+        {
+            stringBuilder.append(" WHERE ")
+                    // TODO: it doesn't work with child's entity fields
+                    // TODO: need to refactor the AbstractMetaField classes
+                    .append(rootMetaData.getEntityDbName())
+                    .append(".")
+                    .append(fieldName)
+                    .append(" = ")
+                    .append(" ? ");
+        }
+        // #/WHERE CLAUSE
 
         // #OTHER CLAUSE
         // #/OTHER CLAUSE
