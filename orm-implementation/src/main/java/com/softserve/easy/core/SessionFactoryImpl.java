@@ -26,7 +26,7 @@ public class SessionFactoryImpl implements SessionFactory{
     @Override
     public Session openSession() {
         try {
-            Session session = new SessionImpl(dataSource.getConnection());
+            Session session = new SessionImpl(dataSource.getConnection(), metaDataMap, dependencyGraph);
             sessionsMap.put(Thread.currentThread(), session);
             return session;
         } catch (SQLException e) {

@@ -34,25 +34,39 @@ public class MetaData {
         this.metaFields = metaFields;
     }
 
+
+    public InternalMetaField getPkMetaField() {
+        return (InternalMetaField) metaFields.get(primaryKey);
+    }
+
     public List<InternalMetaField> getInternalMetaField() {
         return metaFields.values().stream()
                 .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.INTERNAL))
-                .map(abstractMetaField -> (InternalMetaField)abstractMetaField)
+                .map(abstractMetaField -> (InternalMetaField) abstractMetaField)
                 .collect(Collectors.toList());
     }
 
     public List<ExternalMetaField> getExternalMetaField() {
         return metaFields.values().stream()
                 .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.EXTERNAL))
-                .map(abstractMetaField -> (ExternalMetaField)abstractMetaField)
+                .map(abstractMetaField -> (ExternalMetaField) abstractMetaField)
                 .collect(Collectors.toList());
     }
 
     public List<CollectionMetaField> getCollectionMetaField() {
         return metaFields.values().stream()
                 .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.COLLECTION))
-                .map(abstractMetaField -> (CollectionMetaField)abstractMetaField)
+                .map(abstractMetaField -> (CollectionMetaField) abstractMetaField)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * @return joined by comma separator column names, checks if the field is transitionable
+     */
+    public String getJoinedColumnNames() {
+        return getInternalMetaField().stream().filter(internalMetaField -> !internalMetaField.isTransitionable())
+                .map(internalMetaField -> String.format("%s.%s", entityDbName, internalMetaField.getDbFieldName()))
+                .collect(Collectors.joining(","));
     }
 
     public <T> boolean checkIdCompatibility(Class<T> idClazz) {

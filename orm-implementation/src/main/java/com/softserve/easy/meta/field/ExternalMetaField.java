@@ -7,9 +7,13 @@ public class ExternalMetaField extends AbstractMetaField {
     private final String foreignKeyFieldName;
 
     public ExternalMetaField(Class<?> fieldType, MappingType mappingType, boolean transitionable, String fieldName,
-                                String foreignKeyFieldName) {
+                             String foreignKeyFieldName) {
         super(fieldType, mappingType, transitionable, fieldName);
         this.foreignKeyFieldName = foreignKeyFieldName;
+    }
+
+    public String getForeignKeyFieldName() {
+        return foreignKeyFieldName;
     }
 
     @Override

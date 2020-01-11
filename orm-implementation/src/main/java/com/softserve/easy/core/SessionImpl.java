@@ -3,6 +3,8 @@ package com.softserve.easy.core;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.DependencyGraph;
 import com.softserve.easy.meta.MetaData;
+import com.softserve.easy.meta.field.ExternalMetaField;
+import com.softserve.easy.meta.field.InternalMetaField;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -40,14 +42,58 @@ public class SessionImpl implements Session {
         return null;
     }
 
-    private String buildSelectSqlQuery(Class<?> entityType) {
+    public String buildSelectSqlQuery(Class<?> rootType) {
+        MetaData rootMetaData = metaDataMap.get(rootType);
+        Set<Class<?>> implicitDependencies = dependencyGraph.getImplicitDependencies(rootType);
+        List<InternalMetaField> internalMetaField = rootMetaData.getInternalMetaField();
+        List<ExternalMetaField> externalMetaField = rootMetaData.getExternalMetaField();
         StringBuilder stringBuilder = new StringBuilder();
-        List<Set<Class<?>>> dependencies = dependencyGraph.getLayeredDependencies(entityType);
-        for (Set<Class<?>> dependency : dependencies) {
 
-        }
+        // #SELECT CLAUSE
+        stringBuilder.append(" SELECT ")
+                .append(rootMetaData.getJoinedColumnNames());
+        implicitDependencies.forEach(classDependency ->
+                stringBuilder.append(",").append(metaDataMap.get(classDependency).getJoinedColumnNames())
+        );
+        // #/SELECT CLAUSE
+
+        // #FROM CLAUSE
+        stringBuilder.append(" FROM ")
+                .append(rootMetaData.getEntityDbName());
+        // #/FROM CLAUSE
+
+        // #JOIN CLAUSE
+        externalMetaField.forEach(exField -> {
+            MetaData childMetaData = metaDataMap.get(exField.getFieldType());
+            stringBuilder.append(getLeftJoinStatement(
+                                    childMetaData.getEntityDbName(),
+                                    rootMetaData.getEntityDbName() + "." + exField.getForeignKeyFieldName(),
+                                    childMetaData.getEntityDbName() + "." + childMetaData.getPkMetaField().getDbFieldName()
+                                    ));
+                }
+        );
+        // #/JOIN CLAUSE
+
+        // #OTHER CLAUSE
+        // #/OTHER CLAUSE
+
+        // #END CLAUSE
+        stringBuilder.append(";");
+        // #END CLAUSE
         return stringBuilder.toString();
     }
+
+    private String getLeftJoinStatement(String childTableName, String parentFkFieldName, String childPkName) {
+        StringBuilder stringBuilder = new StringBuilder()
+                .append(" LEFT JOIN ")
+                .append(childTableName)
+                .append(" ON ")
+                .append(parentFkFieldName)
+                .append(" = ")
+                .append(childPkName);
+        return stringBuilder.toString();
+    }
+
 
     @Override
     public void update(Object object) {

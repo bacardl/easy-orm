@@ -1,29 +1,50 @@
 package com.softserve.easy.core;
 
 import com.softserve.easy.cfg.Configuration;
-import com.softserve.easy.entity.Country;
-import com.softserve.easy.entity.Person;
-import com.softserve.easy.entity.User;
-import org.hamcrest.Matchers;
-import org.junit.BeforeClass;
+import com.softserve.easy.simpleEntity.Country;
+import com.softserve.easy.simpleEntity.User;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalToIgnoringCase;
+import static org.hamcrest.Matchers.is;
 
 class SessionImplTest {
 
+    private static final String SELECT_USER_QUERY_WITHOUT_SCHEMA_NAME =
+            "SELECT users.id,users.login,users.password,users.email,countries.code,countries.name " +
+                    "FROM users " +
+                    "LEFT JOIN countries " +
+                    "ON users.country_code = countries.code";
+
+    private static final String SELECT_COUNTRY_QUERY_WITHOUT_SCHEMA_NAME =
+            "SELECT countries.code,countries.name " +
+                    "FROM countries;";
+
     private static final Class<User> USER_CLASS = User.class;
     private static final long USER_ID = 1L;
-    private static Session session;
+    private static SessionImpl session;
 
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         Configuration configuration = initTestConfiguration();
         SessionFactory sessionFactory = configuration.buildSessionFactory();
-        session = sessionFactory.openSession();
+        session = (SessionImpl) sessionFactory.openSession();
+    }
+
+    @Test
+    void getSelectSqlStringForUserClass() {
+        assertThat(cleanUpString(session.buildSelectSqlQuery(User.class)),
+                equalToIgnoringCase(cleanUpString(SELECT_USER_QUERY_WITHOUT_SCHEMA_NAME)));
+    }
+
+    @Test
+    void getSelectSqlStringForCountryClass() {
+        assertThat(cleanUpString(session.buildSelectSqlQuery(Country.class)),
+                equalToIgnoringCase(cleanUpString(SELECT_COUNTRY_QUERY_WITHOUT_SCHEMA_NAME)));
     }
 
     @Test
@@ -32,25 +53,22 @@ class SessionImplTest {
         country.setId(100);
         country.setName("United States");
 
-        Person person = new Person();
-        person.setId(1L);
-        person.setFirstName("Fred");
-        person.setLastName("Phillips");
-        person.setDateOfBirth(new SimpleDateFormat("yyyy-mm-dd").parse("1990-01-20"));
-
         User user = new User();
         user.setId(1L);
         user.setUsername("Youghoss1978");
         user.setPassword("$2y$10$RXyt4zu9H3PVKv5hE4Sln.FLsTgAakX5Ig7csH.0K58SwAwHVN8DG");
         user.setEmail("FredJPhillips@teleworm.us");
         user.setCountry(country);
-        user.setPerson(person);
 
-        assertThat(session.get(USER_CLASS, USER_ID), Matchers.is(user));
+        assertThat(session.get(USER_CLASS, USER_ID), is(user));
     }
 
     private static Configuration initTestConfiguration() {
         return new Configuration();
+    }
+
+    private static String cleanUpString(String input) {
+        return input.replaceAll("[\\s\\n\\t\\r\\f\\v]+", "");
     }
 
 }

@@ -68,6 +68,7 @@ public class DependencyGraphTest {
         );
     }
 
+
     private static void checkImplicitDependenciesByClass(DependencyGraph classGraph,
                                                          Class<?> checkedClass, Class<?>... connectedClasses) {
         Set<Class<?>> verticesByClass = classGraph.getImplicitDependencies(checkedClass);
