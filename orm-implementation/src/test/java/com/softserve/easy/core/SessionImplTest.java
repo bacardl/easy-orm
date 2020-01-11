@@ -13,17 +13,6 @@ import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.hamcrest.Matchers.is;
 
 class SessionImplTest {
-
-    private static final String SELECT_USER_QUERY_WITHOUT_SCHEMA_NAME =
-            "SELECT users.id,users.login,users.password,users.email,countries.code,countries.name " +
-                    "FROM users " +
-                    "LEFT JOIN countries " +
-                    "ON users.country_code = countries.code";
-
-    private static final String SELECT_COUNTRY_QUERY_WITHOUT_SCHEMA_NAME =
-            "SELECT countries.code,countries.name " +
-                    "FROM countries;";
-
     private static final Class<User> USER_CLASS = User.class;
     private static final long USER_ID = 1L;
     private static SessionImpl session;
@@ -38,13 +27,13 @@ class SessionImplTest {
     @Test
     void getSelectSqlStringForUserClass() {
         assertThat(cleanUpString(session.buildSelectSqlQuery(User.class)),
-                equalToIgnoringCase(cleanUpString(SELECT_USER_QUERY_WITHOUT_SCHEMA_NAME)));
+                equalToIgnoringCase(cleanUpString(QueryConstant.SELECT_USERS_QUERY_WITHOUT_SCHEMA_NAME)));
     }
 
     @Test
     void getSelectSqlStringForCountryClass() {
         assertThat(cleanUpString(session.buildSelectSqlQuery(Country.class)),
-                equalToIgnoringCase(cleanUpString(SELECT_COUNTRY_QUERY_WITHOUT_SCHEMA_NAME)));
+                equalToIgnoringCase(cleanUpString(QueryConstant.SELECT_COUNTRY_QUERY_WITHOUT_SCHEMA_NAME)));
     }
 
     @Test

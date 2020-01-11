@@ -11,7 +11,7 @@ public class User {
     @Id
     private Long id;
 
-    @Column(name = "login")
+    @Column(name = "username")
     private String username;
     private String password;
     private String email;

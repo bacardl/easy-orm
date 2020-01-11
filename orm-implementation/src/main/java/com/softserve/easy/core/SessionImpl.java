@@ -5,14 +5,23 @@ import com.softserve.easy.meta.DependencyGraph;
 import com.softserve.easy.meta.MetaData;
 import com.softserve.easy.meta.field.ExternalMetaField;
 import com.softserve.easy.meta.field.InternalMetaField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class SessionImpl implements Session {
+    private static final Logger LOG = LoggerFactory.getLogger(SessionImpl.class);
+
     private Connection connection;
     private Map<Class<?>, MetaData> metaDataMap;
     private DependencyGraph dependencyGraph;
@@ -39,13 +48,57 @@ public class SessionImpl implements Session {
             throw new OrmException("Wrong type of ID object.");
         }
         String sqlQuery = buildSelectSqlQuery(entityType);
-        return null;
+
+        ResultSet resultSet = null;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
+            resultSet = preparedStatement.executeQuery();
+            // check if it's one row
+            // if it's has zero rows then return null
+        } catch (SQLException e) {
+            LOG.error("There was an exception {}, during select {} by {}", e, entityType.getSimpleName(), id);
+            throw new OrmException(e);
+        }
+
+        // TODO: process 'Optional' properly
+        T entity = buildEntity(entityType, resultSet).get();
+        return entity;
+    }
+
+    public <T> Optional<T> buildEntity(Class<T> entityType, ResultSet resultSet) {
+        MetaData entityMetaData = metaDataMap.get(entityType);
+        List<InternalMetaField> internalMetaField = entityMetaData.getInternalMetaField();
+
+        T instance = null;
+        // TODO: implement PROXY
+        try {
+            instance = entityType.newInstance();
+            if (resultSet.next()) {
+                for (InternalMetaField metaField : internalMetaField) {
+                    Field field = metaField.getField();
+                    boolean accessible = field.isAccessible();
+                    if(!accessible)
+                        field.setAccessible(true);
+
+                    field.set(instance, resultSet.getObject(metaField.getDbFieldName(), metaField.getFieldType()));
+
+                    // return value back
+                    if(!accessible)
+                        field.setAccessible(false);
+                }
+                return Optional.of(instance);
+            } else {
+                throw new IllegalArgumentException("The result set must have exactly one row.");
+            }
+        } catch (Exception e) {
+            // TODO: LOG
+            e.printStackTrace();
+        }
+        return Optional.empty();
     }
 
     public String buildSelectSqlQuery(Class<?> rootType) {
         MetaData rootMetaData = metaDataMap.get(rootType);
         Set<Class<?>> implicitDependencies = dependencyGraph.getImplicitDependencies(rootType);
-        List<InternalMetaField> internalMetaField = rootMetaData.getInternalMetaField();
         List<ExternalMetaField> externalMetaField = rootMetaData.getExternalMetaField();
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -64,12 +117,12 @@ public class SessionImpl implements Session {
 
         // #JOIN CLAUSE
         externalMetaField.forEach(exField -> {
-            MetaData childMetaData = metaDataMap.get(exField.getFieldType());
-            stringBuilder.append(getLeftJoinStatement(
-                                    childMetaData.getEntityDbName(),
-                                    rootMetaData.getEntityDbName() + "." + exField.getForeignKeyFieldName(),
-                                    childMetaData.getEntityDbName() + "." + childMetaData.getPkMetaField().getDbFieldName()
-                                    ));
+                    MetaData childMetaData = metaDataMap.get(exField.getFieldType());
+                    stringBuilder.append(getLeftJoinStatement(
+                            childMetaData.getEntityDbName(),
+                            rootMetaData.getEntityDbName() + "." + exField.getForeignKeyFieldName(),
+                            childMetaData.getEntityDbName() + "." + childMetaData.getPkMetaField().getDbFieldName()
+                    ));
                 }
         );
         // #/JOIN CLAUSE

@@ -84,7 +84,7 @@ public class MetaDataParser {
             switch (mappingType.getFieldType()) {
                 case INTERNAL:
                     metaFields.put(field,
-                            new InternalMetaField(fieldType, mappingType, transitionable, fieldName,
+                            new InternalMetaField(fieldType, mappingType, transitionable, fieldName, field,
                                     dbColumnName.orElse(fieldName.toLowerCase()))
                     );
                     break;
@@ -93,7 +93,7 @@ public class MetaDataParser {
                         throw new ClassValidationException(String.format("EXTERNAL field %s must have either @OneToOne or @ManyToOne annotation", field));
                     }
                     metaFields.put(field,
-                            new ExternalMetaField(fieldType, mappingType, transitionable, fieldName,
+                            new ExternalMetaField(fieldType, mappingType, transitionable, fieldName, field,
                                     dbColumnName.orElse(fieldName.toLowerCase()))
                     );
                     break;
@@ -105,7 +105,7 @@ public class MetaDataParser {
                     Class<?> genericType = genericTypeOptional.orElseThrow(
                             () -> new ClassValidationException(String.format("COLLECTION field %s must be parametrized", field)));
                     metaFields.put(field,
-                            new CollectionMetaField((Class<? extends Collection>) fieldType, mappingType, transitionable, fieldName, genericType)
+                            new CollectionMetaField((Class<? extends Collection>) fieldType, mappingType, transitionable, fieldName, field, genericType)
                     );
                     break;
                 default:

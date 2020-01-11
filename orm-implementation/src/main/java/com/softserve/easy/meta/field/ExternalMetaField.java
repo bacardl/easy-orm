@@ -3,12 +3,15 @@ package com.softserve.easy.meta.field;
 import com.google.common.base.MoreObjects;
 import com.softserve.easy.meta.MappingType;
 
+import java.lang.reflect.Field;
+
 public class ExternalMetaField extends AbstractMetaField {
     private final String foreignKeyFieldName;
 
     public ExternalMetaField(Class<?> fieldType, MappingType mappingType, boolean transitionable, String fieldName,
+                             Field field,
                              String foreignKeyFieldName) {
-        super(fieldType, mappingType, transitionable, fieldName);
+        super(fieldType, mappingType, transitionable, fieldName, field);
         this.foreignKeyFieldName = foreignKeyFieldName;
     }
 
