@@ -19,6 +19,31 @@ public class ExternalMetaField extends AbstractMetaField {
         return foreignKeyFieldName;
     }
 
+    protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
+        private String foreignKeyFieldName;
+
+        public T foreignKeyFieldName(String foreignKeyFieldName) {
+            this.foreignKeyFieldName = foreignKeyFieldName;
+            return self();
+        }
+
+        public ExternalMetaField build() {
+            return new ExternalMetaField(this);
+        }
+    }
+
+    public static class Builder extends Init<Builder> {
+        @Override
+        protected Builder self() {
+            return this;
+        }
+    }
+
+    protected ExternalMetaField(Init<?> init) {
+        super(init);
+        this.foreignKeyFieldName = init.foreignKeyFieldName;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)

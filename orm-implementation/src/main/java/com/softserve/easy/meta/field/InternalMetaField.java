@@ -19,6 +19,32 @@ public class InternalMetaField extends AbstractMetaField {
         return dbFieldName;
     }
 
+
+    protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
+        private String dbFieldName;
+
+        public T dbFieldName(String dbFieldName) {
+            this.dbFieldName = dbFieldName;
+            return self();
+        }
+
+        public InternalMetaField build() {
+            return new InternalMetaField(this);
+        }
+    }
+
+    public static class Builder extends Init<Builder> {
+        @Override
+        protected Builder self() {
+            return this;
+        }
+    }
+
+    protected InternalMetaField(Init<?> init) {
+        super(init);
+        this.dbFieldName = init.dbFieldName;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
