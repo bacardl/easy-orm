@@ -1,19 +1,12 @@
 package com.softserve.easy.meta.field;
 
 import com.google.common.base.MoreObjects;
-import com.softserve.easy.meta.MappingType;
+import com.softserve.easy.meta.MetaData;
 
 import java.lang.reflect.Field;
 
 public class ExternalMetaField extends AbstractMetaField {
     private final String foreignKeyFieldName;
-
-    public ExternalMetaField(Class<?> fieldType, MappingType mappingType, boolean transitionable, String fieldName,
-                             Field field,
-                             String foreignKeyFieldName) {
-        super(fieldType, mappingType, transitionable, fieldName, field);
-        this.foreignKeyFieldName = foreignKeyFieldName;
-    }
 
     public String getForeignKeyFieldName() {
         return foreignKeyFieldName;
@@ -33,6 +26,10 @@ public class ExternalMetaField extends AbstractMetaField {
     }
 
     public static class Builder extends Init<Builder> {
+        public Builder(Field field, MetaData metaData) {
+            this.field = field;
+            this.metaData = metaData;
+        }
         @Override
         protected Builder self() {
             return this;

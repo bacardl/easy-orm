@@ -1,24 +1,16 @@
 package com.softserve.easy.meta.field;
 
 import com.google.common.base.MoreObjects;
-import com.softserve.easy.meta.MappingType;
+import com.softserve.easy.meta.MetaData;
 
 import java.lang.reflect.Field;
 
 public class InternalMetaField extends AbstractMetaField {
     private final String dbFieldName;
 
-    public InternalMetaField(Class<?> fieldType, MappingType mappingType, boolean transitionable, String fieldName,
-                             Field field,
-                             String dbFieldName) {
-        super(fieldType, mappingType, transitionable, fieldName, field);
-        this.dbFieldName = dbFieldName;
-    }
-
     public String getDbFieldName() {
         return dbFieldName;
     }
-
 
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
         private String dbFieldName;
@@ -34,6 +26,10 @@ public class InternalMetaField extends AbstractMetaField {
     }
 
     public static class Builder extends Init<Builder> {
+        public Builder(Field field, MetaData metaData) {
+            this.field = field;
+            this.metaData = metaData;
+        }
         @Override
         protected Builder self() {
             return this;

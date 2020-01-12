@@ -1,20 +1,12 @@
 package com.softserve.easy.meta.field;
 
 import com.google.common.base.MoreObjects;
-import com.softserve.easy.meta.MappingType;
+import com.softserve.easy.meta.MetaData;
 
 import java.lang.reflect.Field;
-import java.util.Collection;
 
 public class CollectionMetaField  extends AbstractMetaField {
     private final Class<?> genericType;
-
-    public CollectionMetaField(Class<? extends Collection> fieldType, MappingType mappingType, boolean transitionable,
-                               String fieldName, Field field,
-                               Class<?> genericType) {
-        super(fieldType, mappingType, transitionable, fieldName, field);
-        this.genericType = genericType;
-    }
 
     public Class<?> getGenericType() {
         return genericType;
@@ -34,6 +26,10 @@ public class CollectionMetaField  extends AbstractMetaField {
     }
 
     public static class Builder extends Init<Builder> {
+        public Builder(Field field, MetaData metaData) {
+            this.field = field;
+            this.metaData = metaData;
+        }
         @Override
         protected Builder self() {
             return this;

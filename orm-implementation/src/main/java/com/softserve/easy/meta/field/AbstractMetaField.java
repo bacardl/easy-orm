@@ -10,17 +10,10 @@ public abstract class AbstractMetaField {
     protected final MappingType mappingType;
     protected final boolean transitionable;
     protected final String fieldName;
+
+    //required
     protected final Field field;
-    protected MetaData metaData; // must be final
-
-    protected AbstractMetaField(Class<?> fieldType, MappingType mappingType, boolean transitionable, String fieldName, Field field) {
-
-        this.fieldType = fieldType;
-        this.mappingType = mappingType;
-        this.transitionable = transitionable;
-        this.fieldName = fieldName;
-        this.field = field;
-    }
+    protected final MetaData metaData;
 
     public Class<?> getFieldType() {
         return fieldType;
@@ -43,26 +36,28 @@ public abstract class AbstractMetaField {
         protected MappingType mappingType;
         protected boolean transitionable;
         protected String fieldName;
+
+        //required
         protected Field field;
         protected MetaData metaData;
 
         protected abstract T self();
 
+        public T fieldType(Class<?> fieldType) {
+            this.fieldType = fieldType;
+            return self();
+        }
+        public T mappingType(MappingType mappingType) {
+            this.mappingType = mappingType;
+            return self();
+        }
         public T transitionable(boolean transitionable) {
             this.transitionable = transitionable;
             return self();
         }
-    }
-
-    public static class Builder extends Init<Builder> {
-        public Builder(Field field, MetaData metaData) {
-            this.field = field;
-            this.metaData = metaData;
-        }
-
-        @Override
-        protected Builder self() {
-            return this;
+        public T fieldName(String fieldName) {
+            this.fieldName = fieldName;
+            return self();
         }
     }
 
