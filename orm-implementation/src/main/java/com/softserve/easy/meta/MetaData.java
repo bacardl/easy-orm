@@ -21,7 +21,7 @@ public class MetaData {
     private final String entityDbName;
 
     private final Field primaryKey;
-    private final Map<Field, AbstractMetaField> metaFields;
+    private Map<Field, AbstractMetaField> metaFields;
 
     public MetaData(Class<?> entityClass, String entityClassName, List<Field> fields, List<Annotation> annotations,
                     String entityDbName, Field primaryKey, Map<Field, AbstractMetaField> metaFields) {
@@ -33,7 +33,6 @@ public class MetaData {
         this.primaryKey = primaryKey;
         this.metaFields = metaFields;
     }
-
 
     public InternalMetaField getPkMetaField() {
         return (InternalMetaField) metaFields.get(primaryKey);
@@ -63,9 +62,9 @@ public class MetaData {
     /**
      * @return joined by comma separator column names, checks if the field is transitionable
      */
-    public String getJoinedColumnNames() {
+    public String getJoinedInternalFieldsNames() {
         return getInternalMetaField().stream().filter(internalMetaField -> !internalMetaField.isTransitionable())
-                .map(internalMetaField -> String.format("%s.%s", entityDbName, internalMetaField.getDbFieldName()))
+                .map(InternalMetaField::getDbFieldFullName)
                 .collect(Collectors.joining(","));
     }
 
@@ -103,5 +102,9 @@ public class MetaData {
 
     public Map<Field, AbstractMetaField> getMetaFields() {
         return metaFields;
+    }
+
+    public void setMetaFields(Map<Field, AbstractMetaField> metaFields) {
+        this.metaFields = metaFields;
     }
 }

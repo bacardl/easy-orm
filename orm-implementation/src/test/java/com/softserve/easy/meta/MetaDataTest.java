@@ -12,15 +12,12 @@ class MetaDataTest {
     private static final MetaData META_DATA;
 
     static {
-        MetaDataBuilder metaDataBuilder = new MetaDataBuilder(USER_CLASS)
-                .setMetaFields(MetaDataParser.createMetaFields(USER_CLASS))
-                .setEntityDbName(MetaDataParser.getDbTableName(USER_CLASS).get())
-                .setPrimaryKey(MetaDataParser.getPrimaryKeyField(USER_CLASS).get());
-        META_DATA = metaDataBuilder.build();
+        META_DATA = MetaDataParser.analyzeClass(USER_CLASS);
+        META_DATA.setMetaFields(MetaDataParser.createMetaFields(META_DATA));
     }
 
     @Test
     void getJoinedColumnNames() {
-        assertThat(META_DATA.getJoinedColumnNames(), is("users.id,users.login,users.password,users.email"));
+        assertThat(META_DATA.getJoinedInternalFieldsNames(), is("users.id,users.login,users.password,users.email"));
     }
 }

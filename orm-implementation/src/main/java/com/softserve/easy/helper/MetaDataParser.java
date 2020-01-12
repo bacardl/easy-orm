@@ -13,7 +13,10 @@ import com.softserve.easy.meta.field.InternalMetaField;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 public class MetaDataParser {
     public static boolean isEntityAnnotatedClass(Class<?> annotatedClass) {
@@ -63,59 +66,69 @@ public class MetaDataParser {
                         String.format("Class %s must have field marked with @Id", clazz))));
         Optional<String> entityName = MetaDataParser.getDbTableName(clazz);
         entityName.ifPresent(s -> metaDataBuilder.setEntityDbName(entityName.get()));
-
-        metaDataBuilder.setMetaFields(MetaDataParser.createMetaFields(clazz));
         return metaDataBuilder.build();
     }
 
     /**
      * @throws OrmException
      */
-    public static Map<Field, AbstractMetaField> createMetaFields(Class<?> clazz) {
-        Objects.requireNonNull(clazz);
+    public static Map<Field, AbstractMetaField> createMetaFields(MetaData metaData) {
+        Objects.requireNonNull(metaData.getEntityClass());
         Map<Field, AbstractMetaField> metaFields = new LinkedHashMap<>();
-        for (Field field : clazz.getDeclaredFields()) {
-            Class<?> fieldType = field.getType();
-            MappingType mappingType = MappingType.getMappingType(fieldType);
-            boolean transitionable = isTransientField(field);
-            String fieldName = field.getName();
-            Optional<String> dbColumnName = getDbColumnName(field);
-
-            switch (mappingType.getFieldType()) {
-                case INTERNAL:
-                    metaFields.put(field,
-                            new InternalMetaField(fieldType, mappingType, transitionable, fieldName, field,
-                                    dbColumnName.orElse(fieldName.toLowerCase()))
-                    );
-                    break;
-                case EXTERNAL:
-                    if (hasOneToOneAnnotation(field) == hasManyToOneAnnotation(field)) {
-                        throw new ClassValidationException(String.format("EXTERNAL field %s must have either @OneToOne or @ManyToOne annotation", field));
-                    }
-                    metaFields.put(field,
-                            new ExternalMetaField(fieldType, mappingType, transitionable, fieldName, field,
-                                    dbColumnName.orElse(fieldName.toLowerCase()))
-                    );
-                    break;
-                case COLLECTION:
-                    if (hasManyToManyAnnotation(field) == hasOneToManyAnnotation(field)) {
-                        throw new ClassValidationException((String.format("COLLECTION field %s must have either @ManyToMany or @OneToMany annotation", field)));
-                    }
-                    Optional<Class<?>> genericTypeOptional = getGenericType(field);
-                    Class<?> genericType = genericTypeOptional.orElseThrow(
-                            () -> new ClassValidationException(String.format("COLLECTION field %s must be parametrized", field)));
-                    metaFields.put(field,
-                            new CollectionMetaField((Class<? extends Collection>) fieldType, mappingType, transitionable, fieldName, field, genericType)
-                    );
-                    break;
-                default:
-                    throw new OrmException("The framework doesn't support this type of field: " + fieldType);
-            }
-
-
+        for (Field field : metaData.getEntityClass().getDeclaredFields()) {
+            metaFields.put(field, getMetaField(field, metaData));
         }
         return metaFields;
     }
+
+    private static AbstractMetaField getMetaField(Field field, MetaData metaData) {
+        Class<?> fieldType = field.getType();
+        MappingType mappingType = MappingType.getMappingType(fieldType);
+        boolean transitionable = isTransientField(field);
+        String fieldName = field.getName();
+        Optional<String> dbColumnName = getDbColumnName(field);
+
+        switch (mappingType.getFieldType()) {
+            case INTERNAL:
+                return new InternalMetaField.Builder(field, metaData)
+                        .fieldType(fieldType)
+                        .mappingType(mappingType)
+                        .fieldName(fieldName)
+                        .transitionable(transitionable)
+                        .dbFieldName(dbColumnName.orElse(fieldName.toLowerCase()))
+                        .build();
+            case EXTERNAL:
+                if (hasOneToOneAnnotation(field) == hasManyToOneAnnotation(field)) {
+                    throw new ClassValidationException(String.format("EXTERNAL field %s must have either @OneToOne or @ManyToOne annotation", field));
+                }
+                return new ExternalMetaField.Builder(field, metaData)
+                        .fieldType(fieldType)
+                        .mappingType(mappingType)
+                        .fieldName(fieldName)
+                        .transitionable(transitionable)
+                        .foreignKeyFieldName(dbColumnName.orElse(fieldName.toLowerCase()))
+                        .build();
+            case COLLECTION:
+                if (hasManyToManyAnnotation(field) == hasOneToManyAnnotation(field)) {
+                    throw new ClassValidationException((String.format("COLLECTION field %s must have either @ManyToMany or @OneToMany annotation", field)));
+                }
+                Optional<Class<?>> genericTypeOptional = getGenericType(field);
+                Class<?> genericType = genericTypeOptional.orElseThrow(
+                        () -> new ClassValidationException(String.format("COLLECTION field %s must be parametrized", field)));
+                return new CollectionMetaField.Builder(field, metaData)
+                        .fieldType(fieldType)
+                        .mappingType(mappingType)
+                        .fieldName(fieldName)
+                        .transitionable(transitionable)
+                        .genericType(genericType)
+                        .build();
+            default:
+                throw new OrmException("The framework doesn't support this type of field: " + fieldType);
+        }
+
+
+    }
+
 
     public static boolean isTransientField(Field field) {
         return Objects.nonNull(field.getAnnotation(Transient.class));
@@ -124,12 +137,15 @@ public class MetaDataParser {
     public static boolean hasOneToManyAnnotation(Field field) {
         return Objects.nonNull(field.getAnnotation(OneToMany.class));
     }
+
     public static boolean hasManyToOneAnnotation(Field field) {
         return Objects.nonNull(field.getAnnotation(ManyToOne.class));
     }
+
     public static boolean hasOneToOneAnnotation(Field field) {
         return Objects.nonNull(field.getAnnotation(OneToOne.class));
     }
+
     public static boolean hasManyToManyAnnotation(Field field) {
         return Objects.nonNull(field.getAnnotation(ManyToMany.class));
     }

@@ -12,6 +12,10 @@ public class ExternalMetaField extends AbstractMetaField {
         return foreignKeyFieldName;
     }
 
+    public String getForeignKeyFieldFullName() {
+        return metaData.getEntityDbName() + "." + foreignKeyFieldName;
+    }
+
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
         private String foreignKeyFieldName;
 

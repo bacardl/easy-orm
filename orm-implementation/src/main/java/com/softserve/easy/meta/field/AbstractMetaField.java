@@ -21,14 +21,21 @@ public abstract class AbstractMetaField {
     public MappingType getMappingType() {
         return mappingType;
     }
+
     public boolean isTransitionable() {
         return transitionable;
     }
+
     public String getFieldName() {
         return fieldName;
     }
+
     public Field getField() {
         return field;
+    }
+
+    public MetaData getMetaData() {
+        return metaData;
     }
 
     protected static abstract class Init<T extends Init<T>> {

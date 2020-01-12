@@ -13,7 +13,6 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 
 public class SessionImpl implements Session {
@@ -45,7 +44,7 @@ public class SessionImpl implements Session {
         if (metaData.checkIdCompatibility(id.getClass())) {
             throw new OrmException("Wrong type of ID object.");
         }
-        String sqlQuery = buildSelectSqlQueryWithWhereClause(entityType,metaData.getPkMetaField().getDbFieldName());
+        String sqlQuery = buildSelectSqlQueryWithWhereClause(entityType, metaData.getPkMetaField().getDbFieldName());
 
         ResultSet resultSet = null;
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
@@ -60,7 +59,7 @@ public class SessionImpl implements Session {
                 throw new IllegalArgumentException("The result set must have exactly one row.");
             }
             // if it's has zero rows then return null
-        } catch (SQLException e) {
+        } catch (Exception e) {
             LOG.error("There was an exception {}, during select {} by {}", e, entityType.getSimpleName(), id);
             throw new OrmException(e);
         }
@@ -70,43 +69,37 @@ public class SessionImpl implements Session {
         return entity;
     }
 
-    public <T> Optional<T> buildEntity(Class<T> entityType, ResultSet resultSet) {
+    public <T> Optional<T> buildEntity(Class<T> entityType, ResultSet resultSet) throws Exception {
         MetaData entityMetaData = metaDataMap.get(entityType);
         List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
         List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
         // TODO: implement PROXY
-        try {
-            final T instance = entityType.newInstance();
-            for (InternalMetaField metaField : internalMetaFields) {
-                Field field = metaField.getField();
-                boolean accessible = field.isAccessible();
-                if (!accessible)
-                    field.setAccessible(true);
-                field.set(instance, resultSet.getObject(metaField.getDbFieldName(), metaField.getFieldType()));
-                // return value back
-                if (!accessible) {
-                    field.setAccessible(false);
-                }
-            }
 
-            for (ExternalMetaField metaField : externalMetaFields) {
-                Field field = metaField.getField();
-                Object childInstance = buildEntity(metaField.getFieldType(), resultSet).orElseGet(null);
-                boolean accessible = field.isAccessible();
-                if (!accessible)
-                    field.setAccessible(true);
-                field.set(instance, childInstance);
-                // return value back
-                if (!accessible)
-                    field.setAccessible(false);
+        final T instance = entityType.newInstance();
+        for (InternalMetaField metaField : internalMetaFields) {
+            Field field = metaField.getField();
+            boolean accessible = field.isAccessible();
+            if (!accessible)
+                field.setAccessible(true);
+            field.set(instance, resultSet.getObject(metaField.getDbFieldName(), metaField.getFieldType()));
+            // return value back
+            if (!accessible) {
+                field.setAccessible(false);
             }
-            return Optional.of(instance);
-
-        } catch (Exception e) {
-            // TODO: LOG
-            e.printStackTrace();
         }
-        return Optional.empty();
+
+        for (ExternalMetaField metaField : externalMetaFields) {
+            Field field = metaField.getField();
+            Object childInstance = buildEntity(metaField.getFieldType(), resultSet).orElseGet(null);
+            boolean accessible = field.isAccessible();
+            if (!accessible)
+                field.setAccessible(true);
+            field.set(instance, childInstance);
+            // return value back
+            if (!accessible)
+                field.setAccessible(false);
+        }
+        return Optional.ofNullable(instance);
     }
 
     public String buildSelectSqlQuery(Class<?> rootType) {
@@ -122,9 +115,9 @@ public class SessionImpl implements Session {
 
         // #SELECT CLAUSE
         stringBuilder.append(" SELECT ")
-                .append(rootMetaData.getJoinedColumnNames());
+                .append(rootMetaData.getJoinedInternalFieldsNames());
         implicitDependencies.forEach(classDependency ->
-                stringBuilder.append(",").append(metaDataMap.get(classDependency).getJoinedColumnNames())
+                stringBuilder.append(",").append(metaDataMap.get(classDependency).getJoinedInternalFieldsNames())
         );
         // #/SELECT CLAUSE
 
@@ -138,8 +131,8 @@ public class SessionImpl implements Session {
                     MetaData childMetaData = metaDataMap.get(exField.getFieldType());
                     stringBuilder.append(getLeftJoinStatement(
                             childMetaData.getEntityDbName(),
-                            rootMetaData.getEntityDbName() + "." + exField.getForeignKeyFieldName(),
-                            childMetaData.getEntityDbName() + "." + childMetaData.getPkMetaField().getDbFieldName()
+                            exField.getForeignKeyFieldFullName(),
+                            childMetaData.getPkMetaField().getDbFieldFullName()
                     ));
                 }
         );

@@ -5,7 +5,6 @@ import com.softserve.easy.meta.field.AbstractMetaField;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +26,6 @@ public class MetaDataBuilder {
         this.annotations = Arrays.asList(entityClass.getAnnotations());
 
         this.entityDbName = entityClassName;
-        this.metaFields = new LinkedHashMap<>();
     }
 
     public MetaDataBuilder setEntityDbName(String entityDbName) {

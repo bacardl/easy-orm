@@ -12,6 +12,10 @@ public class InternalMetaField extends AbstractMetaField {
         return dbFieldName;
     }
 
+    public String getDbFieldFullName() {
+        return metaData.getEntityDbName() + "." + dbFieldName;
+    }
+
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
         private String dbFieldName;
 
