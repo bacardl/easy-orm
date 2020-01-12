@@ -26,7 +26,8 @@ public class Configuration {
 
     public Configuration() {
         this.properties = Environment.getProperties();
-        this.observedClasses = ClassScanner.getAnnotatedClasses(Entity.class, properties.getProperty(ENTITY_PACKAGE_PROPERTY));
+        this.observedClasses = ClassScanner.getAnnotatedClasses(Entity.class,
+                Objects.requireNonNull(properties.getProperty(ENTITY_PACKAGE_PROPERTY)));
         this.classConfig = new HashMap<>();
 
         for (Class<?> observedClass : observedClasses) {

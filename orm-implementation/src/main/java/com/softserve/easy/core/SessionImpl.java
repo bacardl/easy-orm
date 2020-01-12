@@ -38,19 +38,27 @@ public class SessionImpl implements Session {
     @Override
     public <T> T get(Class<T> entityType, Serializable id) {
         MetaData metaData = metaDataMap.get(entityType);
+        T entity = null;
         if (metaData.checkTypeCompatibility(entityType)) {
             throw new OrmException(String.format("The %s class isn't mapped by Orm", entityType.getSimpleName()));
         }
         if (metaData.checkIdCompatibility(id.getClass())) {
             throw new OrmException("Wrong type of ID object.");
         }
-        String sqlQuery = buildSelectSqlQuery(entityType);
+        String sqlQuery = buildSelectSqlQueryWithWhereClause(entityType,metaData.getPkMetaField().getDbFieldName());
 
         ResultSet resultSet = null;
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
             preparedStatement.setObject(1, id);
             resultSet = preparedStatement.executeQuery();
+
+            System.out.println(resultSet.getRow());
             // check if it's one row
+            if (resultSet.next()) {
+                entity = buildEntity(entityType, resultSet).orElseGet(() -> null);
+            } else {
+                throw new IllegalArgumentException("The result set must have exactly one row.");
+            }
             // if it's has zero rows then return null
         } catch (SQLException e) {
             LOG.error("There was an exception {}, during select {} by {}", e, entityType.getSimpleName(), id);
@@ -58,36 +66,42 @@ public class SessionImpl implements Session {
         }
 
         // TODO: process 'Optional' properly
-        T entity = buildEntity(entityType, resultSet).get();
+
         return entity;
     }
 
     public <T> Optional<T> buildEntity(Class<T> entityType, ResultSet resultSet) {
         MetaData entityMetaData = metaDataMap.get(entityType);
-        List<InternalMetaField> internalMetaField = entityMetaData.getInternalMetaField();
-
-        T instance = null;
+        List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
+        List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
         // TODO: implement PROXY
         try {
-            instance = entityType.newInstance();
-            if (resultSet.next()) {
-                for (InternalMetaField metaField : internalMetaField) {
-                    Field field = metaField.getField();
-
-                    boolean accessible = field.isAccessible();
-                    if (!accessible)
-                        field.setAccessible(true);
-
-                    field.set(instance, resultSet.getObject(metaField.getDbFieldName(), metaField.getFieldType()));
-
-                    // return value back
-                    if (!accessible)
-                        field.setAccessible(false);
+            final T instance = entityType.newInstance();
+            for (InternalMetaField metaField : internalMetaFields) {
+                Field field = metaField.getField();
+                boolean accessible = field.isAccessible();
+                if (!accessible)
+                    field.setAccessible(true);
+                field.set(instance, resultSet.getObject(metaField.getDbFieldName(), metaField.getFieldType()));
+                // return value back
+                if (!accessible) {
+                    field.setAccessible(false);
                 }
-                return Optional.of(instance);
-            } else {
-                throw new IllegalArgumentException("The result set must have exactly one row.");
             }
+
+            for (ExternalMetaField metaField : externalMetaFields) {
+                Field field = metaField.getField();
+                Object childInstance = buildEntity(metaField.getFieldType(), resultSet).orElseGet(null);
+                boolean accessible = field.isAccessible();
+                if (!accessible)
+                    field.setAccessible(true);
+                field.set(instance, childInstance);
+                // return value back
+                if (!accessible)
+                    field.setAccessible(false);
+            }
+            return Optional.of(instance);
+
         } catch (Exception e) {
             // TODO: LOG
             e.printStackTrace();
@@ -132,8 +146,7 @@ public class SessionImpl implements Session {
         // #/JOIN CLAUSE
 
         // #WHERE CLAUSE
-        if (Objects.nonNull(fieldName))
-        {
+        if (Objects.nonNull(fieldName)) {
             stringBuilder.append(" WHERE ")
                     // TODO: it doesn't work with child's entity fields
                     // TODO: need to refactor the AbstractMetaField classes
@@ -164,7 +177,6 @@ public class SessionImpl implements Session {
                 .append(childPkName);
         return stringBuilder.toString();
     }
-
 
     @Override
     public void update(Object object) {

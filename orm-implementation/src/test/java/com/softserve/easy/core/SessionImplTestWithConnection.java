@@ -45,21 +45,6 @@ public class SessionImplTestWithConnection {
     }
 
     @Test
-    public void myTest() throws SQLException {
-        Connection connection = getClientConnection();
-        PreparedStatement preparedStatement
-                = connection.prepareStatement(QueryConstant.SELECT_USER_BY_ID_WITHOUT_SCHEMA_NAME);
-        preparedStatement.setObject(1, new Long(1L));
-
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        resultSet.next();
-        System.out.println(resultSet.isLast());
-        System.out.println("ID: " + resultSet.getLong("id"));
-        System.out.println("ID like Long obj: " + resultSet.getObject("id", Long.class));
-    }
-
-    @Test
     public void shouldCreateUserWithInternalFields() throws SQLException {
         Connection connection = getClientConnection();
         PreparedStatement preparedStatement
@@ -68,6 +53,9 @@ public class SessionImplTestWithConnection {
 
         ResultSet resultSet = preparedStatement.executeQuery();
 
+        // important!
+        resultSet.next();
+
         Optional<User> optionalUser = session.buildEntity(USER_CLASS, resultSet);
         User actualUser = optionalUser.orElseGet(Assertions::fail);
 
@@ -75,6 +63,9 @@ public class SessionImplTestWithConnection {
         assertThat(actualUser.getUsername(), equalTo("Youghoss1978"));
         assertThat(actualUser.getPassword(), equalTo("$2y$10$RXyt4zu9H3PVKv5hE4Sln.FLsTgAakX5Ig7csH.0K58SwAwHVN8DG"));
         assertThat(actualUser.getEmail(), equalTo("FredJPhillips@teleworm.us"));
+
+        assertThat(actualUser.getCountry().getId(), equalTo(100));
+        assertThat(actualUser.getCountry().getName(), equalTo("United States"));
     }
 
     private static Configuration initTestConfiguration() {
