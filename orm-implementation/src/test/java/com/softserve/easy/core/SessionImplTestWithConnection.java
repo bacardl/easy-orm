@@ -45,7 +45,7 @@ public class SessionImplTestWithConnection {
     }
 
     @Test
-    public void shouldCreateUserWithInternalFields() throws SQLException {
+    public void shouldCreateUserWithInternalFields() throws Exception {
         Connection connection = getClientConnection();
         PreparedStatement preparedStatement
                 = connection.prepareStatement(QueryConstant.SELECT_USER_BY_ID_WITHOUT_SCHEMA_NAME);

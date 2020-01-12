@@ -81,6 +81,13 @@ public class MetaDataParser {
         return metaFields;
     }
 
+
+    /**
+     * Abstract method
+     * @param field
+     * @param metaData
+     * @return object of Internal, External or Collection + MetaField
+     */
     private static AbstractMetaField getMetaField(Field field, MetaData metaData) {
         Class<?> fieldType = field.getType();
         MappingType mappingType = MappingType.getMappingType(fieldType);
