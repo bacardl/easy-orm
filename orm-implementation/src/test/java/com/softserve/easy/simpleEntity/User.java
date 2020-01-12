@@ -2,6 +2,7 @@ package com.softserve.easy.simpleEntity;
 
 import com.softserve.easy.annotation.*;
 
+import java.util.Objects;
 import java.util.StringJoiner;
 
 @Entity(name = "User")
@@ -58,6 +59,23 @@ public class User {
 
     public void setCountry(Country country) {
         this.country = country;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User user = (User) o;
+        return Objects.equals(getId(), user.getId()) &&
+                getUsername().equals(user.getUsername()) &&
+                getPassword().equals(user.getPassword()) &&
+                getEmail().equals(user.getEmail()) &&
+                Objects.equals(getCountry(), user.getCountry());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getUsername(), getPassword(), getEmail(), getCountry());
     }
 
     @Override

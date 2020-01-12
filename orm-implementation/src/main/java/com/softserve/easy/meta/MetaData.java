@@ -69,11 +69,7 @@ public class MetaData {
     }
 
     public <T> boolean checkIdCompatibility(Class<T> idClazz) {
-        return metaFields.get(primaryKey).getFieldType().equals(idClazz);
-    }
-
-    public <T> boolean checkTypeCompatibility(Class<T> entityType) {
-        return entityClass.equals(entityType);
+        return metaFields.get(primaryKey).getFieldType().isAssignableFrom(idClazz);
     }
 
     public Class<?> getEntityClass() {

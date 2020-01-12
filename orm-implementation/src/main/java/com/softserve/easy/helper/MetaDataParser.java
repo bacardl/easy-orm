@@ -83,7 +83,7 @@ public class MetaDataParser {
 
 
     /**
-     * Abstract method
+     * Factory method
      * @param field
      * @param metaData
      * @return object of Internal, External or Collection + MetaField

@@ -36,14 +36,17 @@ public class SessionImpl implements Session {
 
     @Override
     public <T> T get(Class<T> entityType, Serializable id) {
+        if (Objects.isNull(entityType) || Objects.isNull(id)) {
+            throw new IllegalArgumentException("The arguments cannot be null.");
+        }
         MetaData metaData = metaDataMap.get(entityType);
-        T entity = null;
-        if (metaData.checkTypeCompatibility(entityType)) {
+        if (Objects.isNull(metaData)) {
             throw new OrmException(String.format("The %s class isn't mapped by Orm", entityType.getSimpleName()));
         }
-        if (metaData.checkIdCompatibility(id.getClass())) {
+        if (!metaData.checkIdCompatibility(id.getClass())) {
             throw new OrmException("Wrong type of ID object.");
         }
+        T entity = null;
         String sqlQuery = buildSelectSqlQueryWithWhereClause(entityType, metaData.getPkMetaField().getDbFieldName());
 
         ResultSet resultSet = null;
@@ -51,20 +54,22 @@ public class SessionImpl implements Session {
             preparedStatement.setObject(1, id);
             resultSet = preparedStatement.executeQuery();
 
-            System.out.println(resultSet.getRow());
             // check if it's one row
             if (resultSet.next()) {
                 entity = buildEntity(entityType, resultSet).orElseGet(() -> null);
+                if (!resultSet.isLast()) {
+                    throw new OrmException("Entity at database has a few primary keys." +
+                            "Use @EmbeddedId or change the database schema.");
+                }
             } else {
-                throw new IllegalArgumentException("The result set must have exactly one row.");
+                // didn't find an entity
+                return null;
             }
             // if it's has zero rows then return null
         } catch (Exception e) {
             LOG.error("There was an exception {}, during select {} by {}", e, entityType.getSimpleName(), id);
             throw new OrmException(e);
         }
-
-        // TODO: process 'Optional' properly
 
         return entity;
     }
@@ -74,7 +79,6 @@ public class SessionImpl implements Session {
         List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
         List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
         // TODO: implement PROXY
-
         final T instance = entityType.newInstance();
         for (InternalMetaField metaField : internalMetaFields) {
             Field field = metaField.getField();
