@@ -250,7 +250,7 @@ public class SessionImpl implements Session {
         return result;
     }
 
-    private Object getId(Object o) throws IllegalAccessException {
+    private Object getIdValue(Object o) throws IllegalAccessException {
         Field[] fields = o.getClass().getDeclaredFields();
         for(Field f: fields) {
             f.setAccessible(true);
