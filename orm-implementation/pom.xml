@@ -32,6 +32,8 @@
         <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
         <!--plugin-->
         <junit-platform-runner.version>1.5.2</junit-platform-runner.version>
+        <hamcrest-library.version>2.1</hamcrest-library.version>
+        <mockito-core.version>3.2.4</mockito-core.version>
     </properties>
 
     <dependencies>
@@ -68,7 +70,13 @@
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-library</artifactId>
-            <version>2.1</version>
+            <version>${hamcrest-library.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito-core.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

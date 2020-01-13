@@ -1,4 +1,4 @@
-package com.softserve.easy.queryhelper;
+package com.softserve.easy.jdbc.query;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -1,4 +1,4 @@
-package com.softserve.easy.queryhelper;
+package com.softserve.easy.jdbc.query;
 
 public enum LikeType {
     STARTS_WITH,
