@@ -1,6 +1,7 @@
 package com.softserve.easy.core;
 
 import com.softserve.easy.annotation.Column;
+import com.softserve.easy.annotation.Id;
 import com.softserve.easy.annotation.ManyToOne;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.DependencyGraph;
@@ -227,8 +228,7 @@ public class SessionImpl implements Session {
 
             if(f.isAnnotationPresent(ManyToOne.class)) {
                 Object object = f.get(o);
-                MetaData metaDateManyToOne = metaDataMap.get(o.getClass());
-                sbSecondPart.append(metaDateManyToOne.getPrimaryKey());
+                sbSecondPart.append(getId(object));
             } else {
                 if(f.get(o) instanceof String) {
                     sbSecondPart.append("'").append(f.get(o)).append("'");
@@ -248,6 +248,17 @@ public class SessionImpl implements Session {
         String result = sbFirstPart.toString();
         System.out.println(result);
         return result;
+    }
+
+    private Object getId(Object o) throws IllegalAccessException {
+        Field[] fields = o.getClass().getDeclaredFields();
+        for(Field f: fields) {
+            f.setAccessible(true);
+            if(f.isAnnotationPresent(Id.class)) {
+                return f.get(o);
+            }
+        }
+        return null;
     }
 }
 

@@ -3,6 +3,7 @@ package com.softserve.easy.core;
 import com.softserve.easy.cfg.Configuration;
 import com.softserve.easy.simpleEntity.Country;
 import com.softserve.easy.simpleEntity.User;
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -48,4 +49,53 @@ class SessionImplTest {
         return input.replaceAll("[\\s\\n\\t\\r\\f\\v]+", "").trim();
     }
 
+    @Test
+    void getInsertSqlQueryFromClassUserJon() {
+        Country ukr = new Country();
+        ukr.setId(13);
+        ukr.setName("Ukraine");
+
+        User jon = new User();
+        jon.setId((long)404);
+        jon.setUsername("jon");
+        jon.setPassword("jon111");
+        jon.setEmail("jon@gmail.com");
+        jon.setCountry(ukr);
+
+
+        String actual = null;
+        try {
+            actual = session.insert(jon);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        String expected = "INSERT INTO users (id,login,password,email,country_code) " +
+                "VALUES (404,'jon','jon111','jon@gmail.com',13);";
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    void getInsertSqlQueryFromClassUserJack() {
+        Country ukr = new Country();
+        ukr.setId(199);
+        ukr.setName("Ukraine");
+
+        User jon = new User();
+        jon.setId((long)11);
+        jon.setUsername("jack");
+        jon.setPassword("jack123");
+        jon.setEmail("jack@gmail.com");
+        jon.setCountry(ukr);
+
+
+        String actual = null;
+        try {
+            actual = session.insert(jon);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        String expected = "INSERT INTO users (id,login,password,email,country_code) " +
+                "VALUES (11,'jack','jack123','jack@gmail.com',199);";
+        Assert.assertEquals(expected, actual);
+    }
 }
