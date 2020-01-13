@@ -1,5 +1,7 @@
 package com.softserve.easy.core;
 
+import com.softserve.easy.annotation.Column;
+import com.softserve.easy.annotation.ManyToOne;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.DependencyGraph;
 import com.softserve.easy.meta.MetaData;
@@ -204,4 +206,48 @@ public class SessionImpl implements Session {
     public Transaction beginTransaction() {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public String insert(Object o) throws IllegalAccessException{
+        MetaData metaData = metaDataMap.get(o.getClass());
+        String tableName = metaData.getEntityDbName();
+
+        StringBuilder sbFirstPart = new StringBuilder("INSERT INTO " + tableName + " (");
+        StringBuilder sbSecondPart = new StringBuilder("VALUES (");
+
+        List<Field> fields = metaData.getFields();
+        for (Field f: fields) {
+            f.setAccessible(true);
+            if(f.isAnnotationPresent(Column.class)) {
+                sbFirstPart.append(f.getAnnotation(Column.class).name());
+            } else {
+                sbFirstPart.append(f.getName());
+            }
+            sbFirstPart.append(",");
+
+            if(f.isAnnotationPresent(ManyToOne.class)) {
+                Object object = f.get(o);
+                MetaData metaDateManyToOne = metaDataMap.get(o.getClass());
+                sbSecondPart.append(metaDateManyToOne.getPrimaryKey());
+            } else {
+                if(f.get(o) instanceof String) {
+                    sbSecondPart.append("'").append(f.get(o)).append("'");
+                } else {
+                    sbSecondPart.append(f.get(o));
+                }
+            }
+            sbSecondPart.append(",");
+        }
+        sbFirstPart.deleteCharAt(sbFirstPart.length() - 1);
+        sbSecondPart.deleteCharAt(sbSecondPart.length() - 1);
+
+        sbFirstPart.append(") ");
+        sbSecondPart.append(");");
+        sbFirstPart.append(sbSecondPart.toString());
+
+        String result = sbFirstPart.toString();
+        System.out.println(result);
+        return result;
+    }
 }
+
