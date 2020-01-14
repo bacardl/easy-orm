@@ -248,16 +248,5 @@ public class SessionImpl implements Session {
     public Transaction beginTransaction() {
         throw new UnsupportedOperationException();
     }
-
-    private Object getIdValue(Object o) throws IllegalAccessException {
-        Field[] fields = o.getClass().getDeclaredFields();
-        for(Field f: fields) {
-            f.setAccessible(true);
-            if(f.isAnnotationPresent(Id.class)) {
-                return f.get(o);
-            }
-        }
-        return null;
-    }
 }
 

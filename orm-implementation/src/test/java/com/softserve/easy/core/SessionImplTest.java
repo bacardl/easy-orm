@@ -63,12 +63,7 @@ class SessionImplTest {
         jon.setCountry(ukr);
 
 
-        String actual = null;
-        try {
-            actual = session.insert(jon);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        String actual = session.buildInsertSqlQuery(jon);
         String expected = "INSERT INTO users (id,login,password,email,country_code) " +
                 "VALUES (404,'jon','jon111','jon@gmail.com',13);";
         Assert.assertEquals(expected, actual);
