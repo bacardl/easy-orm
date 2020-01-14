@@ -10,5 +10,4 @@ public interface Session extends Transactional {
     void clear();
     void flush();
     void close();
-    String insert(Object object) throws IllegalAccessException;
 }

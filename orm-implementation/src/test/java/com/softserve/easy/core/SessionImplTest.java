@@ -73,29 +73,4 @@ class SessionImplTest {
                 "VALUES (404,'jon','jon111','jon@gmail.com',13);";
         Assert.assertEquals(expected, actual);
     }
-
-    @Test
-    void getInsertSqlQueryFromClassUserJack() {
-        Country ukr = new Country();
-        ukr.setId(199);
-        ukr.setName("Ukraine");
-
-        User jon = new User();
-        jon.setId((long)11);
-        jon.setUsername("jack");
-        jon.setPassword("jack123");
-        jon.setEmail("jack@gmail.com");
-        jon.setCountry(ukr);
-
-
-        String actual = null;
-        try {
-            actual = session.insert(jon);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        String expected = "INSERT INTO users (id,login,password,email,country_code) " +
-                "VALUES (11,'jack','jack123','jack@gmail.com',199);";
-        Assert.assertEquals(expected, actual);
-    }
 }

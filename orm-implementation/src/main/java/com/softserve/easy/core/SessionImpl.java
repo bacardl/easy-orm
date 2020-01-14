@@ -33,8 +33,49 @@ public class SessionImpl implements Session {
     }
 
     @Override
-    public Serializable save(Object object) {
+    public Serializable save(Object o) {
+        if (Objects.isNull(o)) {
+            throw new IllegalArgumentException("The arguments cannot be null.");
+        }
+        MetaData metaData = metaDataMap.get(o.getClass());
+        if (Objects.isNull(metaData)) {
+            throw new OrmException(String.format("The %s class isn't mapped by Orm", o.getClass().getSimpleName()));
+        }
+        String sqlQuery = buildInsertSqlQuery(o);
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
+            int numberOfChangedRows = preparedStatement.executeUpdate();
+            if(numberOfChangedRows <= 0) {
+                //TODO:throw Exception;
+            }
+        } catch (Exception e) {
+            LOG.error("There was an exception {}, during insert {}", e, o.getClass().getSimpleName());
+            throw new OrmException(e);
+        }
+
         return null;
+    }
+
+    public String buildInsertSqlQuery(Object object) {
+        MetaData currentMetaData = metaDataMap.get(object.getClass());
+
+        String tableName = currentMetaData.getEntityDbName();
+        StringBuilder sbFirstPart = new StringBuilder();
+        StringBuilder sbSecondPart = new StringBuilder();
+
+        sbFirstPart.append("INSERT INTO ").append(tableName).append(" (");
+        sbFirstPart.append(currentMetaData.getJoinedInternalFieldsNames());
+//        sbFirstPart.append(currentMetaData.getJoinedExternalFieldsNames());
+        sbFirstPart.append(") ");
+
+        sbSecondPart.append("VALUES (");
+//        sbSecondPart.append(currentMetaData.getJoinedInternalFieldsValues());
+//        sbSecondPart.append(currentMetaData.getJoinedExternalFieldsValues());
+        sbSecondPart.append(");");
+
+        sbFirstPart.append(sbSecondPart.toString());
+
+        return sbFirstPart.toString();
     }
 
     @Override
@@ -206,48 +247,6 @@ public class SessionImpl implements Session {
     @Override
     public Transaction beginTransaction() {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String insert(Object o) throws IllegalAccessException{
-        MetaData metaData = metaDataMap.get(o.getClass());
-        String tableName = metaData.getEntityDbName();
-
-        StringBuilder sbFirstPart = new StringBuilder("INSERT INTO " + tableName + " (");
-        StringBuilder sbSecondPart = new StringBuilder("VALUES (");
-
-        List<Field> fields = metaData.getFields();
-        for (Field f: fields) {
-            f.setAccessible(true);
-            if(f.isAnnotationPresent(Column.class)) {
-                sbFirstPart.append(f.getAnnotation(Column.class).name());
-            } else {
-                sbFirstPart.append(f.getName());
-            }
-            sbFirstPart.append(",");
-
-            if(f.isAnnotationPresent(ManyToOne.class)) {
-                Object object = f.get(o);
-                sbSecondPart.append(getId(object));
-            } else {
-                if(f.get(o) instanceof String) {
-                    sbSecondPart.append("'").append(f.get(o)).append("'");
-                } else {
-                    sbSecondPart.append(f.get(o));
-                }
-            }
-            sbSecondPart.append(",");
-        }
-        sbFirstPart.deleteCharAt(sbFirstPart.length() - 1);
-        sbSecondPart.deleteCharAt(sbSecondPart.length() - 1);
-
-        sbFirstPart.append(") ");
-        sbSecondPart.append(");");
-        sbFirstPart.append(sbSecondPart.toString());
-
-        String result = sbFirstPart.toString();
-        System.out.println(result);
-        return result;
     }
 
     private Object getIdValue(Object o) throws IllegalAccessException {
