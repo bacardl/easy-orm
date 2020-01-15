@@ -70,8 +70,15 @@ public class MetaData {
 
     public String getJoinedExternalFieldsNames() {
         return getExternalMetaField().stream().filter(externalMetaField -> !externalMetaField.isTransitionable())
-                .map(ExternalMetaField::getForeignKeyFieldFullName)
-                .collect(Collectors.joining(","));
+                .map(ExternalMetaField::getForeignKeyFieldFullName).collect(Collectors.joining(","));
+    }
+
+    public long getCountInternalFields() {
+        return getInternalMetaField().stream().filter(internalMetaField -> !internalMetaField.isTransitionable()).count();
+    }
+
+    public long getCountExternalFields() {
+        return getExternalMetaField().stream().filter(externalMetaField -> !externalMetaField.isTransitionable()).count();
     }
 
     public <T> boolean checkIdCompatibility(Class<T> idClazz) {

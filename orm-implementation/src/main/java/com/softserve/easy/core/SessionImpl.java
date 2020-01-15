@@ -64,22 +64,28 @@ public class SessionImpl implements Session {
         StringBuilder sbSecondPart = new StringBuilder();
 
         sbFirstPart.append("INSERT INTO ").append(tableName).append(" (");
-//        for (InternalMetaField internalMetaField : currentMetaData.getInternalMetaField()) {
-//            sbFirstPart.append(internalMetaField.getDbFieldFullName());
-//        }
-        sbFirstPart.append(currentMetaData.getJoinedInternalFieldsNames());
-        sbFirstPart.append(",");
-        sbFirstPart.append(currentMetaData.getJoinedExternalFieldsNames());
-        sbFirstPart.append(") ");
-
         sbSecondPart.append("VALUES (");
-//        sbSecondPart.append(currentMetaData.getJoinedInternalFieldsValues());
-//        sbSecondPart.append(currentMetaData.getJoinedExternalFieldsValues());
-        sbSecondPart.append(");");
-
-        sbFirstPart.append(sbSecondPart.toString());
-
-        return sbFirstPart.toString();
+        for (InternalMetaField internalMetaField : currentMetaData.getInternalMetaField()) {
+            sbFirstPart.append(internalMetaField.getDbFieldFullName());
+        }
+        return "";
+//        sbFirstPart.append("INSERT INTO ").append(tableName).append(" (");
+////        for (InternalMetaField internalMetaField : currentMetaData.getInternalMetaField()) {
+////            sbFirstPart.append(internalMetaField.getDbFieldFullName());
+////        }
+//        sbFirstPart.append(currentMetaData.getJoinedInternalFieldsNames());
+//        sbFirstPart.append(",");
+//        sbFirstPart.append(currentMetaData.getJoinedExternalFieldsNames());
+//        sbFirstPart.append(") ");
+//
+//        sbSecondPart.append("VALUES (");
+////        sbSecondPart.append(currentMetaData.getJoinedInternalFieldsValues());
+////        sbSecondPart.append(currentMetaData.getJoinedExternalFieldsValues());
+//        sbSecondPart.append(");");
+//
+//        sbFirstPart.append(sbSecondPart.toString());
+//
+//        return sbFirstPart.toString();
     }
 
     @Override
