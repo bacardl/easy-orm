@@ -68,6 +68,12 @@ public class MetaData {
                 .collect(Collectors.joining(","));
     }
 
+    public String getJoinedExternalFieldsNames() {
+        return getExternalMetaField().stream().filter(externalMetaField -> !externalMetaField.isTransitionable())
+                .map(ExternalMetaField::getForeignKeyFieldFullName)
+                .collect(Collectors.joining(","));
+    }
+
     public <T> boolean checkIdCompatibility(Class<T> idClazz) {
         return metaFields.get(primaryKey).getFieldType().isAssignableFrom(idClazz);
     }
