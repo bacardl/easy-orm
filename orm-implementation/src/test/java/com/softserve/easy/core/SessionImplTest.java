@@ -1,13 +1,19 @@
 package com.softserve.easy.core;
 
 import com.softserve.easy.cfg.Configuration;
+import com.softserve.easy.entity.Person;
 import com.softserve.easy.simpleEntity.Country;
 import com.softserve.easy.simpleEntity.User;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
+import static org.omg.PortableServer.IdAssignmentPolicyValue.USER_ID;
 
 class SessionImplTest {
     private static final Class<User> USER_CLASS = User.class;
@@ -56,7 +62,7 @@ class SessionImplTest {
     }
     @Test
     void updateEntity(){
-        
+
     }
 
     @Test

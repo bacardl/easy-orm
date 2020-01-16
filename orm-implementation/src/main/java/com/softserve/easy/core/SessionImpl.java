@@ -10,10 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SessionImpl implements Session {
     private static final Logger LOG = LoggerFactory.getLogger(SessionImpl.class);
@@ -177,12 +176,111 @@ public class SessionImpl implements Session {
 
     @Override
     public void update(Object object) {
-        throw new UnsupportedOperationException();
+        if (Objects.isNull(object)) {
+            throw new IllegalArgumentException("The argument cannot be null.");
+        }
+        Class<?> currentClass = object.getClass();
+        MetaData metaData = metaDataMap.get(currentClass);
+        if (Objects.isNull(metaData)) {
+            throw new OrmException(String.format("The %s class isn't mapped by Orm", object.getClass().getSimpleName()));
+        }
+        List<ExternalMetaField> externalMetaFields = metaData.getExternalMetaField();
+        List<InternalMetaField> internalMetaFields = metaData.getInternalMetaField();
+        String updateQuery = buildUpdateQuery(currentClass);
+        try(PreparedStatement statement = connection.prepareStatement(updateQuery)){
+            List<String> parameters = collectUpdateParameters(internalMetaFields,externalMetaFields,object);
+            for (int i = 0; i < parameters.size(); i++){
+                statement.setObject(i+1,parameters.get(i));
+            }
+            statement.executeQuery();
+        } catch (Exception e){
+            LOG.error("There was an exception {}, during update query for {} ", e, object.getClass().getSimpleName() );
+            throw new OrmException(e);
+        }
+    }
+
+    private String buildUpdateQuery(Class<?> currentClass) {
+        MetaData classMetaData = metaDataMap.get(currentClass);
+        List<String> foreignKeyFieldNames = getForeignKeyFieldNames(classMetaData);
+        List<String> internalFieldNames = getInternalFieldNames(classMetaData);
+        foreignKeyFieldNames = foreignKeyFieldNames.stream()
+                .map(foreignKeyFieldName -> foreignKeyFieldName + " = ?")
+                .collect(Collectors.toList());
+        internalFieldNames = internalFieldNames.stream()
+                .map(internalFieldName -> internalFieldName + " = ?")
+                .collect(Collectors.toList());
+        StringBuilder query = new StringBuilder()
+                .append("UPDATE ")
+                .append(classMetaData.getEntityDbName())
+                .append(" SET (")
+                .append(String.join(",", foreignKeyFieldNames))
+                .append(String.join(",", internalFieldNames))
+                .append(" WHERE ")
+                .append(classMetaData.getPkMetaField().getDbFieldName())
+                .append(" = ? ;");
+        return query.toString();
+    }
+
+    private List<String> getForeignKeyFieldNames(MetaData classMetaData) {
+        List<ExternalMetaField> externalMetaFields = classMetaData.getExternalMetaField();
+        return externalMetaFields.stream()
+                .map(ExternalMetaField::getForeignKeyFieldName)
+                .collect(Collectors.toList());
+    }
+
+    private List<String> getInternalFieldNames(MetaData classMetaData) {
+        List<InternalMetaField> internalMetaFields = classMetaData.getInternalMetaField();
+        return internalMetaFields.stream()
+                .map(InternalMetaField::getDbFieldName)
+                .collect(Collectors.toList());
+    }
+
+    private List<String> collectUpdateParameters(List<InternalMetaField> internalMetaFields, List<ExternalMetaField> externalMetaFields, Object object) throws IllegalAccessException {
+        List<String> parameters = new ArrayList<>();
+        for (ExternalMetaField externalMetaField : externalMetaFields){
+            Object externalObject = externalMetaField.getField().get(object);
+            if(Objects.isNull(externalObject)){
+                parameters.add("NULL");
+            } else {
+                MetaData externalClassMetaData = metaDataMap.get(externalObject.getClass());
+                parameters.add(externalClassMetaData.getPrimaryKey().get(externalObject).toString());
+            }
+        }
+        for (InternalMetaField internalMetaField : internalMetaFields) {
+            if(Objects.isNull(internalMetaField)){
+                parameters.add("NULL");
+            } else {
+                parameters.add(internalMetaField.getField().get(object).toString());
+            }
+
+        }
+        return parameters;
     }
 
     @Override
     public void delete(Object object) {
-        throw new UnsupportedOperationException();
+        if (Objects.isNull(object)) {
+            throw new IllegalArgumentException("The argument cannot be null.");
+        }
+        Class<?> currentClass = object.getClass();
+        MetaData metaData = metaDataMap.get(object.getClass());
+        if (Objects.isNull(metaData)) {
+            throw new OrmException(String.format("The %s class isn't mapped by Orm", object.getClass().getSimpleName()));
+        }
+        StringBuilder query = new StringBuilder();
+        query.append("DELETE FROM ")
+                .append(metaDataMap.get(currentClass).getEntityDbName())
+                .append(" WHERE ")
+                .append(metaDataMap.get(currentClass).getPrimaryKey())
+                .append(" = ")
+                .append("?");
+        try(PreparedStatement statement = connection.prepareStatement(query.toString())) {
+            statement.setObject(1,metaDataMap.get(currentClass).getPrimaryKey().get(object));
+            statement.executeQuery();
+        } catch (SQLException | IllegalAccessException e) {
+            LOG.error("There was an exception {}, during delete query for {} by {}", e, object.getClass().getSimpleName(), object.toString());
+            throw new OrmException(e);
+        }
     }
 
     @Override
@@ -204,6 +302,7 @@ public class SessionImpl implements Session {
     public Transaction beginTransaction() {
         throw new UnsupportedOperationException();
     }
+    //redundant until implementation of cascade
     private void recursiveDelete(Stack<String> query, Set<Class<?>> traversedClasses, Object object) {
         Class<?> currentClass = object.getClass();
         List<ExternalMetaField> externalFields = metaDataMap.get(object.getClass()).getExternalMetaField();
@@ -215,6 +314,7 @@ public class SessionImpl implements Session {
             e.printStackTrace();
         }
         traversedClasses.add(currentClass);
+
         if (externalFields.size() != 0) {
             for (ExternalMetaField externalField : externalFields) {
                 if (!traversedClasses.contains(externalField.getFieldType())) {
