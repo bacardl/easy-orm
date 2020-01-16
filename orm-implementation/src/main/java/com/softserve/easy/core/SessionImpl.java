@@ -60,15 +60,23 @@ public class SessionImpl implements Session {
         MetaData currentMetaData = metaDataMap.get(object.getClass());
 
         String tableName = currentMetaData.getEntityDbName();
-        StringBuilder sbFirstPart = new StringBuilder();
-        StringBuilder sbSecondPart = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
-        sbFirstPart.append("INSERT INTO ").append(tableName).append(" (");
-        sbSecondPart.append("VALUES (");
-        for (InternalMetaField internalMetaField : currentMetaData.getInternalMetaField()) {
-            sbFirstPart.append(internalMetaField.getDbFieldFullName());
+        sb.append("INSERT INTO ").append(tableName).append(" (");
+        sb.append(currentMetaData.getJoinedInternalFieldsNames());
+        sb.append(",");
+        sb.append(currentMetaData.getJoinedExternalFieldsNames());
+        sb.append(") ");
+        sb.append("VALUES (");
+        long countInAndExFields = currentMetaData.getCountInternalFields() + currentMetaData.getCountExternalFields();
+        for(int i = 0; i < countInAndExFields; i++){
+            sb.append("?");
+            if(i + 1 < countInAndExFields) {
+                sb.append(",");
+            }
         }
-        return "";
+        sb.append(");");
+        return sb.toString();
 //        sbFirstPart.append("INSERT INTO ").append(tableName).append(" (");
 ////        for (InternalMetaField internalMetaField : currentMetaData.getInternalMetaField()) {
 ////            sbFirstPart.append(internalMetaField.getDbFieldFullName());
