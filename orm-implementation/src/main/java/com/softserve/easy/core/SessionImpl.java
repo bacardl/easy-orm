@@ -186,20 +186,22 @@ public class SessionImpl implements Session {
         }
         List<ExternalMetaField> externalMetaFields = metaData.getExternalMetaField();
         List<InternalMetaField> internalMetaFields = metaData.getInternalMetaField();
+        internalMetaFields.remove(metaData.getPkMetaField());
         String updateQuery = buildUpdateQuery(currentClass);
-        try(PreparedStatement statement = connection.prepareStatement(updateQuery)){
-            List<String> parameters = collectUpdateParameters(internalMetaFields,externalMetaFields,object);
-            for (int i = 0; i < parameters.size(); i++){
-                statement.setObject(i+1,parameters.get(i));
+        try (PreparedStatement statement = connection.prepareStatement(updateQuery)) {
+            List<Object> parameters = collectUpdateParameters(internalMetaFields, externalMetaFields, object, metaData);
+            for (int i = 0; i < parameters.size(); i++) {
+                statement.setObject(i + 1, parameters.get(i));
             }
-            statement.executeQuery();
-        } catch (Exception e){
-            LOG.error("There was an exception {}, during update query for {} ", e, object.getClass().getSimpleName() );
-            throw new OrmException(e);
+            int rows = statement.executeUpdate();
+            connection.commit();
+            LOG.info("-------ROWS AFFECTED " + rows + "-------");
+        } catch (Exception e) {
+            LOG.error("There was an exception {}, during update query for {} ", e, object.getClass().getSimpleName());
         }
     }
 
-    private String buildUpdateQuery(Class<?> currentClass) {
+    public String buildUpdateQuery(Class<?> currentClass) {
         MetaData classMetaData = metaDataMap.get(currentClass);
         List<String> foreignKeyFieldNames = getForeignKeyFieldNames(classMetaData);
         List<String> internalFieldNames = getInternalFieldNames(classMetaData);
@@ -212,8 +214,9 @@ public class SessionImpl implements Session {
         StringBuilder query = new StringBuilder()
                 .append("UPDATE ")
                 .append(classMetaData.getEntityDbName())
-                .append(" SET (")
+                .append(" SET ")
                 .append(String.join(",", foreignKeyFieldNames))
+                .append(", ")
                 .append(String.join(",", internalFieldNames))
                 .append(" WHERE ")
                 .append(classMetaData.getPkMetaField().getDbFieldName())
@@ -230,30 +233,38 @@ public class SessionImpl implements Session {
 
     private List<String> getInternalFieldNames(MetaData classMetaData) {
         List<InternalMetaField> internalMetaFields = classMetaData.getInternalMetaField();
+        internalMetaFields.remove(classMetaData.getPkMetaField());
         return internalMetaFields.stream()
                 .map(InternalMetaField::getDbFieldName)
                 .collect(Collectors.toList());
     }
 
-    private List<String> collectUpdateParameters(List<InternalMetaField> internalMetaFields, List<ExternalMetaField> externalMetaFields, Object object) throws IllegalAccessException {
-        List<String> parameters = new ArrayList<>();
+    private List<Object> collectUpdateParameters(List<InternalMetaField> internalMetaFields, List<ExternalMetaField> externalMetaFields, Object object, MetaData metaData) throws IllegalAccessException {
+        List<Object> parameters = new ArrayList<>();
         for (ExternalMetaField externalMetaField : externalMetaFields){
+            checkAndProvideAccessibility(externalMetaField.getField());
             Object externalObject = externalMetaField.getField().get(object);
             if(Objects.isNull(externalObject)){
-                parameters.add("NULL");
+                parameters.add(null);
             } else {
                 MetaData externalClassMetaData = metaDataMap.get(externalObject.getClass());
-                parameters.add(externalClassMetaData.getPrimaryKey().get(externalObject).toString());
+                checkAndProvideAccessibility(externalClassMetaData.getPrimaryKey());
+                parameters.add(externalClassMetaData.getPrimaryKey().get(externalObject));
             }
         }
         for (InternalMetaField internalMetaField : internalMetaFields) {
-            if(Objects.isNull(internalMetaField)){
-                parameters.add("NULL");
+            checkAndProvideAccessibility(internalMetaField.getField());
+            Object internalObject = internalMetaField.getField().get(object);
+            if(Objects.isNull(internalObject)){
+                parameters.add(null);
             } else {
-                parameters.add(internalMetaField.getField().get(object).toString());
+                parameters.add(internalMetaField.getField().get(object));
             }
 
         }
+        Field pkField = metaData.getPkMetaField().getField();
+        checkAndProvideAccessibility(pkField);
+        parameters.add(metaData.getPkMetaField().getField().get(object));
         return parameters;
     }
 
@@ -267,42 +278,57 @@ public class SessionImpl implements Session {
         if (Objects.isNull(metaData)) {
             throw new OrmException(String.format("The %s class isn't mapped by Orm", object.getClass().getSimpleName()));
         }
-        StringBuilder query = new StringBuilder();
-        query.append("DELETE FROM ")
-                .append(metaDataMap.get(currentClass).getEntityDbName())
-                .append(" WHERE ")
-                .append(metaDataMap.get(currentClass).getPrimaryKey())
-                .append(" = ")
-                .append("?");
-        try(PreparedStatement statement = connection.prepareStatement(query.toString())) {
-            statement.setObject(1,metaDataMap.get(currentClass).getPrimaryKey().get(object));
-            statement.executeQuery();
+        Field pkField = metaData.getPrimaryKey();
+       checkAndProvideAccessibility(pkField);
+        String query = buildDeleteQuery(metaData);
+        try(PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setObject(1,pkField.get(object).toString());
+            statement.execute();
         } catch (SQLException | IllegalAccessException e) {
             LOG.error("There was an exception {}, during delete query for {} by {}", e, object.getClass().getSimpleName(), object.toString());
             throw new OrmException(e);
         }
     }
 
-    @Override
-    public void clear() {
-        throw new UnsupportedOperationException();
+    private String buildDeleteQuery(MetaData metaData) {
+        StringBuilder query = new StringBuilder();
+        query.append("DELETE FROM ")
+                .append(metaDataMap.get(metaData.getEntityClass()).getEntityDbName())
+                .append(" WHERE ")
+                .append(metaData.getPkMetaField().getDbFieldFullName())
+                .append(" = ")
+                .append("?");
+        return query.toString();
+    }
+    public String buildDeleteSqlQuery(Object object) {
+        if (Objects.isNull(object)) {
+            throw new IllegalArgumentException("The argument cannot be null.");
+        }
+        Class<?> currentClass = object.getClass();
+        MetaData metaData = metaDataMap.get(object.getClass());
+        if (Objects.isNull(metaData)) {
+            throw new OrmException(String.format("The %s class isn't mapped by Orm", object.getClass().getSimpleName()));
+        }
+        Field pkField = metaData.getPrimaryKey();
+        if(!pkField.isAccessible()){
+            pkField.setAccessible(true);
+        }
+        StringBuilder query = new StringBuilder();
+        query.append("DELETE FROM ")
+                .append(metaDataMap.get(metaData.getEntityClass()).getEntityDbName())
+                .append(" WHERE ")
+                .append(metaData.getPkMetaField().getDbFieldFullName())
+                .append(" = ")
+                .append("?");
+        return query.toString();
     }
 
-    @Override
-    public void flush() {
-        throw new UnsupportedOperationException();
+    private void checkAndProvideAccessibility(Field field){
+        if(!field.isAccessible()){
+            field.setAccessible(true);
+        }
     }
 
-    @Override
-    public void close() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Transaction beginTransaction() {
-        throw new UnsupportedOperationException();
-    }
-    //redundant until implementation of cascade
     private void recursiveDelete(Stack<String> query, Set<Class<?>> traversedClasses, Object object) {
         Class<?> currentClass = object.getClass();
         List<ExternalMetaField> externalFields = metaDataMap.get(object.getClass()).getExternalMetaField();
@@ -329,5 +355,29 @@ public class SessionImpl implements Session {
             }
         }
     }
+
+
+
+    @Override
+    public void clear() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void flush() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void close() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Transaction beginTransaction() {
+        throw new UnsupportedOperationException();
+    }
+    //redundant until implementation of cascade
+
 }
 

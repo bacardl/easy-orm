@@ -1,0 +1,33 @@
+COUNTRIES:
+  - CODE: 100
+    NAME: "United States"
+  - CODE: 200
+    NAME: "United Kingdom"
+  - CODE: 300
+    NAME: "Ukraine"
+  - CODE: 400
+    NAME: "Zambia"
+  - CODE: 500
+    NAME: "Australia"
+
+USERS:
+  - ID: 1
+    USERNAME: "Youghoss1978"
+    PASSWORD: "$2y$10$RXyt4zu9H3PVKv5hE4Sln.FLsTgAakX5Ig7csH.0K58SwAwHVN8DG"
+    EMAIL: "FredJPhillips@teleworm.us"
+    COUNTRY_CODE: 100
+  - ID: 2
+    USERNAME: "Shom1995"
+    PASSWORD: "$2y$10$aweUAddEdQodJoxB2/ajEePYg4ZZuDewc1riewCnebR2MG9jT2tTy"
+    EMAIL: "CalvinDHenry@teleworm.us"
+    COUNTRY_CODE: 200
+  - ID: 4
+    USERNAME: "Ralithaten"
+    PASSWORD: "$2y$10$rvQQK4YS7MRMZPkGN32bSOiwiXsi8xwQ4bEY7JzpzJtZlO3TZ.g7i"
+    EMAIL: "WalterTAlvarado@armyspy.com"
+    COUNTRY_CODE: 500
+  - ID: 5
+    USERNAME: "Witeasteme1999"
+    PASSWORD: "$2y$10$6zQ1d7RuE.bnnlCCN4JVC.fZMGzIAMSoqw0/wJT5rTsEHhxwOcEM."
+    EMAIL: "KellyRStoller@rhyta.com"
+    COUNTRY_CODE: 300

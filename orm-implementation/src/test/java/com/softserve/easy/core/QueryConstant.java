@@ -18,4 +18,6 @@ public class QueryConstant {
     public static final String SELECT_COUNTRY_QUERY_WITHOUT_SCHEMA_NAME =
             "SELECT countries.code,countries.name " +
                     "FROM countries;";
+    public static final  String DELETE_USER_QUERY_WHERE_PRIMARYKEY =
+            "DELETE FROM users WHERE users.id = ?";
 }
