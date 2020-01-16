@@ -14,7 +14,6 @@ public class QueryConstant {
                     "ON users.country_code = countries.code " +
                     "WHERE users.id = ?;";
 
-
     public static final String SELECT_COUNTRY_QUERY_WITHOUT_SCHEMA_NAME =
             "SELECT countries.code,countries.name " +
                     "FROM countries;";
