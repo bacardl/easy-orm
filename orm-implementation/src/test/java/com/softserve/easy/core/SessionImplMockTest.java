@@ -24,7 +24,7 @@ class SessionImplMockTest {
 
     @Before
     public void setUp() {
-        session = new SessionImpl(connection, metaDataMap, dependencyGraph);
+//        session = new SessionImpl(connection, metaDataMap, dependencyGraph);
         MockitoAnnotations.initMocks(this);
     }
 

@@ -22,7 +22,6 @@
         <junit.jupiter.version>5.5.2</junit.jupiter.version>
         <hsqldb.version>2.5.0</hsqldb.version>
         <rider-core.version>1.9.1</rider-core.version>
-        <assertj-core.version>3.14.0</assertj-core.version>
         <!--EndLib-->
         <!--https://junit.org/junit5/docs/current/user-guide/#running-tests-ide-->
         <junit-platform-launcher.version>1.5.2</junit-platform-launcher.version>
@@ -83,12 +82,6 @@
             <groupId>org.dbunit</groupId>
             <artifactId>dbunit</artifactId>
             <version>${dbunit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>${assertj-core.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

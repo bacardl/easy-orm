@@ -1,8 +1,7 @@
 package com.softserve.easy.core;
 
 import com.softserve.easy.exception.OrmException;
-import com.softserve.easy.meta.DependencyGraph;
-import com.softserve.easy.meta.MetaData;
+import com.softserve.easy.meta.MetaContext;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -11,22 +10,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SessionFactoryImpl implements SessionFactory {
     private final Map<Thread, Session> sessionsMap = new ConcurrentHashMap<>();
+    private final MetaContext metaContext;
     private final DataSource dataSource;
-    private final Map<Class<?>, MetaData> metaDataMap;
-    private final DependencyGraph dependencyGraph;
-
     private boolean closed;
 
-    public SessionFactoryImpl(DataSource dataSource, Map<Class<?>, MetaData> metaDataMap, DependencyGraph dependencyGraph) {
+    public SessionFactoryImpl(DataSource dataSource, MetaContext metaContext) {
         this.dataSource = dataSource;
-        this.metaDataMap = metaDataMap;
-        this.dependencyGraph = dependencyGraph;
+        this.metaContext = metaContext;
     }
 
     @Override
     public Session openSession() {
         try {
-            Session session = new SessionImpl(dataSource.getConnection(), metaDataMap, dependencyGraph);
+            Session session = new SessionImpl(dataSource.getConnection(), metaContext);
             sessionsMap.put(Thread.currentThread(), session);
             return session;
         } catch (SQLException e) {

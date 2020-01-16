@@ -1,7 +1,7 @@
 package com.softserve.easy.core;
 
 import com.softserve.easy.exception.OrmException;
-import com.softserve.easy.meta.DependencyGraph;
+import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
 import com.softserve.easy.meta.field.ExternalMetaField;
 import com.softserve.easy.meta.field.InternalMetaField;
@@ -13,20 +13,22 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 public class SessionImpl implements Session {
     private static final Logger LOG = LoggerFactory.getLogger(SessionImpl.class);
 
-    private Connection connection;
-    private Map<Class<?>, MetaData> metaDataMap;
-    private DependencyGraph dependencyGraph;
+    private final Connection connection;
+    private final MetaContext metaContext;
+
     private Transaction transaction;
 
-    public SessionImpl(Connection connection, Map<Class<?>, MetaData> metaDataMap, DependencyGraph dependencyGraph) {
+    public SessionImpl(Connection connection, MetaContext metaContext) {
         this.connection = connection;
-        this.metaDataMap = metaDataMap;
-        this.dependencyGraph = dependencyGraph;
+        this.metaContext = metaContext;
     }
 
     @Override
@@ -39,7 +41,7 @@ public class SessionImpl implements Session {
         if (Objects.isNull(entityType) || Objects.isNull(id)) {
             throw new IllegalArgumentException("The arguments cannot be null.");
         }
-        MetaData metaData = metaDataMap.get(entityType);
+        MetaData metaData = metaContext.getMetaDataMap().get(entityType);
         if (Objects.isNull(metaData)) {
             throw new OrmException(String.format("The %s class isn't mapped by Orm", entityType.getSimpleName()));
         }
@@ -75,7 +77,7 @@ public class SessionImpl implements Session {
     }
 
     public <T> Optional<T> buildEntity(Class<T> entityType, ResultSet resultSet) throws Exception {
-        MetaData entityMetaData = metaDataMap.get(entityType);
+        MetaData entityMetaData = metaContext.getMetaDataMap().get(entityType);
         List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
         List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
         // TODO: implement PROXY
@@ -112,8 +114,8 @@ public class SessionImpl implements Session {
 
     // it could be expanded
     public String buildSelectSqlQueryWithWhereClause(Class<?> rootType, String fieldName) {
-        MetaData rootMetaData = metaDataMap.get(rootType);
-        Set<Class<?>> implicitDependencies = dependencyGraph.getImplicitDependencies(rootType);
+        MetaData rootMetaData = metaContext.getMetaDataMap().get(rootType);
+        Set<Class<?>> implicitDependencies = metaContext.getDependencyGraph().getImplicitDependencies(rootType);
         List<ExternalMetaField> externalMetaField = rootMetaData.getExternalMetaField();
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -121,7 +123,10 @@ public class SessionImpl implements Session {
         stringBuilder.append(" SELECT ")
                 .append(rootMetaData.getJoinedInternalFieldsNames());
         implicitDependencies.forEach(classDependency ->
-                stringBuilder.append(",").append(metaDataMap.get(classDependency).getJoinedInternalFieldsNames())
+                stringBuilder.append(",").append(metaContext
+                        .getMetaDataMap()
+                        .get(classDependency)
+                        .getJoinedInternalFieldsNames())
         );
         // #/SELECT CLAUSE
 
@@ -132,7 +137,7 @@ public class SessionImpl implements Session {
 
         // #JOIN CLAUSE
         externalMetaField.forEach(exField -> {
-                    MetaData childMetaData = metaDataMap.get(exField.getFieldType());
+                    MetaData childMetaData = metaContext.getMetaDataMap().get(exField.getFieldType());
                     stringBuilder.append(getLeftJoinStatement(
                             childMetaData.getEntityDbName(),
                             exField.getForeignKeyFieldFullName(),
