@@ -18,49 +18,58 @@ public class MetaData {
     private final List<Field> fields;
 
     private final List<Annotation> annotations;
-    private final String entityDbTableName;
+    private final String entityDbName;
 
     private final Field primaryKey;
-    private final Map<Field, AbstractMetaField> metaFields;
+    private Map<Field, AbstractMetaField> metaFields;
 
     public MetaData(Class<?> entityClass, String entityClassName, List<Field> fields, List<Annotation> annotations,
-                    String entityDbTableName, Field primaryKey, Map<Field, AbstractMetaField> metaFields) {
+                    String entityDbName, Field primaryKey, Map<Field, AbstractMetaField> metaFields) {
         this.entityClass = entityClass;
         this.entityClassName = entityClassName;
         this.fields = fields;
         this.annotations = annotations;
-        this.entityDbTableName = entityDbTableName;
+        this.entityDbName = entityDbName;
         this.primaryKey = primaryKey;
         this.metaFields = metaFields;
+    }
+
+    public InternalMetaField getPkMetaField() {
+        return (InternalMetaField) metaFields.get(primaryKey);
     }
 
     public List<InternalMetaField> getInternalMetaField() {
         return metaFields.values().stream()
                 .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.INTERNAL))
-                .map(abstractMetaField -> (InternalMetaField)abstractMetaField)
+                .map(abstractMetaField -> (InternalMetaField) abstractMetaField)
                 .collect(Collectors.toList());
     }
 
     public List<ExternalMetaField> getExternalMetaField() {
         return metaFields.values().stream()
                 .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.EXTERNAL))
-                .map(abstractMetaField -> (ExternalMetaField)abstractMetaField)
+                .map(abstractMetaField -> (ExternalMetaField) abstractMetaField)
                 .collect(Collectors.toList());
     }
 
     public List<CollectionMetaField> getCollectionMetaField() {
         return metaFields.values().stream()
                 .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.COLLECTION))
-                .map(abstractMetaField -> (CollectionMetaField)abstractMetaField)
+                .map(abstractMetaField -> (CollectionMetaField) abstractMetaField)
                 .collect(Collectors.toList());
     }
 
-    public <T> boolean checkIdCompatibility(Class<T> idClazz) {
-        return metaFields.get(primaryKey).getFieldType().equals(idClazz);
+    /**
+     * @return joined by comma separator column names, checks if the field is transitionable
+     */
+    public String getJoinedInternalFieldsNames() {
+        return getInternalMetaField().stream().filter(internalMetaField -> !internalMetaField.isTransitionable())
+                .map(InternalMetaField::getDbFieldFullName)
+                .collect(Collectors.joining(","));
     }
 
-    public <T> boolean checkTypeCompatibility(Class<T> entityType) {
-        return entityClass.equals(entityType);
+    public <T> boolean checkIdCompatibility(Class<T> idClazz) {
+        return metaFields.get(primaryKey).getFieldType().isAssignableFrom(idClazz);
     }
 
     public Class<?> getEntityClass() {
@@ -79,8 +88,8 @@ public class MetaData {
         return annotations;
     }
 
-    public String getEntityDbTableName() {
-        return entityDbTableName;
+    public String getEntityDbName() {
+        return entityDbName;
     }
 
     public Field getPrimaryKey() {
@@ -91,4 +100,7 @@ public class MetaData {
         return metaFields;
     }
 
+    public void setMetaFields(Map<Field, AbstractMetaField> metaFields) {
+        this.metaFields = metaFields;
+    }
 }

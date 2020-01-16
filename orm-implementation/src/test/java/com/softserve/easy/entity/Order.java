@@ -1,6 +1,6 @@
 package com.softserve.easy.entity;
 
-import com.softserve.easy.annotation.Entity;
+import com.softserve.easy.annotation.*;
 
 import java.util.Date;
 import java.util.List;
@@ -8,14 +8,14 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 @Entity(name = "Order")
-// @Table(name = "orders")
+@Table(name = "orders")
 public class Order {
-    // @Id
+     @Id
     // @GeneratedValue
     private Long id;
 
-    // @Column(name = "")
-    // @ManyToOne
+     @Column(name = "")
+     @ManyToOne
     // @JoinColumn(name="user_id", nullable=false)
     private User user;
     private String status;

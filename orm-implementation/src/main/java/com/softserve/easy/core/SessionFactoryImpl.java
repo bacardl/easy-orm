@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SessionFactoryImpl implements SessionFactory{
+public class SessionFactoryImpl implements SessionFactory {
     private final Map<Thread, Session> sessionsMap = new ConcurrentHashMap<>();
     private final DataSource dataSource;
     private final Map<Class<?>, MetaData> metaDataMap;
@@ -26,7 +26,7 @@ public class SessionFactoryImpl implements SessionFactory{
     @Override
     public Session openSession() {
         try {
-            Session session = new SessionImpl(dataSource.getConnection());
+            Session session = new SessionImpl(dataSource.getConnection(), metaDataMap, dependencyGraph);
             sessionsMap.put(Thread.currentThread(), session);
             return session;
         } catch (SQLException e) {
@@ -36,7 +36,7 @@ public class SessionFactoryImpl implements SessionFactory{
 
     @Override
     public Session getCurrentSession() {
-        return sessionsMap.getOrDefault(Thread.currentThread(),this.openSession());
+        return sessionsMap.getOrDefault(Thread.currentThread(), this.openSession());
     }
 
     @Override

@@ -52,7 +52,7 @@ class MetaDataParserTest {
 
     @Test
     void createMetaFieldsForUserClass() {
-        Map<Field, AbstractMetaField> metaFields = MetaDataParser.createMetaFields(USER_CLASS);
+        Map<Field, AbstractMetaField> metaFields = MetaDataParser.createMetaFields(MetaDataParser.analyzeClass(USER_CLASS));
 
         assertThat(metaFields, aMapWithSize(NUMBER_OF_FIELDS_OF_USER_CLASS));
 

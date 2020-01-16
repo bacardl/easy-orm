@@ -1,15 +1,48 @@
 package com.softserve.easy.meta.field;
 
 import com.google.common.base.MoreObjects;
-import com.softserve.easy.meta.MappingType;
+import com.softserve.easy.meta.MetaData;
+
+import java.lang.reflect.Field;
 
 public class ExternalMetaField extends AbstractMetaField {
     private final String foreignKeyFieldName;
 
-    public ExternalMetaField(Class<?> fieldType, MappingType mappingType, boolean transitionable, String fieldName,
-                                String foreignKeyFieldName) {
-        super(fieldType, mappingType, transitionable, fieldName);
-        this.foreignKeyFieldName = foreignKeyFieldName;
+    public String getForeignKeyFieldName() {
+        return foreignKeyFieldName;
+    }
+
+    public String getForeignKeyFieldFullName() {
+        return metaData.getEntityDbName() + "." + foreignKeyFieldName;
+    }
+
+    protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
+        private String foreignKeyFieldName;
+
+        public T foreignKeyFieldName(String foreignKeyFieldName) {
+            this.foreignKeyFieldName = foreignKeyFieldName;
+            return self();
+        }
+
+        public ExternalMetaField build() {
+            return new ExternalMetaField(this);
+        }
+    }
+
+    public static class Builder extends Init<Builder> {
+        public Builder(Field field, MetaData metaData) {
+            this.field = field;
+            this.metaData = metaData;
+        }
+        @Override
+        protected Builder self() {
+            return this;
+        }
+    }
+
+    protected ExternalMetaField(Init<?> init) {
+        super(init);
+        this.foreignKeyFieldName = init.foreignKeyFieldName;
     }
 
     @Override

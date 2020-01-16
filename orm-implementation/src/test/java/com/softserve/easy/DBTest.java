@@ -17,12 +17,15 @@ import java.sql.Statement;
 
 @RunWith(JUnit4.class)
 @DataSet(
-        value = "dataset/yml/user/user.yml",
+        value = "dataset/complex/yml/user/user.yml",
         strategy = SeedStrategy.CLEAN_INSERT,
-        executeScriptsBefore = {"dataset/db-schema.sql"})
+        executeScriptsBefore = {"dataset/complex/db-schema.sql"})
 public class DBTest {
     @Rule
     public DBUnitRule dbUnitRule = DBUnitRule.instance();
+
+
+
 
 //    private static Session session;
 //

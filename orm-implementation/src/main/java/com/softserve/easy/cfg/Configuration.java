@@ -7,12 +7,14 @@ import com.softserve.easy.helper.ClassScanner;
 import com.softserve.easy.helper.MetaDataParser;
 import com.softserve.easy.meta.DependencyGraph;
 import com.softserve.easy.meta.MetaData;
+import com.softserve.easy.meta.field.AbstractMetaField;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Field;
 import java.util.*;
 
 import static com.softserve.easy.cfg.ConfigPropertyConstant.*;
@@ -26,11 +28,12 @@ public class Configuration {
 
     public Configuration() {
         this.properties = Environment.getProperties();
-        this.observedClasses = ClassScanner.getAnnotatedClasses(Entity.class);
+        this.observedClasses = ClassScanner.getAnnotatedClasses(Entity.class,
+                Objects.requireNonNull(properties.getProperty(ENTITY_PACKAGE_PROPERTY)));
         this.classConfig = new HashMap<>();
 
         for (Class<?> observedClass : observedClasses) {
-            classConfig.put(observedClass, MetaDataParser.analyzeClass(observedClass));
+            addEntityToConfig(observedClass);
         }
         this.dependencyGraph = new DependencyGraph(observedClasses);
     }
@@ -43,7 +46,7 @@ public class Configuration {
         {
             if (MetaDataParser.isEntityAnnotatedClass(annotatedClass))
             {
-                classConfig.put(annotatedClass, MetaDataParser.analyzeClass(annotatedClass));
+                addEntityToConfig(annotatedClass);
             } else {
                 throw new IllegalArgumentException("annotatedClass must be annotated by @Entity");
             }
@@ -54,10 +57,17 @@ public class Configuration {
         return this;
     }
 
+    // creates meta data, creates meta fields and populates(links) meta fields to meta data
+    private void addEntityToConfig(Class<?> annotatedClass) {
+        MetaData metaData = MetaDataParser.analyzeClass(annotatedClass);
+        Map<Field, AbstractMetaField> metaFields = MetaDataParser.createMetaFields(metaData);
+        metaData.setMetaFields(metaFields);
+        classConfig.put(annotatedClass, metaData);
+    }
 
 
     public Configuration setProperty(String propertyName, String value) {
-        properties.setProperty( propertyName, value );
+        properties.setProperty(propertyName, value);
         return this;
     }
 
