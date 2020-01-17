@@ -1,7 +1,6 @@
 package com.softserve.easy.core;
 
 import com.softserve.easy.annotation.Id;
-import com.softserve.easy.annotation.ManyToOne;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.DependencyGraph;
 import com.softserve.easy.meta.MetaData;
@@ -124,23 +123,19 @@ public class SessionImpl implements Session {
         return sb.toString();
     }
 
-    private Object getIdValue(Object o){
-        Field[] fields = o.getClass().getDeclaredFields();
-        for(Field f: fields) {
-            f.setAccessible(true);
-            if(f.isAnnotationPresent(Id.class)) {
-                try {
-                    return f.get(o);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return null;
+    private Object getIdValue(Object object) throws IllegalAccessException {
+        MetaData currentMetaData = metaDataMap.get(object.getClass());
+        currentMetaData.getPrimaryKey().setAccessible(true);
+        return  currentMetaData.getPrimaryKey().get(object);
     }
 
     private boolean hasId(Object o) {
-        return getIdValue(o) != null;
+        try {
+            return getIdValue(o) != null;
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
@@ -283,11 +278,6 @@ public class SessionImpl implements Session {
                 .append(childPkName);
         return stringBuilder.toString();
     }
-
-//    public boolean hasObjectsId(Object o) {
-//
-//        return
-//    }
 
     @Override
     public void update(Object object) {
