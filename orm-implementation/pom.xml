@@ -22,7 +22,6 @@
         <junit.jupiter.version>5.5.2</junit.jupiter.version>
         <hsqldb.version>2.5.0</hsqldb.version>
         <rider-core.version>1.9.1</rider-core.version>
-        <assertj-core.version>3.14.0</assertj-core.version>
         <!--EndLib-->
         <!--https://junit.org/junit5/docs/current/user-guide/#running-tests-ide-->
         <junit-platform-launcher.version>1.5.2</junit-platform-launcher.version>
@@ -32,6 +31,9 @@
         <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
         <!--plugin-->
         <junit-platform-runner.version>1.5.2</junit-platform-runner.version>
+        <hamcrest-library.version>2.1</hamcrest-library.version>
+        <mockito-core.version>3.2.4</mockito-core.version>
+        <sqlbuilder.version>3.0.0</sqlbuilder.version>
     </properties>
 
     <dependencies>
@@ -68,19 +70,19 @@
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-library</artifactId>
-            <version>2.1</version>
+            <version>${hamcrest-library.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito-core.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.dbunit</groupId>
             <artifactId>dbunit</artifactId>
             <version>${dbunit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>${assertj-core.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -104,6 +106,11 @@
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>${HikariCP.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.healthmarketscience.sqlbuilder</groupId>
+            <artifactId>sqlbuilder</artifactId>
+            <version>${sqlbuilder.version}</version>
         </dependency>
     </dependencies>
 

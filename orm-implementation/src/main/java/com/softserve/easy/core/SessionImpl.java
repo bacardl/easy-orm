@@ -1,7 +1,7 @@
 package com.softserve.easy.core;
 
 import com.softserve.easy.exception.OrmException;
-import com.softserve.easy.meta.DependencyGraph;
+import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
 import com.softserve.easy.meta.field.ExternalMetaField;
 import com.softserve.easy.meta.field.InternalMetaField;
@@ -13,19 +13,26 @@ import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+
 
 public class SessionImpl implements Session {
     private static final Logger LOG = LoggerFactory.getLogger(SessionImpl.class);
 
-    private Connection connection;
-    private Map<Class<?>, MetaData> metaDataMap;
-    private DependencyGraph dependencyGraph;
+    private final Connection connection;
+    private final MetaContext metaContext;
+
     private Transaction transaction;
 
-    public SessionImpl(Connection connection, Map<Class<?>, MetaData> metaDataMap, DependencyGraph dependencyGraph) {
+    public SessionImpl(Connection connection, MetaContext metaContext) {
         this.connection = connection;
-        this.metaDataMap = metaDataMap;
-        this.dependencyGraph = dependencyGraph;
+        this.metaContext = metaContext;
     }
 
     @Override
@@ -38,7 +45,7 @@ public class SessionImpl implements Session {
         if (Objects.isNull(entityType) || Objects.isNull(id)) {
             throw new IllegalArgumentException("The arguments cannot be null.");
         }
-        MetaData metaData = metaDataMap.get(entityType);
+        MetaData metaData = metaContext.getMetaDataMap().get(entityType);
         if (Objects.isNull(metaData)) {
             throw new OrmException(String.format("The %s class isn't mapped by Orm", entityType.getSimpleName()));
         }
@@ -74,7 +81,7 @@ public class SessionImpl implements Session {
     }
 
     public <T> Optional<T> buildEntity(Class<T> entityType, ResultSet resultSet) throws Exception {
-        MetaData entityMetaData = metaDataMap.get(entityType);
+        MetaData entityMetaData = metaContext.getMetaDataMap().get(entityType);
         List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
         List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
         // TODO: implement PROXY
@@ -111,8 +118,8 @@ public class SessionImpl implements Session {
 
     // it could be expanded
     public String buildSelectSqlQueryWithWhereClause(Class<?> rootType, String fieldName) {
-        MetaData rootMetaData = metaDataMap.get(rootType);
-        Set<Class<?>> implicitDependencies = dependencyGraph.getAllDependencies(rootType);
+        MetaData rootMetaData = metaContext.getMetaDataMap().get(rootType);
+        Set<Class<?>> implicitDependencies = metaContext.getDependencyGraph().getAllDependencies(rootType);
         List<ExternalMetaField> externalMetaField = rootMetaData.getExternalMetaField();
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -120,7 +127,10 @@ public class SessionImpl implements Session {
         stringBuilder.append(" SELECT ")
                 .append(rootMetaData.getJoinedInternalFieldsNames());
         implicitDependencies.forEach(classDependency ->
-                stringBuilder.append(",").append(metaDataMap.get(classDependency).getJoinedInternalFieldsNames())
+                stringBuilder.append(",").append(metaContext
+                        .getMetaDataMap()
+                        .get(classDependency)
+                        .getJoinedInternalFieldsNames())
         );
         // #/SELECT CLAUSE
 
@@ -131,7 +141,7 @@ public class SessionImpl implements Session {
 
         // #JOIN CLAUSE
         externalMetaField.forEach(exField -> {
-                    MetaData childMetaData = metaDataMap.get(exField.getFieldType());
+                    MetaData childMetaData = metaContext.getMetaDataMap().get(exField.getFieldType());
                     stringBuilder.append(getLeftJoinStatement(
                             childMetaData.getEntityDbName(),
                             exField.getForeignKeyFieldFullName(),
@@ -174,13 +184,14 @@ public class SessionImpl implements Session {
         return stringBuilder.toString();
     }
 
+
     @Override
     public void update(Object object) {
         if (Objects.isNull(object)) {
             throw new IllegalArgumentException("The argument cannot be null.");
         }
         Class<?> currentClass = object.getClass();
-        MetaData metaData = metaDataMap.get(currentClass);
+        MetaData metaData = metaContext.getMetaDataMap().get(currentClass);
         if (Objects.isNull(metaData)) {
             throw new OrmException(String.format("The %s class isn't mapped by Orm", object.getClass().getSimpleName()));
         }
@@ -200,7 +211,7 @@ public class SessionImpl implements Session {
     }
 
     private String buildUpdateQuery(Class<?> currentClass) {
-        MetaData classMetaData = metaDataMap.get(currentClass);
+        MetaData classMetaData = metaContext.getMetaDataMap().get(currentClass);
         List<String> foreignKeyFieldNames = getForeignKeyFieldNames(classMetaData);
         List<String> internalFieldNames = getInternalFieldNames(classMetaData);
         foreignKeyFieldNames = foreignKeyFieldNames.stream()
@@ -242,7 +253,7 @@ public class SessionImpl implements Session {
             if(Objects.isNull(externalObject)){
                 parameters.add("NULL");
             } else {
-                MetaData externalClassMetaData = metaDataMap.get(externalObject.getClass());
+                MetaData externalClassMetaData = metaContext.getMetaDataMap().get(externalObject.getClass());
                 parameters.add(externalClassMetaData.getPrimaryKey().get(externalObject).toString());
             }
         }
@@ -263,19 +274,19 @@ public class SessionImpl implements Session {
             throw new IllegalArgumentException("The argument cannot be null.");
         }
         Class<?> currentClass = object.getClass();
-        MetaData metaData = metaDataMap.get(object.getClass());
+        MetaData metaData = metaContext.getMetaDataMap().get(object.getClass());
         if (Objects.isNull(metaData)) {
             throw new OrmException(String.format("The %s class isn't mapped by Orm", object.getClass().getSimpleName()));
         }
         StringBuilder query = new StringBuilder();
         query.append("DELETE FROM ")
-                .append(metaDataMap.get(currentClass).getEntityDbName())
+                .append(metaContext.getMetaDataMap().get(currentClass).getEntityDbName())
                 .append(" WHERE ")
-                .append(metaDataMap.get(currentClass).getPrimaryKey())
+                .append(metaContext.getMetaDataMap().get(currentClass).getPrimaryKey())
                 .append(" = ")
                 .append("?");
         try(PreparedStatement statement = connection.prepareStatement(query.toString())) {
-            statement.setObject(1,metaDataMap.get(currentClass).getPrimaryKey().get(object));
+            statement.setObject(1,metaContext.getMetaDataMap().get(currentClass).getPrimaryKey().get(object));
             statement.executeQuery();
         } catch (SQLException | IllegalAccessException e) {
             LOG.error("There was an exception {}, during delete query for {} by {}", e, object.getClass().getSimpleName(), object.toString());
@@ -305,11 +316,11 @@ public class SessionImpl implements Session {
     //redundant until implementation of cascade
     private void recursiveDelete(Stack<String> query, Set<Class<?>> traversedClasses, Object object) {
         Class<?> currentClass = object.getClass();
-        List<ExternalMetaField> externalFields = metaDataMap.get(object.getClass()).getExternalMetaField();
+        List<ExternalMetaField> externalFields = metaContext.getMetaDataMap().get(object.getClass()).getExternalMetaField();
         try {
-            query.push("DELETE FROM " + metaDataMap.get(currentClass).getEntityDbName()
-                    + " WHERE " + metaDataMap.get(currentClass).getPrimaryKey()
-                    + " = " + metaDataMap.get(currentClass).getPrimaryKey().get(object));
+            query.push("DELETE FROM " + metaContext.getMetaDataMap().get(currentClass).getEntityDbName()
+                    + " WHERE " + metaContext.getMetaDataMap().get(currentClass).getPrimaryKey()
+                    + " = " + metaContext.getMetaDataMap().get(currentClass).getPrimaryKey().get(object));
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }

@@ -2,10 +2,11 @@ package com.softserve.easy.cfg;
 
 import com.softserve.easy.annotation.Entity;
 import com.softserve.easy.core.SessionFactory;
-import com.softserve.easy.core.SessionFactoryBuilder;
+import com.softserve.easy.core.SessionFactoryImpl;
 import com.softserve.easy.helper.ClassScanner;
 import com.softserve.easy.helper.MetaDataParser;
 import com.softserve.easy.meta.DependencyGraph;
+import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
 import com.softserve.easy.meta.field.AbstractMetaField;
 import com.zaxxer.hikari.HikariConfig;
@@ -85,15 +86,12 @@ public class Configuration {
      * but with a new DataSource instance
      */
     public SessionFactory buildSessionFactory() {
-        DataSource dataSource = initDataSource();
-        return new SessionFactoryBuilder()
-                .setDataSource(dataSource)
-                .setMetaDataMap(classConfig)
-                .setDependencyGraph(dependencyGraph)
-                .build();
+        DataSource dataSource = initHikariDataSource();
+        MetaContext metaContext = new MetaContext(classConfig, dependencyGraph, properties, observedClasses);
+        return new SessionFactoryImpl(dataSource, metaContext);
     }
 
-    private DataSource initDataSource() {
+    private DataSource initHikariDataSource() {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName(properties.getProperty(DRIVER_CLASS_PROPERTY));
         config.setJdbcUrl(properties.getProperty(URL_PROPERTY));
@@ -101,6 +99,4 @@ public class Configuration {
         config.setPassword(properties.getProperty(PASSWORD_PROPERTY));
         return new HikariDataSource(config);
     }
-
-
 }

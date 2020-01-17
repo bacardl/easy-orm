@@ -1,8 +1,11 @@
-package com.softserve.easy.queryhelper;
+package com.softserve.easy.jdbc.query;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Not implemented. For future.
+ */
 public class QueryBuilderImpl implements QueryBuilder {
     private String tableName;
     private StringBuilder query;
