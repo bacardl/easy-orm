@@ -138,19 +138,34 @@ public class SessionImplTestWithConnection {
     //INSERT
     @ExpectedDataSet(value = "dataset/simple/yml/data-insert.yml")
     @Test
+    public void saveUserWithoutId() throws ParseException {
+        Country country = new Country();
+        country.setId(100);
+        country.setName("United States");
+
+        User user = new User();
+        user.setUsername("Jon");
+        user.setPassword("Jon123123");
+        user.setEmail("Jon@gmail.com");
+        user.setCountry(country);
+
+        session.save(user);
+    }
+
+    @ExpectedDataSet(value = "dataset/simple/yml/data-insert.yml")
+    @Test
     public void saveUserWithId() throws ParseException {
         Country country = new Country();
         country.setId(100);
         country.setName("United States");
 
         User user = new User();
-        user.setId(1L);
+        user.setId(6L);
         user.setUsername("Jon");
         user.setPassword("Jon123123");
         user.setEmail("Jon@gmail.com");
         user.setCountry(country);
 
-        //assertThat(session.save(user), is(user));
         session.save(user);
     }
 

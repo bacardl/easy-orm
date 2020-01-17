@@ -42,57 +42,43 @@ public class SessionImpl implements Session {
 
         Object generatedId = null;
         String sqlQuery = buildInsertSqlQuery(object);
-//        String sqlQuery = "INSERT INTO users (users.id,users.login,users.password,users.email,users.country_code) " +
-//                "VALUES (6,'Jon','Jon123123','Jon@gmail.com',100);";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery, Statement.RETURN_GENERATED_KEYS)) {
-            //if we have id
             int i = 0;
             if(hasId(object)) {
-                //get Value Internal-Fields
-                for (Field f : metaData.getFields()) {
-                    f.setAccessible(true);
+                for (InternalMetaField f : metaData.getInternalMetaField()) {
+                    f.getField().setAccessible(true);
                     i++;
-                    preparedStatement.setObject(i, f.get(object));
-                }
-                //get Value External-Fields
-                for (Field f : metaData.getFields()) {
-                    if (f.isAnnotationPresent(ManyToOne.class)) {
-                        i++;
-                        Object object1 = f.get(object);
-                        preparedStatement.setObject(i, getIdValue(object1));
-                    }
+                    preparedStatement.setObject(i, f.getField().get(object));
                 }
             } else {
-                for (Field f : metaData.getFields()) {
-                    f.setAccessible(true);
+                for (InternalMetaField f : metaData.getInternalMetaFieldsWithoutPk()) {
+                    f.getField().setAccessible(true);
                     i++;
-                    if(!f.isAnnotationPresent(Id.class)) {
-                        preparedStatement.setObject(i, f.get(object));
-                    }
-                }
-                //get Value External-Fields
-                for (Field f : metaData.getFields()) {
-                    if (f.isAnnotationPresent(ManyToOne.class)) {
-                        i++;
-                        Object object1 = f.get(object);
-                        preparedStatement.setObject(i, getIdValue(object1));
-                    }
+                    preparedStatement.setObject(i, f.getField().get(object));
                 }
             }
-            int affectedRows = preparedStatement.executeUpdate();
 
-            if (affectedRows == 0) {
+            for (ExternalMetaField f : metaData.getExternalMetaField()) {
+                f.getField().setAccessible(true);
+                i++;
+                preparedStatement.setObject(i, getIdValue(f.getField().get(object)));
+            }
+            generatedId = preparedStatement.executeUpdate();
+
+            if (generatedId == null) {
                 throw new SQLException("Creating user failed, no rows affected.");
             }
 
             try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     generatedId = generatedKeys.getLong(1);
-                }
-                else {
+                } else {
                     throw new SQLException("Creating user failed, no ID obtained.");
                 }
+            }catch(Exception e) {
+                    e.printStackTrace();
             }
+
         } catch (Exception e) {
             LOG.error("There was an exception {}, during insert {}", e, object.getClass().getSimpleName());
             throw new OrmException(e);
@@ -109,14 +95,14 @@ public class SessionImpl implements Session {
         sb.append("INSERT INTO ").append(tableName).append(" (");
         //have id or no
         if(hasId(object)) {
-            sb.append(currentMetaData.getJoinedInternalFieldsNames());
+            sb.append(currentMetaData.getJoinedInternalFieldsNamesNotFull());
         } else {
-            sb.append(currentMetaData.getJoinedInternalFieldsNamesWithoutPrimaryKey());
+            sb.append(currentMetaData.getJoinedInternalFieldsNamesNotFullWithoutPrimaryKey());
         }
 
         if(currentMetaData.getCountExternalFields() > 0) {
             sb.append(",");
-            sb.append(currentMetaData.getJoinedExternalFieldsNames());
+            sb.append(currentMetaData.getJoinedExternalFieldsNamesNotFull());
         }
 
         sb.append(") ").append("VALUES (");

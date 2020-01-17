@@ -20,18 +20,18 @@ public class QueryConstant {
                     "FROM countries;";
 
     public static final String INSERT_USER_QUERY_WITH_ID =
-            "INSERT INTO users (users.id,users.login,users.password,users.email,users.country_code) " +
+            "INSERT INTO users (id,username,password,email,country_code) " +
             "VALUES (?,?,?,?,?);";
 
     public static final String INSERT_USER_QUERY_WITHOUT_ID =
-            "INSERT INTO users (users.login,users.password,users.email,users.country_code) " +
+            "INSERT INTO users (username,password,email,country_code) " +
             "VALUES (?,?,?,?);";
 
     public static final String INSERT_COUNTRY_QUERY_WITH_CODE =
-            "INSERT INTO countries (countries.code,countries.name) " +
+            "INSERT INTO countries (code,name) " +
                     "VALUES (?,?);";
 
     public static final String INSERT_COUNTRY_QUERY_WITHOUT_CODE =
-            "INSERT INTO countries (countries.name) " +
+            "INSERT INTO countries (name) " +
                     "VALUES (?);";
 }

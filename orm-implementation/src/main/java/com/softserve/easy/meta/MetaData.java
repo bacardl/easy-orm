@@ -44,6 +44,7 @@ public class MetaData {
                 .map(abstractMetaField -> (InternalMetaField) abstractMetaField)
                 .collect(Collectors.toList());
     }
+
     public List<InternalMetaField> getInternalMetaFieldsWithoutPk() {
         return metaFields.values().stream()
                 .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.INTERNAL))
@@ -74,15 +75,33 @@ public class MetaData {
                 .map(InternalMetaField::getDbFieldFullName)
                 .collect(Collectors.joining(","));
     }
+
+    public String getJoinedInternalFieldsNamesNotFull() {
+        return getInternalMetaField().stream().filter(internalMetaField -> !internalMetaField.isTransitionable())
+                .map(InternalMetaField::getDbFieldName)
+                .collect(Collectors.joining(","));
+    }
+
     public String getJoinedInternalFieldsNamesWithoutPrimaryKey() {
         return getInternalMetaFieldsWithoutPk().stream().filter(internalMetaField -> !internalMetaField.isTransitionable())
                 .map(InternalMetaField::getDbFieldFullName)
                 .collect(Collectors.joining(","));
     }
 
+    public String getJoinedInternalFieldsNamesNotFullWithoutPrimaryKey() {
+        return getInternalMetaFieldsWithoutPk().stream().filter(internalMetaField -> !internalMetaField.isTransitionable())
+                .map(InternalMetaField::getDbFieldName)
+                .collect(Collectors.joining(","));
+    }
+
     public String getJoinedExternalFieldsNames() {
         return getExternalMetaField().stream().filter(externalMetaField -> !externalMetaField.isTransitionable())
                 .map(ExternalMetaField::getForeignKeyFieldFullName).collect(Collectors.joining(","));
+    }
+
+    public String getJoinedExternalFieldsNamesNotFull() {
+        return getExternalMetaField().stream().filter(externalMetaField -> !externalMetaField.isTransitionable())
+                .map(ExternalMetaField::getForeignKeyFieldName).collect(Collectors.joining(","));
     }
 
     public long getCountInternalFields() {
