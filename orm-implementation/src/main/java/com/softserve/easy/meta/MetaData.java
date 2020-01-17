@@ -44,6 +44,13 @@ public class MetaData {
                 .map(abstractMetaField -> (InternalMetaField) abstractMetaField)
                 .collect(Collectors.toList());
     }
+    public List<InternalMetaField> getInternalMetaFieldsWithoutPk() {
+        return metaFields.values().stream()
+                .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.INTERNAL))
+                .filter(abstractMetaField -> !abstractMetaField.getField().equals(primaryKey))
+                .map(abstractMetaField -> (InternalMetaField) abstractMetaField)
+                .collect(Collectors.toList());
+    }
 
     public List<ExternalMetaField> getExternalMetaField() {
         return metaFields.values().stream()
@@ -67,6 +74,11 @@ public class MetaData {
                 .map(InternalMetaField::getDbFieldFullName)
                 .collect(Collectors.joining(","));
     }
+    public String getJoinedInternalFieldsNamesWithoutPrimaryKey() {
+        return getInternalMetaFieldsWithoutPk().stream().filter(internalMetaField -> !internalMetaField.isTransitionable())
+                .map(InternalMetaField::getDbFieldFullName)
+                .collect(Collectors.joining(","));
+    }
 
     public String getJoinedExternalFieldsNames() {
         return getExternalMetaField().stream().filter(externalMetaField -> !externalMetaField.isTransitionable())
@@ -75,6 +87,10 @@ public class MetaData {
 
     public long getCountInternalFields() {
         return getInternalMetaField().stream().filter(internalMetaField -> !internalMetaField.isTransitionable()).count();
+    }
+
+    public long getCountInternalFieldsWithoutPrimaryKey() {
+        return getInternalMetaFieldsWithoutPk().stream().filter(internalMetaField -> !internalMetaField.isTransitionable()).count();
     }
 
     public long getCountExternalFields() {

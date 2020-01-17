@@ -1,6 +1,5 @@
 package com.softserve.easy.core;
 
-import com.softserve.easy.annotation.Column;
 import com.softserve.easy.annotation.Id;
 import com.softserve.easy.annotation.ManyToOne;
 import com.softserve.easy.exception.OrmException;
@@ -13,9 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.*;
 
 public class SessionImpl implements Session {
@@ -33,27 +30,74 @@ public class SessionImpl implements Session {
     }
 
     @Override
-    public Serializable save(Object o) {
-        if (Objects.isNull(o)) {
+    public Serializable save(Object object) {
+        // checks Object
+        if (Objects.isNull(object)) {
             throw new IllegalArgumentException("The arguments cannot be null.");
         }
-        MetaData metaData = metaDataMap.get(o.getClass());
+        MetaData metaData = metaDataMap.get(object.getClass());
         if (Objects.isNull(metaData)) {
-            throw new OrmException(String.format("The %s class isn't mapped by Orm", o.getClass().getSimpleName()));
+            throw new OrmException(String.format("The %s class isn't mapped by Orm", object.getClass().getSimpleName()));
         }
-        String sqlQuery = buildInsertSqlQuery(o);
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
-            int numberOfChangedRows = preparedStatement.executeUpdate();
-            if(numberOfChangedRows <= 0) {
-                //TODO:throw Exception;
+        Object generatedId = null;
+        String sqlQuery = buildInsertSqlQuery(object);
+//        String sqlQuery = "INSERT INTO users (users.id,users.login,users.password,users.email,users.country_code) " +
+//                "VALUES (6,'Jon','Jon123123','Jon@gmail.com',100);";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery, Statement.RETURN_GENERATED_KEYS)) {
+            //if we have id
+            int i = 0;
+            if(hasId(object)) {
+                //get Value Internal-Fields
+                for (Field f : metaData.getFields()) {
+                    f.setAccessible(true);
+                    i++;
+                    preparedStatement.setObject(i, f.get(object));
+                }
+                //get Value External-Fields
+                for (Field f : metaData.getFields()) {
+                    if (f.isAnnotationPresent(ManyToOne.class)) {
+                        i++;
+                        Object object1 = f.get(object);
+                        preparedStatement.setObject(i, getIdValue(object1));
+                    }
+                }
+            } else {
+                for (Field f : metaData.getFields()) {
+                    f.setAccessible(true);
+                    i++;
+                    if(!f.isAnnotationPresent(Id.class)) {
+                        preparedStatement.setObject(i, f.get(object));
+                    }
+                }
+                //get Value External-Fields
+                for (Field f : metaData.getFields()) {
+                    if (f.isAnnotationPresent(ManyToOne.class)) {
+                        i++;
+                        Object object1 = f.get(object);
+                        preparedStatement.setObject(i, getIdValue(object1));
+                    }
+                }
+            }
+            int affectedRows = preparedStatement.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Creating user failed, no rows affected.");
+            }
+
+            try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    generatedId = generatedKeys.getLong(1);
+                }
+                else {
+                    throw new SQLException("Creating user failed, no ID obtained.");
+                }
             }
         } catch (Exception e) {
-            LOG.error("There was an exception {}, during insert {}", e, o.getClass().getSimpleName());
+            LOG.error("There was an exception {}, during insert {}", e, object.getClass().getSimpleName());
             throw new OrmException(e);
         }
-
-        return null;
+        return (Serializable) generatedId;
     }
 
     public String buildInsertSqlQuery(Object object) {
@@ -63,12 +107,27 @@ public class SessionImpl implements Session {
         StringBuilder sb = new StringBuilder();
 
         sb.append("INSERT INTO ").append(tableName).append(" (");
-        sb.append(currentMetaData.getJoinedInternalFieldsNames());
-        sb.append(",");
-        sb.append(currentMetaData.getJoinedExternalFieldsNames());
-        sb.append(") ");
-        sb.append("VALUES (");
-        long countInAndExFields = currentMetaData.getCountInternalFields() + currentMetaData.getCountExternalFields();
+        //have id or no
+        if(hasId(object)) {
+            sb.append(currentMetaData.getJoinedInternalFieldsNames());
+        } else {
+            sb.append(currentMetaData.getJoinedInternalFieldsNamesWithoutPrimaryKey());
+        }
+
+        if(currentMetaData.getCountExternalFields() > 0) {
+            sb.append(",");
+            sb.append(currentMetaData.getJoinedExternalFieldsNames());
+        }
+
+        sb.append(") ").append("VALUES (");
+        long countInAndExFields = 0;
+        //have id or no
+        if(hasId(object)) {
+            countInAndExFields = currentMetaData.getCountInternalFields() + currentMetaData.getCountExternalFields();
+        } else {
+            countInAndExFields = currentMetaData.getCountInternalFieldsWithoutPrimaryKey() + currentMetaData.getCountExternalFields();
+        }
+
         for(int i = 0; i < countInAndExFields; i++){
             sb.append("?");
             if(i + 1 < countInAndExFields) {
@@ -77,23 +136,25 @@ public class SessionImpl implements Session {
         }
         sb.append(");");
         return sb.toString();
-//        sbFirstPart.append("INSERT INTO ").append(tableName).append(" (");
-////        for (InternalMetaField internalMetaField : currentMetaData.getInternalMetaField()) {
-////            sbFirstPart.append(internalMetaField.getDbFieldFullName());
-////        }
-//        sbFirstPart.append(currentMetaData.getJoinedInternalFieldsNames());
-//        sbFirstPart.append(",");
-//        sbFirstPart.append(currentMetaData.getJoinedExternalFieldsNames());
-//        sbFirstPart.append(") ");
-//
-//        sbSecondPart.append("VALUES (");
-////        sbSecondPart.append(currentMetaData.getJoinedInternalFieldsValues());
-////        sbSecondPart.append(currentMetaData.getJoinedExternalFieldsValues());
-//        sbSecondPart.append(");");
-//
-//        sbFirstPart.append(sbSecondPart.toString());
-//
-//        return sbFirstPart.toString();
+    }
+
+    private Object getIdValue(Object o){
+        Field[] fields = o.getClass().getDeclaredFields();
+        for(Field f: fields) {
+            f.setAccessible(true);
+            if(f.isAnnotationPresent(Id.class)) {
+                try {
+                    return f.get(o);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean hasId(Object o) {
+        return getIdValue(o) != null;
     }
 
     @Override
@@ -236,6 +297,11 @@ public class SessionImpl implements Session {
                 .append(childPkName);
         return stringBuilder.toString();
     }
+
+//    public boolean hasObjectsId(Object o) {
+//
+//        return
+//    }
 
     @Override
     public void update(Object object) {

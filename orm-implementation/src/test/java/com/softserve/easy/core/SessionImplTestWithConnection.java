@@ -2,6 +2,7 @@ package com.softserve.easy.core;
 
 import com.github.database.rider.core.DBUnitRule;
 import com.github.database.rider.core.api.dataset.DataSet;
+import com.github.database.rider.core.api.dataset.ExpectedDataSet;
 import com.github.database.rider.core.api.dataset.SeedStrategy;
 import com.softserve.easy.cfg.Configuration;
 import com.softserve.easy.exception.OrmException;
@@ -132,6 +133,25 @@ public class SessionImplTestWithConnection {
 
         assertThat(actualUser.getCountry().getId(), equalTo(100));
         assertThat(actualUser.getCountry().getName(), equalTo("United States"));
+    }
+
+    //INSERT
+    @ExpectedDataSet(value = "dataset/simple/yml/data-insert.yml")
+    @Test
+    public void saveUserWithId() throws ParseException {
+        Country country = new Country();
+        country.setId(100);
+        country.setName("United States");
+
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("Jon");
+        user.setPassword("Jon123123");
+        user.setEmail("Jon@gmail.com");
+        user.setCountry(country);
+
+        //assertThat(session.save(user), is(user));
+        session.save(user);
     }
 
     private static Configuration initTestConfiguration() {
