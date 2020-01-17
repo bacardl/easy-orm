@@ -22,4 +22,8 @@ public class QueryConstant {
             "SELECT countries.code,countries.name " +
                     "FROM countries " +
                     "WHERE countries.code = ?;";
+
+    public static final  String DELETE_USER_QUERY_WHERE_PRIMARYKEY =
+            "DELETE FROM users WHERE users.id = ?";
+
 }

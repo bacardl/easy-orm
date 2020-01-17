@@ -39,6 +39,39 @@ class SessionImplTest {
                 equalToIgnoringCase(cleanUpString(QueryConstant.SELECT_USER_BY_ID_WITHOUT_SCHEMA_NAME)));
     }
     @Test
+    public void generateDeleteQuery(){
+        Country country = new Country();
+        country.setId(100);
+        country.setName("United States");
+
+        User user = new User();
+        user.setId(3L);
+        user.setUsername("Wittiould1980");
+        user.setPassword("$2y$10$pRmUEPJMB0/CR5uCuqCA2ODdE0iOJswpXFdIIhZmuZyiZIMe.OCl2");
+        user.setEmail("VirginiaDCook@armyspy.com");
+        user.setCountry(country);
+        String actual = session.buildDeleteSqlQuery(user);
+        assertThat(cleanUpString(session.buildDeleteSqlQuery(user)),
+                equalToIgnoringCase(cleanUpString(QueryConstant.DELETE_USER_QUERY_WHERE_PRIMARYKEY)));
+    }
+    @Test
+    void generateUpdateQuery(){
+        Country country = new Country();
+        country.setId(100);
+        country.setName("United States");
+
+        User user = new User();
+        user.setId(3L);
+        user.setUsername("Wittiould1980");
+        user.setPassword("$2y$10$pRmUEPJMB0/CR5uCuqCA2ODdE0iOJswpXFdIIhZmuZyiZIMe.OCl2");
+        user.setEmail("VOT_ETO_DA@armyspy.com");
+        user.setCountry(country);
+        String actual = session.buildUpdateQuery(user.getClass());
+        System.out.println(actual);
+        assertThat(actual, Matchers.notNullValue());
+    }
+
+    @Test
     void deleteCascadeRecords() throws ParseException {
         Country country = new Country();
         country.setId(101);
@@ -56,20 +89,17 @@ class SessionImplTest {
         user.setPassword("password");
         user.setEmail("johnD@post.com");
         user.setCountry(country);
-        user.setPerson(person);
         session.delete(person);
         assertThat(session.get(USER_CLASS, USER_ID), Matchers.not(user));
     }
-    @Test
-    void updateEntity(){
 
-    }
 
     @Test
     void getSelectSqlStringForCountryClass() {
         assertThat(cleanUpString(session.buildSelectSqlQuery(Country.class)),
                 equalToIgnoringCase(cleanUpString(QueryConstant.SELECT_COUNTRY_QUERY_WITHOUT_SCHEMA_NAME)));
     }
+
 
 
     private static Configuration initTestConfiguration() {

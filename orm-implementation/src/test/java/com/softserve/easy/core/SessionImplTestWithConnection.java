@@ -2,6 +2,7 @@ package com.softserve.easy.core;
 
 import com.github.database.rider.core.DBUnitRule;
 import com.github.database.rider.core.api.dataset.DataSet;
+import com.github.database.rider.core.api.dataset.ExpectedDataSet;
 import com.github.database.rider.core.api.dataset.SeedStrategy;
 import com.softserve.easy.cfg.Configuration;
 import com.softserve.easy.exception.OrmException;
@@ -14,6 +15,8 @@ import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -167,6 +170,52 @@ public class SessionImplTestWithConnection {
         assertThat(actualCountry.getName(), equalTo(REFERENCE_COUNTRY.getName()));
     }
 
+    @ExpectedDataSet(value = "dataset/simple/yml/data-delete.yml")
+    @Test
+    public void shouldDeleteUserWithId(){
+        Country country = new Country();
+        country.setId(100);
+        country.setName("United States");
+
+        User user = new User();
+        user.setId(3L);
+        user.setUsername("Wittiould1980");
+        user.setPassword("$2y$10$pRmUEPJMB0/CR5uCuqCA2ODdE0iOJswpXFdIIhZmuZyiZIMe.OCl2");
+        user.setEmail("VirginiaDCook@armyspy.com");
+        user.setCountry(country);
+        session.delete(user);
+    }
+
+    @ExpectedDataSet(value = "dataset/simple/yml/data-update.yml")
+    @Test
+    public void shouldUpdateUser(){
+        Country country = new Country();
+        country.setId(100);
+        country.setName("United States");
+
+        User user = new User();
+        user.setId(3L);
+        user.setUsername("Wittiould1980");
+        user.setPassword("$2y$10$pRmUEPJMB0/CR5uCuqCA2ODdE0iOJswpXFdIIhZmuZyiZIMe.OCl2");
+        user.setEmail("VOT_ETO_DA@armyspy.com");
+        user.setCountry(country);
+        session.update(user);
+    }
+    @ExpectedDataSet(value = "dataset/simple/yml/data.yml")
+    @Test
+    public void shouldNotUpdateUser(){
+        Country country = new Country();
+        country.setId(100);
+        country.setName("United States");
+
+        User user = new User();
+        user.setId(28L);
+        user.setUsername("Wittiould1980");
+        user.setPassword("$2y$10$pRmUEPJMB0/CR5uCuqCA2ODdE0iOJswpXFdIIhZmuZyiZIMe.OCl2");
+        user.setEmail("VOT_ETO_DA@armyspy.com");
+        user.setCountry(country);
+        session.update(user);
+    }
 
     private static Configuration initTestConfiguration() {
         return new Configuration();
