@@ -110,4 +110,55 @@ class SessionImplTest {
         return input.replaceAll("[\\s\\n\\t\\r\\f\\v]+", "").trim();
     }
 
+    @Test
+    void shouldReturnInsertQueryForUserWithId() {
+        Country ukr = new Country();
+        ukr.setId(13);
+        ukr.setName("Ukraine");
+
+        User jon = new User();
+        jon.setId((long)404);
+        jon.setUsername("jon");
+        jon.setPassword("jon111");
+        jon.setEmail("jon@gmail.com");
+        jon.setCountry(ukr);
+
+        assertThat(cleanUpString(session.buildInsertSqlQuery(jon)),
+                equalToIgnoringCase(cleanUpString(QueryConstant.INSERT_USER_QUERY_WITH_ID)));
+    }
+
+    @Test
+    void shouldReturnInsertQueryForCountryWithId() {
+        Country ukr = new Country();
+        ukr.setId(13);
+        ukr.setName("Ukraine");
+
+        assertThat(cleanUpString(session.buildInsertSqlQuery(ukr)),
+                equalToIgnoringCase(cleanUpString(QueryConstant.INSERT_COUNTRY_QUERY_WITH_CODE)));
+    }
+
+    @Test
+    void shouldReturnInsertQueryForUserWithoutId() {
+        Country ukr = new Country();
+        ukr.setId(13);
+        ukr.setName("Ukraine");
+
+        User jon = new User();
+        jon.setUsername("jon");
+        jon.setPassword("jon111");
+        jon.setEmail("jon@gmail.com");
+        jon.setCountry(ukr);
+
+        assertThat(cleanUpString(session.buildInsertSqlQuery(jon)),
+                equalToIgnoringCase(cleanUpString(QueryConstant.INSERT_USER_QUERY_WITHOUT_ID)));
+    }
+
+    @Test
+    void shouldReturnInsertQueryForCountryWithoutId() {
+        Country ukr = new Country();
+        ukr.setName("Ukraine");
+
+        assertThat(cleanUpString(session.buildInsertSqlQuery(ukr)),
+                equalToIgnoringCase(cleanUpString(QueryConstant.INSERT_COUNTRY_QUERY_WITHOUT_CODE)));
+    }
 }
