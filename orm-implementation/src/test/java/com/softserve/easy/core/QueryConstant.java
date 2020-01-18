@@ -26,4 +26,19 @@ public class QueryConstant {
     public static final  String DELETE_USER_QUERY_WHERE_PRIMARYKEY =
             "DELETE FROM users WHERE users.id = ?";
 
+    public static final String INSERT_USER_QUERY_WITH_ID =
+            "INSERT INTO users (id,username,password,email,country_code) " +
+                    "VALUES (?,?,?,?,?);";
+
+    public static final String INSERT_USER_QUERY_WITHOUT_ID =
+            "INSERT INTO users (username,password,email,country_code) " +
+                    "VALUES (?,?,?,?);";
+
+    public static final String INSERT_COUNTRY_QUERY_WITH_CODE =
+            "INSERT INTO countries (code,name) " +
+                    "VALUES (?,?);";
+
+    public static final String INSERT_COUNTRY_QUERY_WITHOUT_CODE =
+            "INSERT INTO countries (name) " +
+                    "VALUES (?);";
 }

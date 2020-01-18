@@ -41,7 +41,7 @@ public class SessionImpl implements Session {
         if (Objects.isNull(object)) {
             throw new IllegalArgumentException("The arguments cannot be null.");
         }
-        MetaData metaData = metaDataMap.get(object.getClass());
+        MetaData metaData = metaContext.getMetaDataMap().get(object.getClass());
         if (Objects.isNull(metaData)) {
             throw new OrmException(String.format("The %s class isn't mapped by Orm", object.getClass().getSimpleName()));
         }
@@ -93,7 +93,7 @@ public class SessionImpl implements Session {
     }
 
     public String buildInsertSqlQuery(Object object) {
-        MetaData currentMetaData = metaDataMap.get(object.getClass());
+        MetaData currentMetaData = metaContext.getMetaDataMap().get(object.getClass());
 
         String tableName = currentMetaData.getEntityDbName();
         StringBuilder sb = new StringBuilder();
@@ -131,7 +131,7 @@ public class SessionImpl implements Session {
     }
 
     private Object getIdValue(Object object) throws IllegalAccessException {
-        MetaData currentMetaData = metaDataMap.get(object.getClass());
+        MetaData currentMetaData = metaContext.getMetaDataMap().get(object.getClass());
         currentMetaData.getPrimaryKey().setAccessible(true);
         return  currentMetaData.getPrimaryKey().get(object);
     }
@@ -246,7 +246,7 @@ public class SessionImpl implements Session {
 
         // #JOIN CLAUSE
         externalMetaField.forEach(exField -> {
-                    MetaData childMetaData = metaDataMap.get(exField.getFieldType());
+                    MetaData childMetaData = metaContext.getMetaDataMap().get(exField.getFieldType());
                     stringBuilder.append(getLeftJoinStatement(
                             childMetaData.getEntityDbName(),
                             exField.getForeignKeyFieldFullName(),
