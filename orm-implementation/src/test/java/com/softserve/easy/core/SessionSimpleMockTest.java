@@ -11,7 +11,7 @@ import org.mockito.MockitoAnnotations;
 import java.sql.Connection;
 import java.util.Map;
 
-class SessionImplMockTest {
+class SessionSimpleMockTest {
 
     @InjectMocks
     private Session session;

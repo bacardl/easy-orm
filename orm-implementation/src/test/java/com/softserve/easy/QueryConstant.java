@@ -25,6 +25,11 @@ public class QueryConstant {
                     "WHERE (t1.code = 100)";
 
     public static final  String DELETE_USER_QUERY_WHERE_PRIMARYKEY =
-            "DELETE FROM users WHERE users.id = ?";
+            "DELETE FROM public.users WHERE (id = 3)";
 
+    public static final String UPDATE_USER_QUERY_WHERE_PRIMARYKEY =
+            "UPDATE public.users SET country_code = 100,username = 'Wittiould1980'," +
+                    "password = '$2y$10$pRmUEPJMB0/CR5uCuqCA2ODdE0iOJswpXFdIIhZmuZyiZIMe.OCl2'," +
+                    "email = 'VOT_ETO_DA@armyspy.com' " +
+                    "WHERE (id = 3)";
 }

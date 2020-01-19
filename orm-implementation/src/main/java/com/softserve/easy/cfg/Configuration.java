@@ -95,13 +95,13 @@ public class Configuration {
      * but with a new DataSource instance
      */
     public SessionFactory buildSessionFactory() {
-        initObservedClasses();
         DataSource dataSource = initHikariDataSource();
         MetaContext metaContext = getMetaContext();
         return new SessionFactoryImpl(dataSource, metaContext);
     }
 
     public MetaContext getMetaContext() {
+        initObservedClasses();
         String schemaName = properties.getProperty(DB_SCHEMA);
         if (Objects.nonNull(schemaName)) {
             this.dbSchema = dbSpec.createSchema(schemaName);

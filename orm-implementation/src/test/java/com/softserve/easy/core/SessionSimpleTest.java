@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.omg.PortableServer.IdAssignmentPolicyValue.USER_ID;
 
-class SessionImplTest {
+class SessionSimpleTest {
     private static final Class<User> USER_CLASS = User.class;
     private static final String ID_FIELD_NAME = "id";
     private static SessionImpl session;

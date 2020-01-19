@@ -19,9 +19,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class JDBCPersister implements Persister {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCPersister.class);
@@ -43,7 +41,8 @@ public class JDBCPersister implements Persister {
     @Override
     public <T> T getEntityById(Class<T> entityType, Serializable id) {
         LOG.info("Try to load entity {} by id {} from database.", entityType.getSimpleName(), id);
-        String sqlQuery = sqlManager.buildSelectByIdSqlQuery(entityType,id).toString();
+        MetaData entityMetaData = metaContext.getMetaDataMap().get(entityType);
+        String sqlQuery = sqlManager.buildSelectByPkQuery(entityMetaData, id).toString();
         T entity = null;
         ResultSet resultSet = null;
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
@@ -76,12 +75,8 @@ public class JDBCPersister implements Persister {
         List<InternalMetaField> internalMetaFields = metaData.getInternalMetaField();
         internalMetaFields.remove(metaData.getPkMetaField());
 
-        String updateQuery = sqlManager.buildUpdateQuery(currentClass).toString();
+        String updateQuery = sqlManager.buildUpdateByPkQuery(metaData, object).toString();
         try (PreparedStatement statement = connection.prepareStatement(updateQuery)) {
-            List<Object> parameters = collectUpdateParameters(internalMetaFields, externalMetaFields, object, metaData);
-            for (int i = 0; i < parameters.size(); i++) {
-                statement.setObject(i + 1, parameters.get(i));
-            }
             int rows = statement.executeUpdate();
             connection.commit();
             LOG.info("-------ROWS AFFECTED " + rows + "-------");
@@ -91,51 +86,15 @@ public class JDBCPersister implements Persister {
         }
     }
 
-    private List<Object> collectUpdateParameters(List<InternalMetaField> internalMetaFields, List<ExternalMetaField> externalMetaFields, Object object, MetaData metaData) throws IllegalAccessException {
-        List<Object> parameters = new ArrayList<>();
-        for (ExternalMetaField externalMetaField : externalMetaFields){
-            checkAndProvideAccessibility(externalMetaField.getField());
-            Object externalObject = externalMetaField.getField().get(object);
-            if(Objects.isNull(externalObject)){
-                parameters.add(null);
-            } else {
-                MetaData externalClassMetaData = metaContext.getMetaDataMap().get(externalObject.getClass());
-                checkAndProvideAccessibility(externalClassMetaData.getPrimaryKey());
-                parameters.add(externalClassMetaData.getPrimaryKey().get(externalObject));
-            }
-        }
-        for (InternalMetaField internalMetaField : internalMetaFields) {
-            checkAndProvideAccessibility(internalMetaField.getField());
-            Object internalObject = internalMetaField.getField().get(object);
-            if(Objects.isNull(internalObject)){
-                parameters.add(null);
-            } else {
-                parameters.add(internalMetaField.getField().get(object));
-            }
-
-        }
-        Field pkField = metaData.getPkMetaField().getField();
-        checkAndProvideAccessibility(pkField);
-        parameters.add(metaData.getPkMetaField().getField().get(object));
-        return parameters;
-    }
-
-    private void checkAndProvideAccessibility(Field field) {
-        if (!field.isAccessible()) {
-            field.setAccessible(true);
-        }
-    }
 
     @Override
     public void deleteEntity(Object object) {
         MetaData metaData = metaContext.getMetaDataMap().get(object.getClass());
         Field pkField = metaData.getPrimaryKey();
-        checkAndProvideAccessibility(pkField);
-        String query = sqlManager.buildDeleteQuery(object.getClass()).toString();
+        String query = sqlManager.buildDeleteByPkQuery(metaData, object).toString();
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setObject(1, pkField.get(object).toString());
             statement.execute();
-        } catch (SQLException | IllegalAccessException e) {
+        } catch (SQLException  e) {
             LOG.error("There was an exception {}, during delete query for {} by {}", e, object.getClass().getSimpleName(), object.toString());
             throw new OrmException(e);
         }
@@ -145,6 +104,7 @@ public class JDBCPersister implements Persister {
     public void insertEntity(Object object) {
 
     }
+
     @Override
     public void insertEntityWithId(Object object, Serializable id) {
 

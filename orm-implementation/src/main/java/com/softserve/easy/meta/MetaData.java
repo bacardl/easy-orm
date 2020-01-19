@@ -60,6 +60,12 @@ public class MetaData {
                 .collect(Collectors.toList());
     }
 
+    public List<InternalMetaField> getInternalMetaFieldWithoutPk() {
+        return getInternalMetaField().stream()
+                .filter(internalMetaField -> (!internalMetaField.isPrimaryKey()))
+                .collect(Collectors.toList());
+    }
+
     public List<ExternalMetaField> getExternalMetaField() {
         return metaFields.values().stream()
                 .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.EXTERNAL))

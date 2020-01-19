@@ -4,19 +4,20 @@ import com.healthmarketscience.sqlbuilder.DeleteQuery;
 import com.healthmarketscience.sqlbuilder.InsertQuery;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.UpdateQuery;
+import com.softserve.easy.meta.MetaData;
 
 import java.io.Serializable;
 
 public interface SqlManager {
-    SelectQuery buildSelectByIdSqlQuery(Class<?> entity, Serializable id);
+    SelectQuery buildSelectByPkQuery(MetaData entityMetaData, Serializable id);
 
-    SelectQuery buildSelectAllSqlQuery(Class<?> entity);
+    SelectQuery buildSelectAllQuery(MetaData entityMetaData);
 
-    UpdateQuery buildUpdateQuery(Class<?> entity);
+    UpdateQuery buildUpdateByPkQuery(MetaData entityMetaData, Object object);
 
-    DeleteQuery buildDeleteQuery(Class<?> entity);
+    DeleteQuery buildDeleteByPkQuery(MetaData entityMetaData, Object object);
 
-    InsertQuery buildInsertQueryWithId(Class<?> entity, Serializable id);
+    InsertQuery buildInsertQueryWithId(MetaData entityMetaData, Object object, Serializable id);
 
-    InsertQuery buildInsertQuery(Class<?> entity);
+    InsertQuery buildInsertQuery(MetaData entityMetaData, Object object);
 }
