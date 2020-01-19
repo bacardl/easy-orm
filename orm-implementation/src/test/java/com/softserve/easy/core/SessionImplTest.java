@@ -12,7 +12,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.omg.PortableServer.IdAssignmentPolicyValue.USER_ID;
 
 class SessionImplTest {
@@ -27,49 +26,7 @@ class SessionImplTest {
         session = (SessionImpl) sessionFactory.openSession();
     }
 
-    @Test
-    void getSelectSqlStringForUserClass() {
-        assertThat(cleanUpString(session.buildSelectSqlQuery(USER_CLASS)),
-                equalToIgnoringCase(cleanUpString(QueryConstant.SELECT_USERS_QUERY_WITHOUT_SCHEMA_NAME)));
-    }
 
-    @Test
-    void getSelectSqlStringForUserClassById() {
-        assertThat(cleanUpString(session.buildSelectSqlQueryWithWhereClause(USER_CLASS, ID_FIELD_NAME)),
-                equalToIgnoringCase(cleanUpString(QueryConstant.SELECT_USER_BY_ID_WITHOUT_SCHEMA_NAME)));
-    }
-    @Test
-    public void generateDeleteQuery(){
-        Country country = new Country();
-        country.setId(100);
-        country.setName("United States");
-
-        User user = new User();
-        user.setId(3L);
-        user.setUsername("Wittiould1980");
-        user.setPassword("$2y$10$pRmUEPJMB0/CR5uCuqCA2ODdE0iOJswpXFdIIhZmuZyiZIMe.OCl2");
-        user.setEmail("VirginiaDCook@armyspy.com");
-        user.setCountry(country);
-        String actual = session.buildDeleteSqlQuery(user);
-        assertThat(cleanUpString(session.buildDeleteSqlQuery(user)),
-                equalToIgnoringCase(cleanUpString(QueryConstant.DELETE_USER_QUERY_WHERE_PRIMARYKEY)));
-    }
-    @Test
-    void generateUpdateQuery(){
-        Country country = new Country();
-        country.setId(100);
-        country.setName("United States");
-
-        User user = new User();
-        user.setId(3L);
-        user.setUsername("Wittiould1980");
-        user.setPassword("$2y$10$pRmUEPJMB0/CR5uCuqCA2ODdE0iOJswpXFdIIhZmuZyiZIMe.OCl2");
-        user.setEmail("VOT_ETO_DA@armyspy.com");
-        user.setCountry(country);
-        String actual = session.buildUpdateQuery(user.getClass());
-        System.out.println(actual);
-        assertThat(actual, Matchers.notNullValue());
-    }
 
     @Test
     void deleteCascadeRecords() throws ParseException {
@@ -94,20 +51,9 @@ class SessionImplTest {
     }
 
 
-    @Test
-    void getSelectSqlStringForCountryClass() {
-        assertThat(cleanUpString(session.buildSelectSqlQuery(Country.class)),
-                equalToIgnoringCase(cleanUpString(QueryConstant.SELECT_COUNTRY_QUERY_WITHOUT_SCHEMA_NAME)));
-    }
-
-
-
     private static Configuration initTestConfiguration() {
         return new Configuration();
     }
 
-    private static String cleanUpString(String input) {
-        return input.replaceAll("[\\s\\n\\t\\r\\f\\v]+", "").trim();
-    }
 
 }

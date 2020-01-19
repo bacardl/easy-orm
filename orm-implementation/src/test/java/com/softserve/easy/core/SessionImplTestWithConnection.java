@@ -12,21 +12,14 @@ import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.ParseException;
-import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
 
 @RunWith(JUnit4.class)
 @DataSet(
@@ -72,13 +65,13 @@ public class SessionImplTestWithConnection {
     }
 
     @Test
-    public void getUserByLongId() throws ParseException {
+    public void getUserByLongId() {
         assertThat(session.get(USER_CLASS, USER_ID), is(REFERENCE_USER));
     }
 
 
     @Test
-    public void getCountryByLongId() throws ParseException {
+    public void getCountryByLongId() {
         assertThat(session.get(COUNTRY_CLASS, COUNTRY_ID), is(REFERENCE_COUNTRY));
     }
 
@@ -106,68 +99,6 @@ public class SessionImplTestWithConnection {
     @Test
     public void shouldReturnNullIfUserNotExistInDatabase() {
         assertThat(session.get(USER_CLASS, 9999L), Matchers.nullValue());
-    }
-
-
-    @Test
-    public void shouldBuildUserWithInternalFields() throws Exception {
-        Connection connection = getClientConnection();
-        PreparedStatement preparedStatement
-                = connection.prepareStatement(QueryConstant.SELECT_USER_BY_ID_WITHOUT_SCHEMA_NAME);
-        preparedStatement.setLong(1, USER_ID);
-
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        // important!
-        resultSet.next();
-
-        Optional<User> optionalUser = session.buildEntity(USER_CLASS, resultSet);
-        User actualUser = optionalUser.orElseGet(Assertions::fail);
-
-        assertThat(actualUser.getId(), equalTo(REFERENCE_USER.getId()));
-        assertThat(actualUser.getUsername(), equalTo(REFERENCE_USER.getUsername()));
-        assertThat(actualUser.getPassword(), equalTo(REFERENCE_USER.getPassword()));
-        assertThat(actualUser.getEmail(), equalTo(REFERENCE_USER.getEmail()));
-    }
-
-    @Test
-    public void shouldBuildUserWithExternalFields() throws Exception {
-        Connection connection = getClientConnection();
-        PreparedStatement preparedStatement
-                = connection.prepareStatement(QueryConstant.SELECT_USER_BY_ID_WITHOUT_SCHEMA_NAME);
-        preparedStatement.setLong(1, USER_ID);
-
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        // important!
-        resultSet.next();
-
-        Optional<User> optionalUser = session.buildEntity(USER_CLASS, resultSet);
-        User actualUser = optionalUser.orElseGet(Assertions::fail);
-
-        assertThat(actualUser.getCountry(), notNullValue());
-
-        assertThat(actualUser.getCountry().getId(), equalTo(REFERENCE_COUNTRY.getId()));
-        assertThat(actualUser.getCountry().getName(), equalTo(REFERENCE_COUNTRY.getName()));
-    }
-
-    @Test
-    public void shouldBuildCountryWithInternalFields() throws Exception {
-        Connection connection = getClientConnection();
-        PreparedStatement preparedStatement
-                = connection.prepareStatement(QueryConstant.SELECT_COUNTRY_BY_ID_WITHOUT_SCHEMA_NAME);
-        preparedStatement.setInt(1, COUNTRY_ID);
-
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        // important!
-        resultSet.next();
-
-        Optional<Country> optionalCountry = session.buildEntity(COUNTRY_CLASS, resultSet);
-        Country actualCountry = optionalCountry.orElseGet(Assertions::fail);
-
-        assertThat(actualCountry.getId(), equalTo(REFERENCE_COUNTRY.getId()));
-        assertThat(actualCountry.getName(), equalTo(REFERENCE_COUNTRY.getName()));
     }
 
     @ExpectedDataSet(value = "dataset/simple/yml/data-delete.yml")
