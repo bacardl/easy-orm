@@ -65,7 +65,7 @@ public class JDBCPersister implements Persister {
             throw new OrmException(e);
         }
 
-        return null;
+        return entity;
     }
 
     @Override

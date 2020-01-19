@@ -1,4 +1,4 @@
-package com.softserve.easy.simpleEntity;
+package com.softserve.easy.entity.simple;
 
 import com.softserve.easy.annotation.*;
 

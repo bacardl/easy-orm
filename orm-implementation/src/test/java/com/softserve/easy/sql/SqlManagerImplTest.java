@@ -2,9 +2,9 @@ package com.softserve.easy.sql;
 
 import com.softserve.easy.QueryConstant;
 import com.softserve.easy.cfg.Configuration;
+import com.softserve.easy.entity.simple.Country;
+import com.softserve.easy.entity.simple.User;
 import com.softserve.easy.meta.MetaContext;
-import com.softserve.easy.simpleEntity.Country;
-import com.softserve.easy.simpleEntity.User;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

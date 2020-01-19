@@ -23,7 +23,7 @@ import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.util.*;
 
-import static com.softserve.easy.cfg.ConfigPropertyConstant.*;
+import static com.softserve.easy.constant.ConfigPropertyConstant.*;
 import static com.softserve.easy.helper.MetaDataParser.*;
 
 public class Configuration {
@@ -39,7 +39,6 @@ public class Configuration {
     public Configuration() {
         this.properties = Environment.getProperties();
         this.observedClasses = new HashSet<>();
-        initObservedClasses();
         this.classConfig = new HashMap<>();
     }
 
@@ -96,6 +95,7 @@ public class Configuration {
      * but with a new DataSource instance
      */
     public SessionFactory buildSessionFactory() {
+        initObservedClasses();
         DataSource dataSource = initHikariDataSource();
         MetaContext metaContext = getMetaContext();
         return new SessionFactoryImpl(dataSource, metaContext);

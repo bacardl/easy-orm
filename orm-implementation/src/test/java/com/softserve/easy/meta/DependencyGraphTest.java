@@ -1,8 +1,8 @@
 package com.softserve.easy.meta;
 
-import com.softserve.easy.entity.Country;
-import com.softserve.easy.entity.Person;
-import com.softserve.easy.entity.User;
+import com.softserve.easy.entity.complex.Country;
+import com.softserve.easy.entity.complex.Person;
+import com.softserve.easy.entity.complex.User;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

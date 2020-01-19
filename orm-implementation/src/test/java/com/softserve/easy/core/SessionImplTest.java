@@ -1,9 +1,9 @@
 package com.softserve.easy.core;
 
 import com.softserve.easy.cfg.Configuration;
-import com.softserve.easy.entity.Person;
-import com.softserve.easy.simpleEntity.Country;
-import com.softserve.easy.simpleEntity.User;
+import com.softserve.easy.entity.complex.Person;
+import com.softserve.easy.entity.simple.Country;
+import com.softserve.easy.entity.simple.User;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,6 @@ class SessionImplTest {
         SessionFactory sessionFactory = configuration.buildSessionFactory();
         session = (SessionImpl) sessionFactory.openSession();
     }
-
 
 
     @Test

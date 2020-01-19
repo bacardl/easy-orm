@@ -1,8 +1,8 @@
 package com.softserve.easy.helper;
 
-import com.softserve.easy.entity.Country;
-import com.softserve.easy.entity.Order;
-import com.softserve.easy.entity.User;
+import com.softserve.easy.entity.complex.Country;
+import com.softserve.easy.entity.complex.Order;
+import com.softserve.easy.entity.complex.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

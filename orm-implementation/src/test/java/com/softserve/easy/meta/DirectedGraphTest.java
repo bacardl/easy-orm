@@ -1,6 +1,6 @@
 package com.softserve.easy.meta;
 
-import com.softserve.easy.entity.*;
+import com.softserve.easy.entity.complex.*;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 

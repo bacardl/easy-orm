@@ -1,33 +1,19 @@
 package com.softserve.easy.core;
 
-import com.github.database.rider.core.DBUnitRule;
-import com.github.database.rider.core.api.dataset.DataSet;
 import com.github.database.rider.core.api.dataset.ExpectedDataSet;
-import com.github.database.rider.core.api.dataset.SeedStrategy;
-import com.softserve.easy.cfg.Configuration;
+import com.softserve.easy.SimpleDbUnitTest;
+import com.softserve.easy.entity.simple.Country;
+import com.softserve.easy.entity.simple.User;
 import com.softserve.easy.exception.OrmException;
-import com.softserve.easy.simpleEntity.Country;
-import com.softserve.easy.simpleEntity.User;
 import org.hamcrest.Matchers;
-import org.junit.BeforeClass;
-import org.junit.Rule;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@RunWith(JUnit4.class)
-@DataSet(
-        value = "dataset/simple/yml/data.yml",
-        strategy = SeedStrategy.INSERT, cleanAfter = true,
-        executeScriptsBefore = {"dataset/simple/db-schema.sql"},
-        executeScriptsAfter = {"dataset/simple/drop-db-schema.sql"})
-public class SessionImplTestWithConnection {
+
+public class SessionImplTestWithConnection extends SimpleDbUnitTest {
     private static final Class<User> USER_CLASS = User.class;
     private static final Class<Country> COUNTRY_CLASS = Country.class;
     private static final Long USER_ID = 1L;
@@ -50,18 +36,10 @@ public class SessionImplTestWithConnection {
         REFERENCE_USER.setCountry(REFERENCE_COUNTRY);
     }
 
-    @BeforeClass
-    public static void init() {
-        Configuration configuration = initTestConfiguration();
-        SessionFactory sessionFactory = configuration.buildSessionFactory();
+    @Before
+    public void init() {
+        SessionFactory sessionFactory = getConfiguration().buildSessionFactory();
         session = (SessionImpl) sessionFactory.openSession();
-    }
-
-    @Rule
-    public DBUnitRule dbUnitRule = DBUnitRule.instance();
-
-    private Connection getClientConnection() throws SQLException {
-        return dbUnitRule.getDataSetExecutor().getRiderDataSource().getConnection();
     }
 
     @Test
@@ -148,7 +126,4 @@ public class SessionImplTestWithConnection {
         session.update(user);
     }
 
-    private static Configuration initTestConfiguration() {
-        return new Configuration();
-    }
 }

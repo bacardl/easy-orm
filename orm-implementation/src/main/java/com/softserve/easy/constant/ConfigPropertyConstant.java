@@ -1,4 +1,4 @@
-package com.softserve.easy.cfg;
+package com.softserve.easy.constant;
 
 public class ConfigPropertyConstant {
     public static final String DRIVER_CLASS_PROPERTY = "easy.connection.driver_class";

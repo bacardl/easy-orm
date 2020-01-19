@@ -1,6 +1,12 @@
 package com.softserve.easy.helper;
 
 import com.softserve.easy.annotation.Entity;
+import com.softserve.easy.entity.complex.Order;
+import com.softserve.easy.entity.complex.OrderProduct;
+import com.softserve.easy.entity.complex.Person;
+import com.softserve.easy.entity.complex.Product;
+import com.softserve.easy.entity.simple.Country;
+import com.softserve.easy.entity.simple.User;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
@@ -17,8 +23,8 @@ class ClassScannerTest {
         assertThat(annotatedClasses, Matchers.hasSize(2));
         assertThat(annotatedClasses,
                 Matchers.containsInAnyOrder(
-                        com.softserve.easy.simpleEntity.User.class,
-                        com.softserve.easy.simpleEntity.Country.class));
+                        User.class,
+                        Country.class));
     }
 
     @Test
@@ -29,13 +35,13 @@ class ClassScannerTest {
         assertThat(annotatedClasses, Matchers.hasSize(6));
         assertThat(annotatedClasses,
                 Matchers.containsInAnyOrder(
-                        com.softserve.easy.entity.User.class,
-                        com.softserve.easy.entity.Order.class,
-                        com.softserve.easy.entity.OrderProduct.class,
-//                        com.softserve.easy.entity.OrderProductId.class, @Embeddable
-                        com.softserve.easy.entity.Country.class,
-                        com.softserve.easy.entity.Person.class,
-                        com.softserve.easy.entity.Product.class
+                        com.softserve.easy.entity.complex.User.class,
+                        Order.class,
+                        OrderProduct.class,
+//                        com.softserve.easy.entity.complex.OrderProductId.class, @Embeddable
+                        com.softserve.easy.entity.complex.Country.class,
+                        Person.class,
+                        Product.class
                 ));
     }
 
@@ -48,15 +54,15 @@ class ClassScannerTest {
         assertThat(annotatedClasses, Matchers.hasSize(8));
         assertThat(annotatedClasses,
                 Matchers.containsInAnyOrder(
-                        com.softserve.easy.simpleEntity.User.class,
-                        com.softserve.easy.simpleEntity.Country.class,
-                        com.softserve.easy.entity.User.class,
-                        com.softserve.easy.entity.Order.class,
-                        com.softserve.easy.entity.OrderProduct.class,
-//                        com.softserve.easy.entity.OrderProductId.class, @Embeddable
-                        com.softserve.easy.entity.Country.class,
-                        com.softserve.easy.entity.Person.class,
-                        com.softserve.easy.entity.Product.class
+                        User.class,
+                        Country.class,
+                        com.softserve.easy.entity.complex.User.class,
+                        Order.class,
+                        OrderProduct.class,
+//                        com.softserve.easy.entity.complex.OrderProductId.class, @Embeddable
+                        com.softserve.easy.entity.complex.Country.class,
+                        Person.class,
+                        Product.class
                 ));
     }
 }

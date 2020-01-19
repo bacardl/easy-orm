@@ -1,6 +1,6 @@
 package com.softserve.easy.meta;
 
-import com.softserve.easy.entity.User;
+import com.softserve.easy.entity.complex.User;
 import org.junit.jupiter.api.Test;
 
 class MetaDataTest {
