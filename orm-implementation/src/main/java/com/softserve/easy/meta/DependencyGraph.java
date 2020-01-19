@@ -1,6 +1,7 @@
 package com.softserve.easy.meta;
 
 
+import com.google.common.base.MoreObjects;
 import com.softserve.easy.helper.MetaDataParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ public class DependencyGraph {
         return classGraph.breadthFirstTraversal(clazz);
     }
 
-    public List<Set<Class<?>>> getLayeredDependencies(Class<?> clazz) {
+    public List<Set<DependencyPair<Class<?>>>> getLayeredDependencies(Class<?> clazz) {
         return classGraph.layeredBreadthFirstTraversal(clazz);
     }
 
@@ -55,31 +56,33 @@ public class DependencyGraph {
             Field[] declaredFields = aClass.getDeclaredFields();
             LOG.debug("Class {} has following declared fields: {}", aClass.toString(), Arrays.toString(declaredFields));
             for (Field declaredField : declaredFields) {
-                Class<?> type = declaredField.getType();
-                FieldType fieldType = MappingType.getFieldType(type);
-                switch (fieldType) {
-                    case INTERNAL:
-                        LOG.debug("Analyzed field {} is internal type", declaredField.toString());
-                        break;
-                    case COLLECTION:
-                        LOG.debug("Analyzed field {} is an array or collection", declaredField.toString());
-                        Optional<Class<?>> generic = MetaDataParser.getGenericType(declaredField);
-                        if(generic.isPresent()) {
-                            LOG.debug("Analyzed field {} has generic type: {}",
-                                    declaredField.toString(), generic.get());
-                            graph.addVertex(generic.get());
-                            graph.addEdge(aClass, generic.get());
-                            LOG.debug("Added to graph vertex with value {}", generic.get());
-                        }
-                        break;
-                    case EXTERNAL:
-                        LOG.debug("Analyzed field {} is external type", declaredField.toString());
-                        graph.addVertex(type);
-                        graph.addEdge(aClass, type);
-                        LOG.debug("Added to graph vertex with value {}", type);
-                        break;
-                    default:
-                        LOG.debug("The field {} has been skipped.", declaredField.toString());
+                if (!MetaDataParser.isTransientField(declaredField)) {
+                    Class<?> type = declaredField.getType();
+                    FieldType fieldType = MappingType.getFieldType(type);
+                    switch (fieldType) {
+                        case INTERNAL:
+                            LOG.debug("Analyzed field {} is internal type", declaredField.toString());
+                            break;
+//                    case COLLECTION:
+//                        LOG.debug("Analyzed field {} is an array or collection", declaredField.toString());
+//                        Optional<Class<?>> generic = MetaDataParser.getGenericType(declaredField);
+//                        if(generic.isPresent()) {
+//                            LOG.debug("Analyzed field {} has generic type: {}",
+//                                    declaredField.toString(), generic.get());
+//                            graph.addVertex(generic.get());
+//                            graph.addEdge(aClass, generic.get());
+//                            LOG.debug("Added to graph vertex with value {}", generic.get());
+//                        }
+//                        break;
+                        case EXTERNAL:
+                            LOG.debug("Analyzed field {} is external type", declaredField.toString());
+                            graph.addVertex(type);
+                            graph.addEdge(aClass, type);
+                            LOG.debug("Added to graph vertex with value {}", type);
+                            break;
+                        default:
+                            LOG.debug("The field {} has been skipped.", declaredField.toString());
+                    }
                 }
             }
         }
@@ -168,23 +171,25 @@ public class DependencyGraph {
          * @param root - value of a vertex from we should start to traverse; not considered in layers
          * @return - list of layers; each layer consists successors of the previous layer;
          */
-        public List<Set<T>> layeredBreadthFirstTraversal(T root) {
-            List<Set<T>> layeredList = new LinkedList<>();
+        public List<Set<DependencyPair<T>>> layeredBreadthFirstTraversal(T root) {
+            List<Set<DependencyPair<T>>> layeredList = new LinkedList<>();
             Set<T> visited = new LinkedHashSet<>();
             Queue<T> queue = new LinkedList<>();
             queue.add(root);
             visited.add(root);
             while (!queue.isEmpty()) {
-                T vertex = queue.poll();
-                Set<T> layer = new LinkedHashSet<>();
-                for (Vertex<T> v : this.getAdjVertices(vertex)) {
-                    if (!visited.contains(v.getValue())) {
-                        visited.add((T) v.getValue());
-                        queue.add((T) v.getValue());
-                        layer.add(v.getValue());
+                T vertexValue = queue.poll();
+                Set<DependencyPair<T>> layer = new LinkedHashSet<>();
+                for (Vertex<T> currentVertex : this.getAdjVertices(vertexValue)) {
+                    if (!visited.contains(currentVertex.getValue())) {
+                        visited.add(currentVertex.getValue());
+                        queue.add(currentVertex.getValue());
+                        layer.add(new DependencyPair<>(vertexValue, currentVertex.getValue()));
                     }
                 }
-                layeredList.add(layer);
+                if (!layer.isEmpty()) {
+                    layeredList.add(layer);
+                }
             }
             return layeredList;
         }
@@ -196,6 +201,7 @@ public class DependencyGraph {
                     .toString();
         }
     }
+
 
     static class Vertex<T> {
         private final T value;
@@ -214,7 +220,6 @@ public class DependencyGraph {
                     .add("value=" + value)
                     .toString();
         }
-
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -222,10 +227,46 @@ public class DependencyGraph {
             Vertex<?> vertex = (Vertex<?>) o;
             return Objects.equals(getValue(), vertex.getValue());
         }
-
         @Override
         public int hashCode() {
             return Objects.hash(getValue());
+        }
+    }
+
+    public final static class DependencyPair<T> {
+        private T parent;
+        private T child;
+
+        public DependencyPair(T parent, T child) {
+            this.parent = parent;
+            this.child = child;
+        }
+        public T getParent() {
+            return parent;
+        }
+        public T getChild() {
+            return child;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                    .add("parent:", parent)
+                    .add("child:", child)
+                    .toString();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof DependencyPair)) return false;
+            DependencyPair<?> that = (DependencyPair<?>) o;
+            return getParent().equals(that.getParent()) &&
+                    getChild().equals(that.getChild());
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(getParent(), getChild());
         }
     }
 }

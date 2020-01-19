@@ -1,5 +1,6 @@
 package com.softserve.easy.meta;
 
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
 import com.softserve.easy.meta.field.AbstractMetaField;
 import com.softserve.easy.meta.field.CollectionMetaField;
 import com.softserve.easy.meta.field.ExternalMetaField;
@@ -21,10 +22,19 @@ public class MetaData {
     private final String entityDbName;
 
     private final Field primaryKey;
+
+    private final DbTable dbTable;
+
     private Map<Field, AbstractMetaField> metaFields;
 
-    public MetaData(Class<?> entityClass, String entityClassName, List<Field> fields, List<Annotation> annotations,
-                    String entityDbName, Field primaryKey, Map<Field, AbstractMetaField> metaFields) {
+    public MetaData(Class<?> entityClass,
+                    String entityClassName,
+                    List<Field> fields,
+                    List<Annotation> annotations,
+                    String entityDbName,
+                    Field primaryKey,
+                    Map<Field, AbstractMetaField> metaFields,
+                    DbTable dbTable) {
         this.entityClass = entityClass;
         this.entityClassName = entityClassName;
         this.fields = fields;
@@ -32,6 +42,11 @@ public class MetaData {
         this.entityDbName = entityDbName;
         this.primaryKey = primaryKey;
         this.metaFields = metaFields;
+        this.dbTable = dbTable;
+    }
+
+    public DbTable getDbTable() {
+        return dbTable;
     }
 
     public InternalMetaField getPkMetaField() {
@@ -45,11 +60,9 @@ public class MetaData {
                 .collect(Collectors.toList());
     }
 
-    public List<InternalMetaField> getInternalMetaFieldsWithoutPk() {
-        return metaFields.values().stream()
-                .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.INTERNAL))
-                .filter(abstractMetaField -> !abstractMetaField.getField().equals(primaryKey))
-                .map(abstractMetaField -> (InternalMetaField) abstractMetaField)
+    public List<InternalMetaField> getInternalMetaFieldWithoutPk() {
+        return getInternalMetaField().stream()
+                .filter(internalMetaField -> (!internalMetaField.isPrimaryKey()))
                 .collect(Collectors.toList());
     }
 
@@ -71,7 +84,7 @@ public class MetaData {
      * @return joined by comma separator column names, checks if the field is transitionable
      */
     public String getJoinedInternalFieldsNames() {
-        return getInternalMetaField().stream().filter(internalMetaField -> !internalMetaField.isTransitionable())
+        return getInternalMetaField().stream()
                 .map(InternalMetaField::getDbFieldFullName)
                 .collect(Collectors.joining(","));
     }

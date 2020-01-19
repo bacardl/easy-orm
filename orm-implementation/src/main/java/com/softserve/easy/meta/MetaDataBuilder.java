@@ -1,5 +1,7 @@
 package com.softserve.easy.meta;
 
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
 import com.softserve.easy.meta.field.AbstractMetaField;
 
 import java.lang.annotation.Annotation;
@@ -19,12 +21,15 @@ public class MetaDataBuilder {
     private Field primaryKey;
     private Map<Field, AbstractMetaField> metaFields;
 
-    public MetaDataBuilder(Class<?> entityClass) {
+    private DbSchema dbSchema;
+    private DbTable dbTable;
+
+    public MetaDataBuilder(Class<?> entityClass, DbSchema dbSchema) {
         this.entityClass = entityClass;
         this.entityClassName = entityClass.getSimpleName().toLowerCase();
         this.fields = Arrays.asList(entityClass.getDeclaredFields());
         this.annotations = Arrays.asList(entityClass.getAnnotations());
-
+        this.dbSchema = dbSchema;
         this.entityDbName = entityClassName;
     }
 
@@ -73,6 +78,7 @@ public class MetaDataBuilder {
 
 
     public MetaData build() {
+        this.dbTable = this.dbSchema.addTable(getEntityDbName());
         return new MetaData(
                 this.entityClass,
                 this.entityClassName,
@@ -80,7 +86,8 @@ public class MetaDataBuilder {
                 this.annotations,
                 this.entityDbName,
                 this.primaryKey,
-                this.metaFields
+                this.metaFields,
+                this.dbTable
         );
     }
 }

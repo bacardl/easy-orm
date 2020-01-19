@@ -2,7 +2,6 @@ package com.softserve.easy.meta;
 
 import com.softserve.easy.entity.User;
 import com.softserve.easy.helper.MetaDataParser;
-import com.softserve.easy.simpleEntity.Country;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;

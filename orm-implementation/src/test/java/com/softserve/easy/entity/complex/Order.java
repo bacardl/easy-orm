@@ -1,4 +1,4 @@
-package com.softserve.easy.entity;
+package com.softserve.easy.entity.complex;
 
 import com.softserve.easy.annotation.*;
 
@@ -10,18 +10,17 @@ import java.util.StringJoiner;
 @Entity(name = "Order")
 @Table(name = "orders")
 public class Order {
-     @Id
+    @Id
     // @GeneratedValue
     private Long id;
 
-     @Column(name = "")
-     @ManyToOne
-    // @JoinColumn(name="user_id", nullable=false)
+    @Column(name = "user_id")
+    @ManyToOne
     private User user;
     private String status;
     private Date createdAt;
 
-//    @OneToMany(
+    //    @OneToMany(
 //            mappedBy = "orders",
 //            cascade = CascadeType.ALL,
 //            orphanRemoval = true

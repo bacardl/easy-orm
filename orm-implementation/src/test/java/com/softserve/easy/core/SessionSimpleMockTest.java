@@ -1,7 +1,6 @@
 package com.softserve.easy.core;
 
-import com.softserve.easy.meta.DependencyGraph;
-import com.softserve.easy.meta.MetaData;
+import com.softserve.easy.meta.MetaContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -9,22 +8,20 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.sql.Connection;
-import java.util.Map;
 
-class SessionImplMockTest {
+class SessionSimpleMockTest {
 
     @InjectMocks
     private Session session;
     @Mock
     private Connection connection;
     @Mock
-    private Map<Class<?>, MetaData> metaDataMap;
-    @Mock
-    private DependencyGraph dependencyGraph;
+    private MetaContext metaContext;
+
 
     @Before
     public void setUp() {
-//        session = new SessionImpl(connection, metaDataMap, dependencyGraph);
+        session = new SessionImpl(connection, metaContext);
         MockitoAnnotations.initMocks(this);
     }
 

@@ -1,4 +1,4 @@
-package com.softserve.easy.entity;
+package com.softserve.easy.entity.complex;
 
 import com.softserve.easy.annotation.Entity;
 
@@ -7,8 +7,6 @@ import java.util.StringJoiner;
 
 @Entity(name = "Person")
 // @Table(name = "persons")
-// @GenericGenerator(name = "custom-generator", strategy = "foreign",
-// parameters = { @Parameter(name = "property", value = "user")})
 public class Person {
 
     // @Id

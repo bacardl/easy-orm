@@ -1,4 +1,4 @@
-package com.softserve.easy.entity;
+package com.softserve.easy.entity.complex;
 
 import java.util.Objects;
 import java.util.StringJoiner;
