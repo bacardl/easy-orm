@@ -9,14 +9,13 @@ import com.softserve.easy.meta.MetaData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static com.softserve.easy.SimpleTestEnvironment.COUNTRY_CLASS;
+import static com.softserve.easy.SimpleTestEnvironment.USER_CLASS;
 import static com.softserve.easy.constant.ConfigPropertyConstant.ENTITY_PACKAGE_PROPERTY;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 
 class SqlManagerSimpleTest {
-    private static final Class<User> USER_CLASS = User.class;
-    private static final Class<Country> COUNTRY_CLASS = Country.class;
-
     private static SqlManagerImpl sqlManagerImpl;
     private static MetaContext metaContext;
     private static MetaData userMeta;

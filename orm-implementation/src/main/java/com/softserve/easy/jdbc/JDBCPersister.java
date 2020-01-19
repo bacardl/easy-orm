@@ -6,20 +6,16 @@ import com.softserve.easy.bind.EntityBinderImpl;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
-import com.softserve.easy.meta.field.ExternalMetaField;
-import com.softserve.easy.meta.field.InternalMetaField;
 import com.softserve.easy.sql.SqlManager;
 import com.softserve.easy.sql.SqlManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 public class JDBCPersister implements Persister {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCPersister.class);
@@ -69,19 +65,14 @@ public class JDBCPersister implements Persister {
 
     @Override
     public void updateEntity(Object object) {
-        Class<?> currentClass = object.getClass();
-        MetaData metaData = metaContext.getMetaDataMap().get(currentClass);
-        List<ExternalMetaField> externalMetaFields = metaData.getExternalMetaField();
-        List<InternalMetaField> internalMetaFields = metaData.getInternalMetaField();
-        internalMetaFields.remove(metaData.getPkMetaField());
-
+        Class<?> entityType = object.getClass();
+        MetaData metaData = metaContext.getMetaDataMap().get(entityType);
         String updateQuery = sqlManager.buildUpdateByPkQuery(metaData, object).toString();
         try (PreparedStatement statement = connection.prepareStatement(updateQuery)) {
             int rows = statement.executeUpdate();
-            connection.commit();
             LOG.info("-------ROWS AFFECTED " + rows + "-------");
         } catch (Exception e) {
-            LOG.error("There was an exception {}, during update query for {} ", e, object.getClass().getSimpleName());
+            LOG.error("There was an exception {}, during update query for {} ", e, entityType.getSimpleName());
             throw new OrmException(e);
         }
     }
@@ -90,9 +81,8 @@ public class JDBCPersister implements Persister {
     @Override
     public void deleteEntity(Object object) {
         MetaData metaData = metaContext.getMetaDataMap().get(object.getClass());
-        Field pkField = metaData.getPrimaryKey();
-        String query = sqlManager.buildDeleteByPkQuery(metaData, object).toString();
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        String deleteQuery = sqlManager.buildDeleteByPkQuery(metaData, object).toString();
+        try (PreparedStatement statement = connection.prepareStatement(deleteQuery)) {
             statement.execute();
         } catch (SQLException  e) {
             LOG.error("There was an exception {}, during delete query for {} by {}", e, object.getClass().getSimpleName(), object.toString());
