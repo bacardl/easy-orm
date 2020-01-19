@@ -90,6 +90,7 @@ public class JDBCPersister implements Persister {
             throw new OrmException(e);
         }
     }
+
     private List<Object> collectUpdateParameters(List<InternalMetaField> internalMetaFields, List<ExternalMetaField> externalMetaFields, Object object, MetaData metaData) throws IllegalAccessException {
         List<Object> parameters = new ArrayList<>();
         for (ExternalMetaField externalMetaField : externalMetaFields){
@@ -118,6 +119,7 @@ public class JDBCPersister implements Persister {
         parameters.add(metaData.getPkMetaField().getField().get(object));
         return parameters;
     }
+
     private void checkAndProvideAccessibility(Field field) {
         if (!field.isAccessible()) {
             field.setAccessible(true);
@@ -137,5 +139,14 @@ public class JDBCPersister implements Persister {
             LOG.error("There was an exception {}, during delete query for {} by {}", e, object.getClass().getSimpleName(), object.toString());
             throw new OrmException(e);
         }
+    }
+
+    @Override
+    public void insertEntity(Object object) {
+
+    }
+    @Override
+    public void insertEntityWithId(Object object, Serializable id) {
+
     }
 }

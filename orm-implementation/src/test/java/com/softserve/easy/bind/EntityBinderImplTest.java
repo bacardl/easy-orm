@@ -4,8 +4,11 @@ import com.github.database.rider.core.DBUnitRule;
 import com.github.database.rider.core.api.dataset.DataSet;
 import com.github.database.rider.core.api.dataset.SeedStrategy;
 import com.softserve.easy.QueryConstant;
+import com.softserve.easy.cfg.Configuration;
+import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.simpleEntity.Country;
 import com.softserve.easy.simpleEntity.User;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
@@ -29,7 +32,7 @@ import static org.hamcrest.Matchers.notNullValue;
         strategy = SeedStrategy.INSERT, cleanAfter = true,
         executeScriptsBefore = {"dataset/simple/db-schema.sql"},
         executeScriptsAfter = {"dataset/simple/drop-db-schema.sql"})
-class EntityBinderImplTest {
+public class EntityBinderImplTest {
     private static final Class<User> USER_CLASS = User.class;
     private static final Class<Country> COUNTRY_CLASS = Country.class;
     private static final Long USER_ID = 1L;
@@ -38,7 +41,7 @@ class EntityBinderImplTest {
     private static final User REFERENCE_USER;
     private static final Country REFERENCE_COUNTRY;
 
-    private EntityBinder entityBinder;
+    private static EntityBinder entityBinder;
 
     static {
         REFERENCE_COUNTRY = new Country();
@@ -55,6 +58,16 @@ class EntityBinderImplTest {
 
     @Rule
     public DBUnitRule dbUnitRule = DBUnitRule.instance();
+
+    @BeforeClass
+    public static void initEntityBinder() {
+        MetaContext metaContext = initTestConfiguration().getMetaContext();
+        entityBinder = new EntityBinderImpl(metaContext);
+    }
+
+    private static Configuration initTestConfiguration() {
+        return new Configuration();
+    }
 
     private Connection getClientConnection() throws SQLException {
         return dbUnitRule.getDataSetExecutor().getRiderDataSource().getConnection();
@@ -84,7 +97,6 @@ class EntityBinderImplTest {
         Connection connection = getClientConnection();
         PreparedStatement preparedStatement
                 = connection.prepareStatement(QueryConstant.SELECT_USER_BY_ID_1);
-        preparedStatement.setLong(1, USER_ID);
 
         ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -105,7 +117,6 @@ class EntityBinderImplTest {
         Connection connection = getClientConnection();
         PreparedStatement preparedStatement
                 = connection.prepareStatement(QueryConstant.SELECT_COUNTRY_BY_ID);
-        preparedStatement.setInt(1, COUNTRY_ID);
 
         ResultSet resultSet = preparedStatement.executeQuery();
 
