@@ -9,6 +9,8 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.text.ParseException;
+
 import static com.softserve.easy.SimpleTestEnvironment.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -105,6 +107,40 @@ public class SessionSimpleTestWithConnection extends SimpleDbUnitTest {
         user.setEmail("VOT_ETO_DA@armyspy.com");
         user.setCountry(country);
         session.update(user);
+    }
+
+    //INSERT
+    @ExpectedDataSet(value = "dataset/simple/yml/data-insert.yml")
+    @Test
+    public void saveUserWithoutId() throws ParseException {
+        Country country = new Country();
+        country.setId(100);
+        country.setName("United States");
+
+        User user = new User();
+        user.setUsername("Jon");
+        user.setPassword("Jon123123");
+        user.setEmail("Jon@gmail.com");
+        user.setCountry(country);
+
+        session.save(user);
+    }
+
+    @ExpectedDataSet(value = "dataset/simple/yml/data-insert.yml")
+    @Test
+    public void saveUserWithId() throws ParseException {
+        Country country = new Country();
+        country.setId(100);
+        country.setName("United States");
+
+        User user = new User();
+        user.setId(6L);
+        user.setUsername("Jon");
+        user.setPassword("Jon123123");
+        user.setEmail("Jon@gmail.com");
+        user.setCountry(country);
+
+        session.save(user);
     }
 
 }

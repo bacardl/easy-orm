@@ -92,6 +92,58 @@ class SqlManagerSimpleTest {
                 equalToIgnoringCase(cleanUpString(QueryConstant.UPDATE_USER_QUERY_WHERE_PRIMARYKEY)));
     }
 
+    @Test
+    void shouldReturnInsertQueryForUserWithId() {
+        Country ukr = new Country();
+        ukr.setId(13);
+        ukr.setName("Ukraine");
+
+        User user = new User();
+        user.setId((long)404);
+        user.setUsername("jon");
+        user.setPassword("jon111");
+        user.setEmail("jon@gmail.com");
+        user.setCountry(ukr);
+
+        assertThat(cleanUpString(sqlManagerImpl.buildInsertQuery(userMeta, user).toString()),
+                equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_USER_QUERY_WITH_ID)));
+    }
+
+    @Test
+    void shouldReturnInsertQueryForCountryWithId() {
+        Country country = new Country();
+        country.setId(13);
+        country.setName("Ukraine");
+
+        assertThat(cleanUpString(sqlManagerImpl.buildInsertQuery(countryMeta, country).toString()),
+                equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_COUNTRY_QUERY_WITH_CODE)));
+    }
+
+    @Test
+    void shouldReturnInsertQueryForUserWithoutId() {
+        Country ukr = new Country();
+        ukr.setId(13);
+        ukr.setName("Ukraine");
+
+        User user = new User();
+        user.setUsername("jon");
+        user.setPassword("jon111");
+        user.setEmail("jon@gmail.com");
+        user.setCountry(ukr);
+
+        assertThat(cleanUpString(sqlManagerImpl.buildInsertQuery(userMeta, user).toString()),
+                equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_USER_QUERY_WITHOUT_ID)));
+    }
+
+    @Test
+    void shouldReturnInsertQueryForCountryWithoutId() {
+        Country country = new Country();
+        country.setName("Ukraine");
+
+        assertThat(cleanUpString(sqlManagerImpl.buildInsertQuery(countryMeta, country).toString()),
+                equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_COUNTRY_QUERY_WITHOUT_CODE)));
+    }
+
     private static String cleanUpString(String input) {
         return input.replaceAll("[\\s\\n\\t\\r\\f\\v]+", "").trim();
     }

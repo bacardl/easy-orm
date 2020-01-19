@@ -90,43 +90,43 @@ public class MetaData {
     }
 
     public String getJoinedInternalFieldsNamesNotFull() {
-        return getInternalMetaField().stream().filter(internalMetaField -> !internalMetaField.isTransitionable())
+        return getInternalMetaField().stream()
                 .map(InternalMetaField::getDbFieldName)
                 .collect(Collectors.joining(","));
     }
 
     public String getJoinedInternalFieldsNamesWithoutPrimaryKey() {
-        return getInternalMetaFieldsWithoutPk().stream().filter(internalMetaField -> !internalMetaField.isTransitionable())
+        return getInternalMetaFieldWithoutPk().stream()
                 .map(InternalMetaField::getDbFieldFullName)
                 .collect(Collectors.joining(","));
     }
 
     public String getJoinedInternalFieldsNamesNotFullWithoutPrimaryKey() {
-        return getInternalMetaFieldsWithoutPk().stream().filter(internalMetaField -> !internalMetaField.isTransitionable())
+        return getInternalMetaFieldWithoutPk().stream()
                 .map(InternalMetaField::getDbFieldName)
                 .collect(Collectors.joining(","));
     }
 
     public String getJoinedExternalFieldsNames() {
-        return getExternalMetaField().stream().filter(externalMetaField -> !externalMetaField.isTransitionable())
+        return getExternalMetaField().stream()
                 .map(ExternalMetaField::getForeignKeyFieldFullName).collect(Collectors.joining(","));
     }
 
     public String getJoinedExternalFieldsNamesNotFull() {
-        return getExternalMetaField().stream().filter(externalMetaField -> !externalMetaField.isTransitionable())
+        return getExternalMetaField().stream()
                 .map(ExternalMetaField::getForeignKeyFieldName).collect(Collectors.joining(","));
     }
 
     public long getCountInternalFields() {
-        return getInternalMetaField().stream().filter(internalMetaField -> !internalMetaField.isTransitionable()).count();
+        return getInternalMetaField().size();
     }
 
     public long getCountInternalFieldsWithoutPrimaryKey() {
-        return getInternalMetaFieldsWithoutPk().stream().filter(internalMetaField -> !internalMetaField.isTransitionable()).count();
+        return getInternalMetaFieldWithoutPk().size();
     }
 
     public long getCountExternalFields() {
-        return getExternalMetaField().stream().filter(externalMetaField -> !externalMetaField.isTransitionable()).count();
+        return getExternalMetaField().size();
     }
 
     public <T> boolean checkIdCompatibility(Class<T> idClazz) {

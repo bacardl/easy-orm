@@ -5,11 +5,13 @@ import com.softserve.easy.jdbc.JDBCPersister;
 import com.softserve.easy.jdbc.Persister;
 import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
+import com.softserve.easy.meta.field.ExternalMetaField;
+import com.softserve.easy.meta.field.InternalMetaField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.sql.Connection;
+import java.sql.*;
 import java.util.Objects;
 
 
@@ -50,7 +52,7 @@ public class SessionImpl implements Session {
                     preparedStatement.setObject(i, f.getField().get(object));
                 }
             } else {
-                for (InternalMetaField f : metaData.getInternalMetaFieldsWithoutPk()) {
+                for (InternalMetaField f : metaData.getInternalMetaFieldWithoutPk()) {
                     f.getField().setAccessible(true);
                     i++;
                     preparedStatement.setObject(i, f.getField().get(object));
