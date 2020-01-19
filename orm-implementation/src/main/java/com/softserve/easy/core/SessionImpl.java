@@ -5,21 +5,18 @@ import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
 import com.softserve.easy.meta.field.ExternalMetaField;
 import com.softserve.easy.meta.field.InternalMetaField;
+import com.softserve.easy.sql.SqlManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.sql.*;
-import java.util.*;
-import java.util.stream.Collectors;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class SessionImpl implements Session {
@@ -27,12 +24,14 @@ public class SessionImpl implements Session {
 
     private final Connection connection;
     private final MetaContext metaContext;
+    private final SqlManager sqlManager;
 
     private Transaction transaction;
 
     public SessionImpl(Connection connection, MetaContext metaContext) {
         this.connection = connection;
         this.metaContext = metaContext;
+        this.sqlManager = new SqlManager(metaContext);
     }
 
     @Override
@@ -53,11 +52,12 @@ public class SessionImpl implements Session {
             throw new OrmException("Wrong type of ID object.");
         }
         T entity = null;
-        String sqlQuery = buildSelectSqlQueryWithWhereClause(entityType, metaData.getPkMetaField().getDbFieldName());
+//        String sqlQuery = buildSelectSqlQueryWithWhereClause(entityType, metaData.getPkMetaField().getDbFieldName());
+        String sqlQuery = sqlManager.buildSelectByIdSqlQuery(entityType,id).toString();
 
         ResultSet resultSet = null;
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
-            preparedStatement.setObject(1, id);
+//            preparedStatement.setObject(1, id);
             resultSet = preparedStatement.executeQuery();
 
             // check if it's one row
@@ -155,7 +155,6 @@ public class SessionImpl implements Session {
         if (Objects.nonNull(fieldName)) {
             stringBuilder.append(" WHERE ")
                     // TODO: it doesn't work with child's entity fields
-                    // TODO: need to refactor the AbstractMetaField classes
                     .append(rootMetaData.getEntityDbName())
                     .append(".")
                     .append(fieldName)

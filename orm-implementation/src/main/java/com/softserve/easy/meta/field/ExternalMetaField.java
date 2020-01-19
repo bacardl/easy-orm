@@ -1,12 +1,18 @@
 package com.softserve.easy.meta.field;
 
 import com.google.common.base.MoreObjects;
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.softserve.easy.meta.MetaData;
 
 import java.lang.reflect.Field;
 
 public class ExternalMetaField extends AbstractMetaField {
     private final String foreignKeyFieldName;
+    private final DbColumn externalDbColumn;
+
+    public DbColumn getExternalDbColumn() {
+        return externalDbColumn;
+    }
 
     public String getForeignKeyFieldName() {
         return foreignKeyFieldName;
@@ -43,6 +49,7 @@ public class ExternalMetaField extends AbstractMetaField {
     protected ExternalMetaField(Init<?> init) {
         super(init);
         this.foreignKeyFieldName = init.foreignKeyFieldName;
+        this.externalDbColumn = getMetaData().getDbTable().addColumn(foreignKeyFieldName);
     }
 
     @Override
@@ -51,7 +58,6 @@ public class ExternalMetaField extends AbstractMetaField {
                 .add("fieldName", fieldName)
                 .add("fieldType", fieldType)
                 .add("mappingType", mappingType)
-                .add("transitionable", transitionable)
                 .add("foreignKeyFieldName", foreignKeyFieldName)
                 .toString();
     }

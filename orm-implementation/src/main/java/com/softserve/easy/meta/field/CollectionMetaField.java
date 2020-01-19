@@ -47,7 +47,6 @@ public class CollectionMetaField  extends AbstractMetaField {
                 .add("fieldName", fieldName)
                 .add("fieldType", fieldType)
                 .add("mappingType", mappingType)
-                .add("transitionable", transitionable)
                 .add("genericType", genericType)
                 .toString();
     }

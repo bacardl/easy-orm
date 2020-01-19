@@ -1,7 +1,6 @@
 package com.softserve.easy.meta;
 
 import com.softserve.easy.entity.Country;
-import com.softserve.easy.entity.Order;
 import com.softserve.easy.entity.Person;
 import com.softserve.easy.entity.User;
 import org.hamcrest.Matchers;
@@ -21,15 +20,14 @@ public class DependencyGraphTest {
     private static final Class<User> USER_CLASS = User.class;
     private static final Class<Person> PERSON_CLASS = Person.class;
     private static final Class<Country> COUNTRY_CLASS = Country.class;
-    private static final Class<Order> ORDER_CLASS = Order.class;
-    private static final int NUMBER_OF_ALL_CLASSES = 4;
+    private static final int NUMBER_OF_ALL_CLASSES = 3;
     private static final Logger LOG = LoggerFactory.getLogger(DependencyGraphTest.class);
 
     private Set<Class<?>> classes;
     private DependencyGraph dependencyGraph;
 
     @BeforeEach
-    void init() {
+    public void init() {
         this.classes = new HashSet<>();
         classes.add(USER_CLASS);
         classes.add(PERSON_CLASS);
@@ -37,25 +35,26 @@ public class DependencyGraphTest {
         this.dependencyGraph = new DependencyGraph(classes);
     }
 
+
     @Test
-    void checkNumberOfAllInstances() {
+    public void checkNumberOfAllInstances() {
         assertThat(dependencyGraph.getNumberOfAllClasses(), equalTo(NUMBER_OF_ALL_CLASSES));
     }
 
     @Test
-    void checkExplicitDependencies() {
+    public void checkExplicitDependencies() {
         assertThat(dependencyGraph.getExplicitDependencies(USER_CLASS), not(empty()));
-        checkExplicitDependenciesByClass(dependencyGraph, USER_CLASS, PERSON_CLASS, ORDER_CLASS, COUNTRY_CLASS);
+        checkExplicitDependenciesByClass(dependencyGraph, USER_CLASS, PERSON_CLASS, COUNTRY_CLASS);
         checkExplicitDependenciesByClass(dependencyGraph, PERSON_CLASS, USER_CLASS);
         checkExplicitDependenciesByClass(dependencyGraph, COUNTRY_CLASS);
     }
 
     @Test
-    void checkImplicitDependencies() {
+    public void checkImplicitDependencies() {
         assertThat(dependencyGraph.getAllDependencies(USER_CLASS), not(empty()));
-        checkImplicitDependenciesByClass(dependencyGraph, USER_CLASS, PERSON_CLASS, ORDER_CLASS, COUNTRY_CLASS);
-        checkImplicitDependenciesByClass(dependencyGraph, PERSON_CLASS, USER_CLASS, COUNTRY_CLASS, ORDER_CLASS);
-        checkImplicitDependenciesByClass(dependencyGraph, COUNTRY_CLASS);
+        checkAllDependenciesByClass(dependencyGraph, USER_CLASS, PERSON_CLASS, COUNTRY_CLASS);
+        checkAllDependenciesByClass(dependencyGraph, PERSON_CLASS, USER_CLASS, COUNTRY_CLASS);
+        checkAllDependenciesByClass(dependencyGraph, COUNTRY_CLASS);
     }
 
     private static void checkExplicitDependenciesByClass(DependencyGraph classGraph,
@@ -71,9 +70,8 @@ public class DependencyGraphTest {
         );
     }
 
-
-    private static void checkImplicitDependenciesByClass(DependencyGraph classGraph,
-                                                         Class<?> checkedClass, Class<?>... connectedClasses) {
+    private static void checkAllDependenciesByClass(DependencyGraph classGraph,
+                                                    Class<?> checkedClass, Class<?>... connectedClasses) {
         Set<Class<?>> verticesByClass = classGraph.getAllDependencies(checkedClass);
         assertThat(verticesByClass, Matchers.notNullValue());
         assertThat(checkedClass.getSimpleName()

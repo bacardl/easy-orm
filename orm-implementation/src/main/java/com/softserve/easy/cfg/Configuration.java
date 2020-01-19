@@ -1,14 +1,19 @@
 package com.softserve.easy.cfg;
 
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
 import com.softserve.easy.annotation.Entity;
 import com.softserve.easy.core.SessionFactory;
 import com.softserve.easy.core.SessionFactoryImpl;
+import com.softserve.easy.exception.ClassValidationException;
+import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.helper.ClassScanner;
 import com.softserve.easy.helper.MetaDataParser;
-import com.softserve.easy.meta.DependencyGraph;
-import com.softserve.easy.meta.MetaContext;
-import com.softserve.easy.meta.MetaData;
+import com.softserve.easy.meta.*;
 import com.softserve.easy.meta.field.AbstractMetaField;
+import com.softserve.easy.meta.field.CollectionMetaField;
+import com.softserve.easy.meta.field.ExternalMetaField;
+import com.softserve.easy.meta.field.InternalMetaField;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
@@ -19,6 +24,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 import static com.softserve.easy.cfg.ConfigPropertyConstant.*;
+import static com.softserve.easy.helper.MetaDataParser.*;
 
 public class Configuration {
     private static final Logger LOG = LoggerFactory.getLogger(Configuration.class);
@@ -27,41 +33,45 @@ public class Configuration {
     private DependencyGraph dependencyGraph;
     private Properties properties;
 
+    private DbSpec dbSpec = new DbSpec();
+    private DbSchema dbSchema = dbSpec.getDefaultSchema();
+
     public Configuration() {
         this.properties = Environment.getProperties();
-        this.observedClasses = ClassScanner.getAnnotatedClasses(Entity.class,
-                Objects.requireNonNull(properties.getProperty(ENTITY_PACKAGE_PROPERTY)));
+        this.observedClasses = new HashSet<>();
+        initObservedClasses();
         this.classConfig = new HashMap<>();
+    }
 
-        for (Class<?> observedClass : observedClasses) {
-            addEntityToConfig(observedClass);
+    private void initObservedClasses() {
+        String scanPackage = properties.getProperty(ENTITY_PACKAGE_PROPERTY);
+        if (Objects.nonNull(scanPackage)) {
+            this.observedClasses = ClassScanner.getAnnotatedClasses(Entity.class, scanPackage);
         }
-        this.dependencyGraph = new DependencyGraph(observedClasses);
     }
 
     public Configuration addAnnotatedClass(Class<?> annotatedClass) {
         if (Objects.isNull(annotatedClass)) {
             throw new IllegalArgumentException("The annotatedClass value must be not Null");
         }
-        if (!classConfig.containsKey(annotatedClass))
+        if (!observedClasses.contains(annotatedClass))
         {
             if (MetaDataParser.isEntityAnnotatedClass(annotatedClass))
             {
-                addEntityToConfig(annotatedClass);
+                observedClasses.add(annotatedClass);
             } else {
                 throw new IllegalArgumentException("annotatedClass must be annotated by @Entity");
             }
         } else {
             LOG.info("Class {} has already been mapped from classpath", annotatedClass.getSimpleName());
         }
-        dependencyGraph = new DependencyGraph(observedClasses);
         return this;
     }
 
     // creates meta data, creates meta fields and populates(links) meta fields to meta data
     private void addEntityToConfig(Class<?> annotatedClass) {
-        MetaData metaData = MetaDataParser.analyzeClass(annotatedClass);
-        Map<Field, AbstractMetaField> metaFields = MetaDataParser.createMetaFields(metaData);
+        MetaData metaData = analyzeClass(annotatedClass);
+        Map<Field, AbstractMetaField> metaFields = createMetaFields(metaData);
         metaData.setMetaFields(metaFields);
         classConfig.put(annotatedClass, metaData);
     }
@@ -87,8 +97,28 @@ public class Configuration {
      */
     public SessionFactory buildSessionFactory() {
         DataSource dataSource = initHikariDataSource();
-        MetaContext metaContext = new MetaContext(classConfig, dependencyGraph, properties, observedClasses);
+        MetaContext metaContext = getMetaContext();
         return new SessionFactoryImpl(dataSource, metaContext);
+    }
+
+    public MetaContext getMetaContext() {
+        String schemaName = properties.getProperty(DB_SCHEMA);
+        if (Objects.nonNull(schemaName)) {
+            this.dbSchema = dbSpec.createSchema(schemaName);
+        }
+        initDependencyGraph();
+        initClassConfig();
+        return new MetaContext(classConfig, dependencyGraph, properties, observedClasses, dbSpec, dbSchema );
+    }
+
+    private void initDependencyGraph() {
+        this.dependencyGraph = new DependencyGraph(observedClasses);
+    }
+
+    private void initClassConfig() {
+        for (Class<?> observedClass : observedClasses) {
+            addEntityToConfig(observedClass);
+        }
     }
 
     private DataSource initHikariDataSource() {
@@ -97,6 +127,90 @@ public class Configuration {
         config.setJdbcUrl(properties.getProperty(URL_PROPERTY));
         config.setUsername(properties.getProperty(USERNAME_PROPERTY));
         config.setPassword(properties.getProperty(PASSWORD_PROPERTY));
+        if (Objects.nonNull(properties.getProperty(DB_SCHEMA))) {
+//            config.setSchema(properties.getProperty(DB_SCHEMA));
+        }
         return new HikariDataSource(config);
+    }
+
+    /**
+     * @throws ClassValidationException
+     */
+    public MetaData analyzeClass(Class<?> clazz) {
+        MetaDataBuilder metaDataBuilder = new MetaDataBuilder(clazz, this.dbSchema);
+
+        Optional<Field> primaryKeyField = MetaDataParser.getPrimaryKeyField(clazz);
+        metaDataBuilder.setPrimaryKey(primaryKeyField
+                .orElseThrow(() -> new ClassValidationException(
+                        String.format("Class %s must have field marked with @Id", clazz))));
+        Optional<String> entityName = MetaDataParser.getDbTableName(clazz);
+        entityName.ifPresent(s -> metaDataBuilder.setEntityDbName(entityName.get()));
+        return metaDataBuilder.build();
+    }
+
+    /**
+     * @throws OrmException
+     */
+    public Map<Field, AbstractMetaField> createMetaFields(MetaData metaData) {
+        Objects.requireNonNull(metaData);
+        Map<Field, AbstractMetaField> metaFields = new LinkedHashMap<>();
+        for (Field field : metaData.getFields()) {
+            if (!isTransientField(field)) {
+                metaFields.put(field, getMetaField(field, metaData));
+            }
+        }
+        return metaFields;
+    }
+
+
+    /**
+     * Factory method
+     * @param field
+     * @param metaData
+     * @return object of Internal, External or Collection + MetaField
+     */
+    private AbstractMetaField getMetaField(Field field, MetaData metaData) {
+        Class<?> fieldType = field.getType();
+        MappingType mappingType = MappingType.getMappingType(fieldType);
+        String fieldName = field.getName();
+        Optional<String> dbColumnName = getDbColumnName(field);
+
+        switch (mappingType.getFieldType()) {
+            case INTERNAL:
+                return new InternalMetaField.Builder(field, metaData)
+                        .fieldType(fieldType)
+                        .mappingType(mappingType)
+                        .fieldName(fieldName)
+                        .dbFieldName(dbColumnName.orElse(fieldName.toLowerCase()))
+                        .setPrimaryKey(MetaDataParser.isPrimaryKeyField(field))
+                        .build();
+            case EXTERNAL:
+                if (hasOneToOneAnnotation(field) == hasManyToOneAnnotation(field)) {
+                    throw new ClassValidationException(String.format("EXTERNAL field %s must have either @OneToOne or @ManyToOne annotation", field));
+                }
+                return new ExternalMetaField.Builder(field, metaData)
+                        .fieldType(fieldType)
+                        .mappingType(mappingType)
+                        .fieldName(fieldName)
+                        .foreignKeyFieldName(dbColumnName.orElse(fieldName.toLowerCase()))
+                        .build();
+            case COLLECTION:
+                if (hasManyToManyAnnotation(field) == hasOneToManyAnnotation(field)) {
+                    throw new ClassValidationException((String.format("COLLECTION field %s must have either @ManyToMany or @OneToMany annotation", field)));
+                }
+                Optional<Class<?>> genericTypeOptional = getGenericType(field);
+                Class<?> genericType = genericTypeOptional.orElseThrow(
+                        () -> new ClassValidationException(String.format("COLLECTION field %s must be parametrized", field)));
+                return new CollectionMetaField.Builder(field, metaData)
+                        .fieldType(fieldType)
+                        .mappingType(mappingType)
+                        .fieldName(fieldName)
+                        .genericType(genericType)
+                        .build();
+            default:
+                throw new OrmException("The framework doesn't support this type of field: " + fieldType);
+        }
+
+
     }
 }

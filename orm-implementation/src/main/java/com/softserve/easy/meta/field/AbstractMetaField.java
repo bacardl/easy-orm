@@ -8,7 +8,6 @@ import java.lang.reflect.Field;
 public abstract class AbstractMetaField {
     protected final Class<?> fieldType;
     protected final MappingType mappingType;
-    protected final boolean transitionable;
     protected final String fieldName;
 
     //required
@@ -20,10 +19,6 @@ public abstract class AbstractMetaField {
     }
     public MappingType getMappingType() {
         return mappingType;
-    }
-
-    public boolean isTransitionable() {
-        return transitionable;
     }
 
     public String getFieldName() {
@@ -41,7 +36,6 @@ public abstract class AbstractMetaField {
     protected static abstract class Init<T extends Init<T>> {
         protected Class<?> fieldType;
         protected MappingType mappingType;
-        protected boolean transitionable;
         protected String fieldName;
 
         //required
@@ -58,10 +52,6 @@ public abstract class AbstractMetaField {
             this.mappingType = mappingType;
             return self();
         }
-        public T transitionable(boolean transitionable) {
-            this.transitionable = transitionable;
-            return self();
-        }
         public T fieldName(String fieldName) {
             this.fieldName = fieldName;
             return self();
@@ -71,7 +61,6 @@ public abstract class AbstractMetaField {
     protected AbstractMetaField(Init<?> init) {
         this.fieldType = init.fieldType;
         this.mappingType = init.mappingType;
-        this.transitionable = init.transitionable;
         this.fieldName = init.fieldName;
         this.field = init.field;
         this.metaData = init.metaData;

@@ -5,9 +5,11 @@ connectionConfig:
   password: "12345678"
 mergeDataSets: false
 cacheConnection: true
+caseInsensitiveStrategy: !!com.github.database.rider.core.api.configuration.Orthography 'UPPERCASE'
+properties:
+  caseSensitiveTableNames: true
 #cacheTableNames: true
 #leakHunter: false
-#caseInsensitiveStrategy: !!com.github.database.rider.core.api.configuration.Orthography 'UPPERCASE'
 #properties:
 #  batchedStatements:  false
 #  qualifiedTableNames: false
