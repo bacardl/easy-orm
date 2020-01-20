@@ -101,7 +101,7 @@ class SqlManagerSimpleTest {
         user.setCountry(REFERENCE_COUNTRY);
 
         assertThat(cleanUpString(sqlManagerImpl.buildInsertQueryWithPk(userMeta, user, 404L).toString()),
-                equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_USER_QUERY_WITH_ID)));
+                equalToIgnoringCase(cleanUpString(QueryConstant.INSERT_USER_QUERY_WITH_ID)));
     }
 
     @Test
@@ -110,7 +110,7 @@ class SqlManagerSimpleTest {
         country.setId(900);
         country.setName("Japan");
         assertThat(cleanUpString(sqlManagerImpl.buildInsertQueryWithPk(countryMeta, country, 900).toString()),
-                equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_COUNTRY_QUERY_WITH_CODE)));
+                equalToIgnoringCase(cleanUpString(QueryConstant.INSERT_COUNTRY_QUERY_WITH_CODE)));
     }
 
     @Test
@@ -122,7 +122,7 @@ class SqlManagerSimpleTest {
         user.setCountry(REFERENCE_COUNTRY);
 
         assertThat(cleanUpString(sqlManagerImpl.buildInsertQuery(userMeta, user).toString()),
-                equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_USER_QUERY_WITHOUT_ID)));
+                equalToIgnoringCase(cleanUpString(QueryConstant.INSERT_USER_QUERY_WITHOUT_ID)));
     }
 
     @Test
@@ -131,7 +131,7 @@ class SqlManagerSimpleTest {
         country.setName("Japan");
 
         assertThat(cleanUpString(sqlManagerImpl.buildInsertQuery(countryMeta, country).toString()),
-                equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_COUNTRY_QUERY_WITHOUT_CODE)));
+                equalToIgnoringCase(cleanUpString(QueryConstant.INSERT_COUNTRY_QUERY_WITHOUT_CODE)));
     }
 
     private static String cleanUpString(String input) {
