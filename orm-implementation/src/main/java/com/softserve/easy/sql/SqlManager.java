@@ -19,7 +19,7 @@ public interface SqlManager {
 
     DeleteQuery buildDeleteByPkQuery(MetaData entityMetaData, Object object);
 
-    InsertQuery buildInsertQueryWithId(MetaData entityMetaData, Object object, Serializable id);
+    InsertQuery buildInsertQueryWithPk(MetaData entityMetaData, Object object, Serializable id);
 
     InsertQuery buildInsertQuery(MetaData entityMetaData, Object object);
 }

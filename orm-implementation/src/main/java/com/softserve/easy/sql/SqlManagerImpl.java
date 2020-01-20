@@ -114,7 +114,7 @@ public class SqlManagerImpl implements SqlManager {
         pkField.setAccessible(true);
         try {
             pkValue = pkField.get(object);
-            dbColumnObjectMap = collectUpdateParameters(
+            dbColumnObjectMap = collectParameters(
                     entityMetaData.getInternalMetaFieldWithoutPk(),
                     entityMetaData.getExternalMetaField(), object);
         } catch (IllegalAccessException e) {
@@ -131,9 +131,9 @@ public class SqlManagerImpl implements SqlManager {
         return updateQuery;
     }
 
-    private Map<DbColumn, Object> collectUpdateParameters(List<InternalMetaField> internalMetaFields,
-                                                          List<ExternalMetaField> externalMetaFields,
-                                                          Object object)
+    private Map<DbColumn, Object> collectParameters(List<InternalMetaField> internalMetaFields,
+                                                    List<ExternalMetaField> externalMetaFields,
+                                                    Object object)
             throws IllegalAccessException {
         Map<DbColumn, Object> dbColumnObjectMap = new LinkedHashMap<>();
         for (ExternalMetaField externalMetaField : externalMetaFields) {
@@ -148,7 +148,7 @@ public class SqlManagerImpl implements SqlManager {
                 if (Objects.isNull(externalObjectsPkValue)) {
                     LOG.warn("The field {} of the external entity {} should be defined.",
                             valueEntityMetaData.getPrimaryKey(), valueEntityMetaData.getClass().getSimpleName());
-                    throw new OrmException("Updated entity has a wrong state. The object of the external field's should has" +
+                    throw new OrmException("Entity has a wrong state. The object of the external field's should has" +
                             "a defined primary key field.");
                 }
                 dbColumnObjectMap.put(externalMetaField.getExternalDbColumn(), externalObjectsPkValue);
@@ -180,18 +180,14 @@ public class SqlManagerImpl implements SqlManager {
         InternalMetaField pkMetaField = entityMetaData.getPkMetaField();
         Field pkField = pkMetaField.getField();
         boolean accessible = pkField.isAccessible();
+        pkField.setAccessible(true);
         Object pkValue = null;
-        if (!accessible)
-            pkField.setAccessible(true);
         try {
             pkValue = pkField.get(object);
         } catch (IllegalAccessException e) {
             LOG.error("Couldn't get access to PK field: {}", pkField.getName());
         }
-        // return value back
-        if (!accessible) {
-            pkField.setAccessible(false);
-        }
+        pkField.setAccessible(accessible);
         if (Objects.isNull(pkValue)) {
             throw new OrmException("Couldn't build delete query. Pk field doesn't have value.");
         }
@@ -202,13 +198,27 @@ public class SqlManagerImpl implements SqlManager {
     }
 
     @Override
-    public InsertQuery buildInsertQueryWithId(MetaData entityMetaData, Object object, Serializable id) {
-        return null;
+    public InsertQuery buildInsertQueryWithPk(MetaData entityMetaData, Object object, Serializable id) {
+        InsertQuery insertQuery = buildInsertQuery(entityMetaData, object);
+        insertQuery.addColumn(entityMetaData.getPkMetaField().getInternalDbColumn(), id);
+        insertQuery.validate();
+        return insertQuery;
     }
 
     @Override
     public InsertQuery buildInsertQuery(MetaData entityMetaData, Object object) {
-        return null;
+        InsertQuery insertQuery = new InsertQuery(entityMetaData.getDbTable());
+        Map<DbColumn, Object> dbColumnObjectMap = null;
+        try {
+            dbColumnObjectMap = collectParameters(
+                    entityMetaData.getInternalMetaFieldWithoutPk(),
+                    entityMetaData.getExternalMetaField(), object);
+        } catch (IllegalAccessException e) {
+            LOG.error("Couldn't get access to field: {}", e.getMessage());
+        }
+        Objects.requireNonNull(dbColumnObjectMap).forEach(insertQuery::addColumn);
+        insertQuery.validate();
+        return insertQuery;
     }
 
 }

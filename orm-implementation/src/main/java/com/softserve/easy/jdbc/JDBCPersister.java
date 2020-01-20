@@ -1,21 +1,22 @@
 package com.softserve.easy.jdbc;
 
+import com.healthmarketscience.sqlbuilder.InsertQuery;
 import com.softserve.easy.action.ActionQueue;
 import com.softserve.easy.bind.EntityBinder;
 import com.softserve.easy.bind.EntityBinderImpl;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
+import com.softserve.easy.meta.field.InternalMetaField;
 import com.softserve.easy.sql.SqlManager;
 import com.softserve.easy.sql.SqlManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.lang.reflect.Field;
+import java.sql.*;
+import java.util.Objects;
 
 public class JDBCPersister implements Persister {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCPersister.class);
@@ -114,19 +115,73 @@ public class JDBCPersister implements Persister {
         String deleteQuery = sqlManager.buildDeleteByPkQuery(metaData, object).toString();
         try (PreparedStatement statement = connection.prepareStatement(deleteQuery)) {
             statement.execute();
-        } catch (SQLException  e) {
+        } catch (SQLException e) {
             LOG.error("There was an exception {}, during delete query for {} by {}", e, object.getClass().getSimpleName(), object.toString());
             throw new OrmException(e);
         }
     }
 
     @Override
-    public void insertEntity(Object object) {
+    public Serializable insertEntity(Object object) {
+        MetaData entityMetaData = metaContext.getMetaDataMap().get(object.getClass());
+        InternalMetaField pkMetaField = entityMetaData.getPkMetaField();
+        Field pkField = pkMetaField.getField();
+        boolean accessible = pkField.isAccessible();
+        Serializable pkValue = null;
+        pkField.setAccessible(true);
+        try {
+            pkValue = (Serializable) pkField.get(object);
+        } catch (IllegalAccessException e) {
+            LOG.error("Couldn't get access to field: {}", e.getMessage());
+        }
+        pkField.setAccessible(accessible);
+
+        InsertQuery insertQuery = null;
+
+        if (Objects.isNull(pkValue)) {
+            insertQuery = sqlManager.buildInsertQuery(entityMetaData, object);
+            try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery.toString(),
+                    Statement.RETURN_GENERATED_KEYS)) {
+                int affectedRow = preparedStatement.executeUpdate();
+                if (affectedRow == 1) {
+                    ResultSet resultSet = preparedStatement.getResultSet();
+                    Serializable generatedId = (Serializable) resultSet.getObject(1);
+                    pasteGeneratedId(object, pkField, generatedId);
+                    return generatedId;
+                } else {
+                    throw new IllegalStateException("Should insert only one row.");
+                }
+            } catch (SQLException e) {
+                LOG.error("There was an exception {}, during insert {}", e, object.getClass().getSimpleName());
+                throw new OrmException(e);
+            }
+        } else {
+            insertQuery = sqlManager.buildInsertQueryWithPk(entityMetaData, object, pkValue);
+            try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery.toString(),
+                    Statement.NO_GENERATED_KEYS)) {
+                int affectedRow = preparedStatement.executeUpdate();
+                if (affectedRow == 1) {
+                    return pkValue;
+                } else {
+                    throw new IllegalStateException("Should insert only one row.");
+                }
+            } catch (SQLException e) {
+                LOG.error("There was an exception {}, during insert {}", e, object.getClass().getSimpleName());
+                throw new OrmException(e);
+            }
+        }
 
     }
 
-    @Override
-    public void insertEntityWithId(Object object, Serializable id) {
-
+    private void pasteGeneratedId(Object object, Field pkField, Serializable generatedId) {
+        boolean accessible = pkField.isAccessible();
+        pkField.setAccessible(true);
+        try {
+            pkField.set(object, generatedId);
+        } catch (IllegalAccessException e) {
+            LOG.error("Couldn't get access to field: {}", e.getMessage());
+        }
+        pkField.setAccessible(accessible);
     }
+
 }

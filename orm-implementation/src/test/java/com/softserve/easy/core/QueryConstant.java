@@ -27,18 +27,16 @@ public class QueryConstant {
             "DELETE FROM users WHERE users.id = ?";
 
     public static final String INSERT_USER_QUERY_WITH_ID =
-            "INSERT INTO users (id,username,password,email,country_code) " +
-                    "VALUES (?,?,?,?,?);";
+            "INSERT INTO public.users (country_code,username,password,email,id) " +
+                    "VALUES (100,'jon','jon111','jon@gmail.com',404)";
 
     public static final String INSERT_USER_QUERY_WITHOUT_ID =
-            "INSERT INTO users (username,password,email,country_code) " +
-                    "VALUES (?,?,?,?);";
+            "INSERT INTO public.users (country_code,username,password,email) " +
+                    "VALUES (100,'jon','jon111','jon@gmail.com')";
 
     public static final String INSERT_COUNTRY_QUERY_WITH_CODE =
-            "INSERT INTO countries (code,name) " +
-                    "VALUES (?,?);";
+            "INSERT INTO public.countries (name,code) VALUES ('Japan',900)";
 
     public static final String INSERT_COUNTRY_QUERY_WITHOUT_CODE =
-            "INSERT INTO countries (name) " +
-                    "VALUES (?);";
+            "INSERT INTO public.countries (name) VALUES ('Japan')";
 }

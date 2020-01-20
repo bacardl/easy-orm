@@ -9,8 +9,7 @@ import com.softserve.easy.meta.MetaData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static com.softserve.easy.SimpleTestEnvironment.COUNTRY_CLASS;
-import static com.softserve.easy.SimpleTestEnvironment.USER_CLASS;
+import static com.softserve.easy.SimpleTestEnvironment.*;
 import static com.softserve.easy.constant.ConfigPropertyConstant.ENTITY_PACKAGE_PROPERTY;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
@@ -94,42 +93,33 @@ class SqlManagerSimpleTest {
 
     @Test
     void shouldReturnInsertQueryForUserWithId() {
-        Country ukr = new Country();
-        ukr.setId(13);
-        ukr.setName("Ukraine");
-
         User user = new User();
-        user.setId((long)404);
+        user.setId(404L);
         user.setUsername("jon");
         user.setPassword("jon111");
         user.setEmail("jon@gmail.com");
-        user.setCountry(ukr);
+        user.setCountry(REFERENCE_COUNTRY);
 
-        assertThat(cleanUpString(sqlManagerImpl.buildInsertQuery(userMeta, user).toString()),
+        assertThat(cleanUpString(sqlManagerImpl.buildInsertQueryWithPk(userMeta, user, 404L).toString()),
                 equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_USER_QUERY_WITH_ID)));
     }
 
     @Test
     void shouldReturnInsertQueryForCountryWithId() {
         Country country = new Country();
-        country.setId(13);
-        country.setName("Ukraine");
-
-        assertThat(cleanUpString(sqlManagerImpl.buildInsertQuery(countryMeta, country).toString()),
+        country.setId(900);
+        country.setName("Japan");
+        assertThat(cleanUpString(sqlManagerImpl.buildInsertQueryWithPk(countryMeta, country, 900).toString()),
                 equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_COUNTRY_QUERY_WITH_CODE)));
     }
 
     @Test
     void shouldReturnInsertQueryForUserWithoutId() {
-        Country ukr = new Country();
-        ukr.setId(13);
-        ukr.setName("Ukraine");
-
         User user = new User();
         user.setUsername("jon");
         user.setPassword("jon111");
         user.setEmail("jon@gmail.com");
-        user.setCountry(ukr);
+        user.setCountry(REFERENCE_COUNTRY);
 
         assertThat(cleanUpString(sqlManagerImpl.buildInsertQuery(userMeta, user).toString()),
                 equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_USER_QUERY_WITHOUT_ID)));
@@ -138,7 +128,7 @@ class SqlManagerSimpleTest {
     @Test
     void shouldReturnInsertQueryForCountryWithoutId() {
         Country country = new Country();
-        country.setName("Ukraine");
+        country.setName("Japan");
 
         assertThat(cleanUpString(sqlManagerImpl.buildInsertQuery(countryMeta, country).toString()),
                 equalToIgnoringCase(cleanUpString(com.softserve.easy.core.QueryConstant.INSERT_COUNTRY_QUERY_WITHOUT_CODE)));
