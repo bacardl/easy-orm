@@ -1,17 +1,42 @@
 package com.softserve.easy.bind;
 
-import net.bytebuddy.implementation.bind.annotation.Origin;
+import com.softserve.easy.jdbc.Persister;
+import com.softserve.easy.meta.field.ExternalMetaField;
+import net.bytebuddy.implementation.bind.annotation.This;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Method;
+import java.io.Serializable;
+import java.lang.reflect.Field;
 
 public class LazyLoadingInterceptor {
+    private static final Logger LOG = LoggerFactory.getLogger(LazyLoadingInterceptor.class);
+    private final Persister persister;
+    private final Serializable fkValue;
+    private final ExternalMetaField metaField;
     private boolean isCalled;
-    public void intercept(@Origin Method m) throws Exception {
+
+    public LazyLoadingInterceptor(Persister persister, ExternalMetaField metaField, Serializable fkValue) {
+        this.persister = persister;
+        this.fkValue = fkValue;
+        this.metaField = metaField;
+    }
+
+    public void intercept(@This Object object) throws Exception {
         if (!isCalled) {
             isCalled = true;
-            System.out.println("Init/");
+            LOG.info("Loading value to field {} for entity {}", metaField.getFieldName(), metaField.getMetaData().getEntityClass().getSimpleName());
+            Object lazyObject = persister.getLazyEntityById(metaField.getFieldType(), fkValue);
+            LOG.debug("Loaded lazy object is {}", lazyObject);
+            Field lazyField = metaField.getField();
+            boolean accessible = lazyField.isAccessible();
+            lazyField.setAccessible(true);
+            lazyField.set(object, lazyObject);
+            lazyField.setAccessible(accessible);
+            LOG.debug("Lazy field {} has been defined.", lazyField.getName());
             return;
         }
-        System.out.println("Initialized/");
+        LOG.info("Field {} has already been initialized.", metaField.getFieldName());
+
     }
 }

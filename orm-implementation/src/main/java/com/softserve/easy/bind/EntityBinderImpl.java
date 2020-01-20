@@ -1,7 +1,9 @@
 package com.softserve.easy.bind;
 
 import com.softserve.easy.constant.FetchType;
+import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.helper.ClassScanner;
+import com.softserve.easy.jdbc.Persister;
 import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
 import com.softserve.easy.meta.field.ExternalMetaField;
@@ -11,19 +13,27 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.SuperMethodCall;
 import net.bytebuddy.matcher.ElementMatchers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 public class EntityBinderImpl implements EntityBinder {
+    private static final Logger LOG = LoggerFactory.getLogger(EntityBinderImpl.class);
+
     private final Map<Class<?>, Class<?>> entityProxyMap = new HashMap<>();
     private final Map<Class<?>, Class<?>> entityLazyProxyMap = new HashMap<>();
     private final MetaContext metaContext;
+    private final Persister persister;
 
-    public EntityBinderImpl(MetaContext metaContext) {
+    public EntityBinderImpl(MetaContext metaContext, Persister persister) {
         this.metaContext = metaContext;
+        this.persister = persister;
     }
 
     @Override
@@ -32,7 +42,7 @@ public class EntityBinderImpl implements EntityBinder {
         List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
         List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
 
-        final T instance = getInstance(entityMetaData);
+        final T instance = getInstance(entityMetaData, resultSet);
         for (InternalMetaField metaField : internalMetaFields) {
             Field field = metaField.getField();
             boolean accessible = field.isAccessible();
@@ -44,22 +54,22 @@ public class EntityBinderImpl implements EntityBinder {
         for (ExternalMetaField metaField : externalMetaFields) {
             if (metaField.getEntityFetchType().equals(FetchType.EAGER)) {
                 Field field = metaField.getField();
-                Object childInstance = null;
                 if (Objects.nonNull(resultSet.getObject(metaField.getForeignKeyFieldFullName()))) {
-                    childInstance = buildLazyEntity(metaField.getFieldType(), resultSet);
+                    Object childInstance = buildLazyEntity(metaField.getFieldType(), resultSet);
+                    boolean accessible = field.isAccessible();
+                    field.setAccessible(true);
+                    field.set(instance, childInstance);
+                    field.setAccessible(accessible);
                 }
-                boolean accessible = field.isAccessible();
-                field.setAccessible(true);
-                field.set(instance, childInstance);
-                field.setAccessible(accessible);
             }
         }
         return Optional.ofNullable(instance);
     }
 
+    @Override
     public <T> T buildLazyEntity(Class<T> entityType, ResultSet resultSet) throws Exception {
         MetaData entityMetaData = metaContext.getMetaDataMap().get(entityType);
-        final T lazyEntity = getLazyInstance(entityMetaData);
+        final T lazyEntity = getLazyInstance(entityMetaData, resultSet);
         List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
         for (InternalMetaField metaField : internalMetaFields) {
             Field field = metaField.getField();
@@ -72,7 +82,7 @@ public class EntityBinderImpl implements EntityBinder {
     }
 
     @SuppressWarnings(value = "unchecked")
-    private <T> T getInstance(final MetaData entityMetaData) throws InstantiationException, IllegalAccessException {
+    private <T> T getInstance(final MetaData entityMetaData, ResultSet resultSet) throws InstantiationException, IllegalAccessException {
         Class<?> entityType = entityMetaData.getEntityClass();
         List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
         if (hasLazyExternalFields(externalMetaFields)) {
@@ -84,10 +94,17 @@ public class EntityBinderImpl implements EntityBinder {
                     if (metaField.getEntityFetchType().equals(FetchType.LAZY)) {
                         Optional<Method> getterForField = ClassScanner.getGetterForField(entityType, metaField.getField());
                         if (getterForField.isPresent()) {
+                            Serializable fkValue = null;
+                            try {
+                                fkValue = (Serializable) resultSet.getObject(metaField.getForeignKeyFieldFullName());
+                            } catch (SQLException e) {
+                                LOG.error("Couldn't get fk value from {} column.", metaField.getForeignKeyFieldFullName());
+                                throw new OrmException(e);
+                            }
                             Method getter = getterForField.get();
                             subclass = subclass.method(ElementMatchers.anyOf(getter))
                                     .intercept(MethodDelegation
-                                            .to(new LazyLoadingInterceptor())
+                                            .to(new LazyLoadingInterceptor(this.persister, metaField, fkValue))
                                             .andThen(SuperMethodCall.INSTANCE));
                         }
                     }
@@ -106,7 +123,7 @@ public class EntityBinderImpl implements EntityBinder {
     }
 
     @SuppressWarnings(value = "unchecked")
-    private <T> T getLazyInstance(final MetaData entityMetaData) throws IllegalAccessException, InstantiationException {
+    private <T> T getLazyInstance(final MetaData entityMetaData, ResultSet resultSet) throws IllegalAccessException, InstantiationException {
         Class<?> entityType = entityMetaData.getEntityClass();
         if (entityLazyProxyMap.containsKey(entityType)) {
             return (T) entityLazyProxyMap.get(entityType);
@@ -117,9 +134,16 @@ public class EntityBinderImpl implements EntityBinder {
             Optional<Method> getterForField = ClassScanner.getGetterForField(entityType, metaField.getField());
             if (getterForField.isPresent()) {
                 Method getter = getterForField.get();
+                Serializable fkValue = null;
+                try {
+                    fkValue = (Serializable) resultSet.getObject(metaField.getForeignKeyFieldFullName());
+                } catch (SQLException e) {
+                    LOG.error("Couldn't get fk value from {} column.", metaField.getForeignKeyFieldFullName());
+                    throw new OrmException(e);
+                }
                 subclass = subclass.method(ElementMatchers.anyOf(getter))
                         .intercept(MethodDelegation
-                                .to(new LazyLoadingInterceptor())
+                                .to(new LazyLoadingInterceptor(this.persister, metaField, fkValue))
                                 .andThen(SuperMethodCall.INSTANCE));
             }
         }

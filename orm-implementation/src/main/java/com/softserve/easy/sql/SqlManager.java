@@ -11,6 +11,8 @@ import java.io.Serializable;
 public interface SqlManager {
     SelectQuery buildSelectByPkQuery(MetaData entityMetaData, Serializable id);
 
+    SelectQuery buildLazySelectByPkQuery(MetaData entityMetaData, Serializable id);
+
     SelectQuery buildSelectAllQuery(MetaData entityMetaData);
 
     UpdateQuery buildUpdateByPkQuery(MetaData entityMetaData, Object object);

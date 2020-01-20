@@ -51,6 +51,27 @@ public class SqlManagerImpl implements SqlManager {
         return selectQuery;
     }
 
+    @Override
+    public SelectQuery buildLazySelectByPkQuery(MetaData entityMetaData, Serializable id) {
+        SelectQuery selectQuery = new SelectQuery();
+
+        List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
+        for (InternalMetaField metaField : internalMetaFields) {
+            selectQuery.addAliasedColumn(metaField.getInternalDbColumn(), metaField.getDbFieldFullName());
+        }
+
+        List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
+        for (ExternalMetaField metaField : externalMetaFields) {
+            selectQuery.addAliasedColumn(metaField.getExternalDbColumn(), metaField.getForeignKeyFieldFullName());
+        }
+
+        selectQuery.addCondition(BinaryCondition.equalTo(entityMetaData.getPkMetaField().getInternalDbColumn(), id));
+        selectQuery.validate();
+        LOG.info("Built a lazy select query for {} entity with id: {}.\n{}",
+                entityMetaData.getEntityClass().getSimpleName(), id, selectQuery.toString());
+        return selectQuery;
+    }
+
     private void addDependencyToQuery(SelectQuery selectQuery, ExternalMetaField metaField) {
         MetaData parentMetaData = metaField.getMetaData();
         MetaData childMetaData = metaContext.getMetaDataMap().get(metaField.getFieldType());

@@ -30,7 +30,7 @@ public class JDBCPersister implements Persister {
         this.connection = connection;
         this.metaContext = metaContext;
         this.sqlManager = new SqlManagerImpl(metaContext);
-        this.entityBinder = new EntityBinderImpl(metaContext);
+        this.entityBinder = new EntityBinderImpl(metaContext, this);
     }
 
 
@@ -53,6 +53,36 @@ public class JDBCPersister implements Persister {
                 }
             } else {
                 LOG.info("Entity {} by id {} doesn't exist.", entityType.getSimpleName(), id);
+                return null;
+            }
+        } catch (Exception e) {
+            LOG.error("There was an exception {}, during select {} by {}", e, entityType.getSimpleName(), id);
+            throw new OrmException(e);
+        }
+
+        return entity;
+    }
+
+
+    @Override
+    public <T> T getLazyEntityById(Class<T> entityType, Serializable id) {
+        LOG.info("Try to load lazy entity {} by id {} from database.", entityType.getSimpleName(), id);
+        MetaData entityMetaData = metaContext.getMetaDataMap().get(entityType);
+        String sqlQuery = sqlManager.buildSelectByPkQuery(entityMetaData, id).toString();
+        T entity = null;
+        ResultSet resultSet = null;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
+            resultSet = preparedStatement.executeQuery();
+
+            // check if it's one row
+            if (resultSet.next()) {
+                entity = entityBinder.buildLazyEntity(entityType, resultSet);
+                if (!resultSet.isLast()) {
+                    throw new OrmException("Entity at database has a few primary keys." +
+                            "Use @EmbeddedId or change the database schema.");
+                }
+            } else {
+                LOG.info("Lazy Entity {} by id {} doesn't exist.", entityType.getSimpleName(), id);
                 return null;
             }
         } catch (Exception e) {
