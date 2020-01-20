@@ -58,20 +58,20 @@ class EasyQueryImplTest {
 
     @Test
     void checkSelectMatcherLowerCase(){
-        EasyQueryImpl easyQuery = new EasyQueryImpl("select from ContactEntity where firstName = :param");
+        EasyQueryImpl easyQuery = new EasyQueryImpl("select something from ContactEntity where firstName = :param");
         assertThat(easyQuery.matchesSelect(), equalTo(true));
     }
 
     @Test
     void checkSelectMatcherUpperCase(){
-        EasyQueryImpl easyQuery = new EasyQueryImpl("SELECT FROM ContactEntity WHERE firstName = :param");
+        EasyQueryImpl easyQuery = new EasyQueryImpl("SELECT something FROM ContactEntity WHERE firstName = :param");
         assertThat(easyQuery.matchesSelect(), equalTo(true));
     }
 
     @Test
     void checkSelectMatcherWithoutSelect(){
         EasyQueryImpl easyQuery = new EasyQueryImpl("from ContactEntity where firstName = :param");
-        assertThat(easyQuery.matchesSelect(), equalTo(true));
+        assertThat(easyQuery.matchesSelect(), equalTo(false));
     }
 
     @Test
@@ -87,27 +87,63 @@ class EasyQueryImplTest {
     }
 
     @Test
-    void checkInsertMatcherLowerCase(){
-        EasyQueryImpl easyQuery = new EasyQueryImpl("INSERT INTO ContactEntity(firstName, lastName, birthDate) SELECT firstName2, lastName2, birthDate2 FROM ContactEntity2");
-        assertThat(easyQuery.matchesInsert(), equalTo(true));
+    void checkFromMatcherLowerCase(){
+        EasyQueryImpl easyQuery = new EasyQueryImpl("from Employee");
+        assertThat(easyQuery.matchesFrom(), equalTo(true));
     }
 
     @Test
-    void checkInsertMatcherUpperCase(){
-        EasyQueryImpl easyQuery = new EasyQueryImpl("INSERT INTO ContactEntity(firstName, lastName, birthDate) SELECT firstName2, lastName2, birthDate2 FROM ContactEntity2");
-        assertThat(easyQuery.matchesInsert(), equalTo(true));
+    void checkFromMatcherUpperCase(){
+        EasyQueryImpl easyQuery = new EasyQueryImpl("FROM Employee WHERE a=:b");
+        assertThat(easyQuery.matchesFrom(), equalTo(true));
     }
 
     @Test
-    void checkInsertMatcherWithCondition(){
-        EasyQueryImpl easyQuery = new EasyQueryImpl("insert into purged_accounts(id, code, status) select id, code, status from account where status=:statu");
-        assertThat(easyQuery.matchesInsert(), equalTo(true));
+    void checkFromDoesNotMatchSelect(){
+        EasyQueryImpl easyQuery = new EasyQueryImpl("FROM Employee WHERE a=:b");
+        assertThat(easyQuery.matchesSelect(), equalTo(false));
+    }
+//insert tests
+//    @Test
+//    void checkInsertMatcherLowerCase(){
+//        EasyQueryImpl easyQuery = new EasyQueryImpl("INSERT INTO ContactEntity(firstName, lastName, birthDate) SELECT firstName2, lastName2, birthDate2 FROM ContactEntity2");
+//        assertThat(easyQuery.matchesInsert(), equalTo(true));
+//    }
+//
+//    @Test
+//    void checkInsertMatcherUpperCase(){
+//        EasyQueryImpl easyQuery = new EasyQueryImpl("INSERT INTO ContactEntity(firstName, lastName, birthDate) SELECT firstName2, lastName2, birthDate2 FROM ContactEntity2");
+//        assertThat(easyQuery.matchesInsert(), equalTo(true));
+//    }
+//
+//    @Test
+//    void checkInsertMatcherWithCondition(){
+//        EasyQueryImpl easyQuery = new EasyQueryImpl("insert into purged_accounts(id, code, status) select id, code, status from account where status=:statu");
+//        assertThat(easyQuery.matchesInsert(), equalTo(true));
+//    }
+//
+//    @Test
+//    void checkMatchersNotMix(){
+//        EasyQueryImpl easyQuery = new EasyQueryImpl("insert delete into purged_accounts(id, code, status) select id, code, status from account where status=:statu");
+//        assertThat(easyQuery.matchesInsert(), equalTo(false));
+//    }
+
+    @Test
+    void findTableNameInFromTest(){
+        EasyQueryImpl easyQuery = new EasyQueryImpl("from ContactEntity where firstName = :param");
+        assertThat(easyQuery.extractClassName(),equalTo("ContactEntity"));
     }
 
     @Test
-    void checkMatchersNotMix(){
-        EasyQueryImpl easyQuery = new EasyQueryImpl("insert delete into purged_accounts(id, code, status) select id, code, status from account where status=:statu");
-        assertThat(easyQuery.matchesInsert(), equalTo(false));
+    void findTableNameInDeleteTest(){
+        EasyQueryImpl easyQuery = new EasyQueryImpl("delete from Emp where id= :other");
+        assertThat(easyQuery.extractClassName(),equalTo("Emp"));
+    }
+
+    @Test
+    void findTableNameInUpdateTest(){
+        EasyQueryImpl easyQuery = new EasyQueryImpl("update ContactEntity set firstName = :nameParam, lastName = :lastNameParam");
+        assertThat(easyQuery.extractClassName(),equalTo("ContactEntity"));
     }
 
 
