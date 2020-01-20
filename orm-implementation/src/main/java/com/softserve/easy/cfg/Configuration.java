@@ -3,6 +3,7 @@ package com.softserve.easy.cfg;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
 import com.softserve.easy.annotation.Entity;
+import com.softserve.easy.constant.FetchType;
 import com.softserve.easy.core.SessionFactory;
 import com.softserve.easy.core.SessionFactoryImpl;
 import com.softserve.easy.exception.ClassValidationException;
@@ -174,6 +175,7 @@ public class Configuration {
         MappingType mappingType = MappingType.getMappingType(fieldType);
         String fieldName = field.getName();
         Optional<String> dbColumnName = getDbColumnName(field);
+        Optional<FetchType> fetchType = getFetchTypeValue(field);
 
         switch (mappingType.getFieldType()) {
             case INTERNAL:
@@ -193,6 +195,7 @@ public class Configuration {
                         .mappingType(mappingType)
                         .fieldName(fieldName)
                         .foreignKeyFieldName(dbColumnName.orElse(fieldName.toLowerCase()))
+                        .fetchType(fetchType.orElse(FetchType.EAGER))
                         .build();
             case COLLECTION:
                 if (hasManyToManyAnnotation(field) == hasOneToManyAnnotation(field)) {
@@ -206,6 +209,7 @@ public class Configuration {
                         .mappingType(mappingType)
                         .fieldName(fieldName)
                         .genericType(genericType)
+                        .collectionFetchType(fetchType.orElse(FetchType.LAZY))
                         .build();
             default:
                 throw new OrmException("The framework doesn't support this type of field: " + fieldType);

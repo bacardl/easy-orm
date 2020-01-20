@@ -1,6 +1,7 @@
 package com.softserve.easy.helper;
 
 import com.softserve.easy.annotation.*;
+import com.softserve.easy.constant.FetchType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -40,6 +41,27 @@ public class MetaDataParser {
                 return Optional.of(column.name());
             }
         }
+        return Optional.empty();
+    }
+
+    public static Optional<FetchType> getFetchTypeValue(Field field) {
+        Objects.requireNonNull(field);
+        ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
+        OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+        OneToMany oneToMany = field.getAnnotation(OneToMany.class);
+
+        if (Objects.nonNull(manyToOne)) {
+            return Optional.of(manyToOne.fetch());
+        }
+
+        if (Objects.nonNull(oneToOne)) {
+            return Optional.of(oneToOne.fetch());
+        }
+
+        if (Objects.nonNull(oneToMany)) {
+            return Optional.of(oneToMany.fetch());
+        }
+
         return Optional.empty();
     }
 

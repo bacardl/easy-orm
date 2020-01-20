@@ -1,22 +1,32 @@
 package com.softserve.easy.meta.field;
 
 import com.google.common.base.MoreObjects;
+import com.softserve.easy.constant.FetchType;
 import com.softserve.easy.meta.MetaData;
 
 import java.lang.reflect.Field;
 
 public class CollectionMetaField  extends AbstractMetaField {
     private final Class<?> genericType;
+    private final FetchType collectionFetchType;
 
     public Class<?> getGenericType() {
         return genericType;
     }
+    public FetchType getCollectionFetchType() {
+        return collectionFetchType;
+    }
 
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
         private Class<?> genericType;
+        private FetchType collectionFetchType;
 
         public T genericType(Class<?> genericType) {
             this.genericType = genericType;
+            return self();
+        }
+        public T collectionFetchType(FetchType collectionFetchType) {
+            this.collectionFetchType = collectionFetchType;
             return self();
         }
 
@@ -39,6 +49,7 @@ public class CollectionMetaField  extends AbstractMetaField {
     protected CollectionMetaField(Init<?> init) {
         super(init);
         this.genericType = init.genericType;
+        this.collectionFetchType = init.collectionFetchType;
     }
 
     @Override

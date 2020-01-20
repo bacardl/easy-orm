@@ -3,6 +3,7 @@ package com.softserve.easy.sql;
 import com.healthmarketscience.sqlbuilder.*;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbJoin;
+import com.softserve.easy.constant.FetchType;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
@@ -38,7 +39,9 @@ public class SqlManagerImpl implements SqlManager {
         List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
         for (ExternalMetaField metaField : externalMetaFields) {
             selectQuery.addAliasedColumn(metaField.getExternalDbColumn(), metaField.getForeignKeyFieldFullName());
-            addDependencyToQuery(selectQuery, metaField);
+            if (metaField.getEntityFetchType().equals(FetchType.EAGER)) {
+                    addDependencyToQuery(selectQuery, metaField);
+            }
         }
 
         selectQuery.addCondition(BinaryCondition.equalTo(entityMetaData.getPkMetaField().getInternalDbColumn(), id));

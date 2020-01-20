@@ -10,8 +10,11 @@ import com.softserve.easy.entity.simple.User;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Set;
 
+import static com.softserve.easy.SimpleTestEnvironment.USER_CLASS;
 import static org.junit.Assert.assertThat;
 
 class ClassScannerTest {
@@ -64,5 +67,13 @@ class ClassScannerTest {
                         Person.class,
                         Product.class
                 ));
+    }
+
+    @Test
+    void shouldFindCountryGetter() throws NoSuchFieldException {
+        Field countryField = USER_CLASS.getDeclaredField("country");
+        assertThat(ClassScanner.getGetterForField(USER_CLASS, countryField).isPresent(), Matchers.is(true));
+        Method method = ClassScanner.getGetterForField(USER_CLASS, countryField).get();
+        System.out.println(method.getName());
     }
 }

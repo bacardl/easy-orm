@@ -22,6 +22,10 @@
         <junit.jupiter.version>5.5.2</junit.jupiter.version>
         <hsqldb.version>2.5.0</hsqldb.version>
         <rider-core.version>1.9.1</rider-core.version>
+        <hamcrest-library.version>2.1</hamcrest-library.version>
+        <junit-platform-runner.version>1.5.2</junit-platform-runner.version>
+        <mockito-core.version>3.2.4</mockito-core.version>
+        <sqlbuilder.version>3.0.0</sqlbuilder.version>
         <!--EndLib-->
         <!--https://junit.org/junit5/docs/current/user-guide/#running-tests-ide-->
         <junit-platform-launcher.version>1.5.2</junit-platform-launcher.version>
@@ -30,10 +34,7 @@
         <!--plugin-->
         <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
         <!--plugin-->
-        <junit-platform-runner.version>1.5.2</junit-platform-runner.version>
-        <hamcrest-library.version>2.1</hamcrest-library.version>
-        <mockito-core.version>3.2.4</mockito-core.version>
-        <sqlbuilder.version>3.0.0</sqlbuilder.version>
+        <byte-buddy.version>1.10.6</byte-buddy.version>
     </properties>
 
     <dependencies>
@@ -111,6 +112,11 @@
             <groupId>com.healthmarketscience.sqlbuilder</groupId>
             <artifactId>sqlbuilder</artifactId>
             <version>${sqlbuilder.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>${byte-buddy.version}</version>
         </dependency>
     </dependencies>
 

@@ -2,6 +2,7 @@ package com.softserve.easy.meta.field;
 
 import com.google.common.base.MoreObjects;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import com.softserve.easy.constant.FetchType;
 import com.softserve.easy.meta.MetaData;
 
 import java.lang.reflect.Field;
@@ -9,6 +10,12 @@ import java.lang.reflect.Field;
 public class ExternalMetaField extends AbstractMetaField {
     private final String foreignKeyFieldName;
     private final DbColumn externalDbColumn;
+
+    private final FetchType entityFetchType;
+
+    public FetchType getEntityFetchType() {
+        return entityFetchType;
+    }
 
     public DbColumn getExternalDbColumn() {
         return externalDbColumn;
@@ -24,9 +31,15 @@ public class ExternalMetaField extends AbstractMetaField {
 
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
         private String foreignKeyFieldName;
+        private FetchType fetchType;
 
         public T foreignKeyFieldName(String foreignKeyFieldName) {
             this.foreignKeyFieldName = foreignKeyFieldName;
+            return self();
+        }
+
+        public T fetchType(FetchType fetchType) {
+            this.fetchType = fetchType;
             return self();
         }
 
@@ -50,6 +63,7 @@ public class ExternalMetaField extends AbstractMetaField {
         super(init);
         this.foreignKeyFieldName = init.foreignKeyFieldName;
         this.externalDbColumn = getMetaData().getDbTable().addColumn(foreignKeyFieldName);
+        this.entityFetchType = init.fetchType;
     }
 
     @Override
