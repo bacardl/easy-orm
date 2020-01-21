@@ -9,11 +9,13 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.Serializable;
 import java.text.ParseException;
 
 import static com.softserve.easy.SimpleTestEnvironment.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 
 public class SessionSimpleTestWithConnection extends SimpleDbUnitTest {
@@ -123,7 +125,9 @@ public class SessionSimpleTestWithConnection extends SimpleDbUnitTest {
         user.setEmail("Jon@gmail.com");
         user.setCountry(country);
 
-        session.save(user);
+        Serializable id = session.save(user);
+        assertThat(id, notNullValue());
+        assertThat(id, is(6L));
     }
 
     @ExpectedDataSet(value = "dataset/simple/yml/data-insert.yml")

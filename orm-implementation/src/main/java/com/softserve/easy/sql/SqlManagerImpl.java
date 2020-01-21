@@ -98,7 +98,7 @@ public class SqlManagerImpl implements SqlManager {
     @Override
     public SelectQuery buildSelectAllQuery(MetaData entityMetaData) {
         SelectQuery selectQuery = new SelectQuery();
-        LOG.info("Built a select all query for {} entity.\n{}"
+        LOG.debug("Built a select all query for {} entity.\n{}"
                 , entityMetaData.getEntityClass().getSimpleName(), selectQuery.toString());
         return selectQuery;
     }

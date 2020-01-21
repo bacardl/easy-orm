@@ -26,6 +26,7 @@
         <junit-platform-runner.version>1.5.2</junit-platform-runner.version>
         <mockito-core.version>3.2.4</mockito-core.version>
         <sqlbuilder.version>3.0.0</sqlbuilder.version>
+        <byte-buddy.version>1.10.6</byte-buddy.version>
         <!--EndLib-->
         <!--https://junit.org/junit5/docs/current/user-guide/#running-tests-ide-->
         <junit-platform-launcher.version>1.5.2</junit-platform-launcher.version>
@@ -34,7 +35,6 @@
         <!--plugin-->
         <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
         <!--plugin-->
-        <byte-buddy.version>1.10.6</byte-buddy.version>
     </properties>
 
     <dependencies>

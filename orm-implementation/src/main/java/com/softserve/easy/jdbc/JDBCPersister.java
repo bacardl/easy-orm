@@ -144,10 +144,13 @@ public class JDBCPersister implements Persister {
                     Statement.RETURN_GENERATED_KEYS)) {
                 int affectedRow = preparedStatement.executeUpdate();
                 if (affectedRow == 1) {
-                    ResultSet resultSet = preparedStatement.getResultSet();
-                    Serializable generatedId = (Serializable) resultSet.getObject(1);
-                    pasteGeneratedId(object, pkField, generatedId);
-                    return generatedId;
+                    try(ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                        if (generatedKeys.next()) {
+                            Serializable generatedId = (Serializable) generatedKeys.getObject(1);
+                            pasteGeneratedId(object, pkField, generatedId);
+                            return generatedId;
+                        }
+                    }
                 } else {
                     throw new IllegalStateException("Should insert only one row.");
                 }
@@ -155,20 +158,20 @@ public class JDBCPersister implements Persister {
                 LOG.error("There was an exception {}, during insert {}", e, object.getClass().getSimpleName());
                 throw new OrmException(e);
             }
-        } else {
-            insertQuery = sqlManager.buildInsertQueryWithPk(entityMetaData, object, pkValue);
-            try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery.toString(),
-                    Statement.NO_GENERATED_KEYS)) {
-                int affectedRow = preparedStatement.executeUpdate();
-                if (affectedRow == 1) {
-                    return pkValue;
-                } else {
-                    throw new IllegalStateException("Should insert only one row.");
-                }
-            } catch (SQLException e) {
-                LOG.error("There was an exception {}, during insert {}", e, object.getClass().getSimpleName());
-                throw new OrmException(e);
+        }
+
+        insertQuery = sqlManager.buildInsertQueryWithPk(entityMetaData, object, pkValue);
+        try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery.toString(),
+                Statement.NO_GENERATED_KEYS)) {
+            int affectedRow = preparedStatement.executeUpdate();
+            if (affectedRow == 1) {
+                return pkValue;
+            } else {
+                throw new IllegalStateException("Should insert only one row.");
             }
+        } catch (SQLException e) {
+            LOG.error("There was an exception {}, during insert {}", e, object.getClass().getSimpleName());
+            throw new OrmException(e);
         }
 
     }

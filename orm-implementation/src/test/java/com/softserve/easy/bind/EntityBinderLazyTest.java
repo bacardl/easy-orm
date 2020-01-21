@@ -93,6 +93,7 @@ public class EntityBinderLazyTest extends SimpleDbUnitTest {
 
         Optional<User> optionalUser = entityBinder.buildEntity(LAZY_USER_CLASS, resultSet);
         User actualUser = optionalUser.orElseGet(Assertions::fail);
+        System.out.println(actualUser.getClass());
         Country actualCountry = actualUser.getCountry();
         assertThat(actualCountry, notNullValue());
         Mockito.verify(persister).getLazyEntityById(LAZY_COUNTRY_CLASS, 100);
