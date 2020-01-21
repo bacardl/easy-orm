@@ -3,6 +3,8 @@ package com.softserve.easy.meta;
 import com.softserve.easy.meta.metasql.EasyQueryImpl;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -146,6 +148,36 @@ class EasyQueryImplTest {
         assertThat(easyQuery.extractClassName(),equalTo("ContactEntity"));
     }
 
+    @Test
+    void extractorTest(){
+        EasyQueryImpl easyQuery = new EasyQueryImpl("delete from ContactEntity where firstName = :nameParam and lastName = :lastNameParam");
+        String expected = "firstName = :nameParam and lastName = :lastNameParam";
+        assertThat(easyQuery.extractWhereClause(), equalTo(expected));
+
+    }
+
+    @Test
+    void extractorMultipleConditionsTest(){
+        EasyQueryImpl easyQuery = new EasyQueryImpl("delete from ContactEntity where firstName = :nameParam and lastName = :lastNameParam or kiko = :naibude");
+        String expected = "firstName = :nameParam and lastName = :lastNameParam or kiko = :naibude";
+        assertThat(easyQuery.extractWhereClause(), equalTo(expected));
+    }
+
+    @Test
+    void extractFieldNamesTest(){
+        EasyQueryImpl easyQuery = new EasyQueryImpl("delete from ContactEntity where firstName = :nameParam and lastName = :lastNameParam or kiko = :naibude");
+        String whereCLause = easyQuery.extractWhereClause();
+        List<String> fieldNames= easyQuery.extractFieldNamesAfterWhereClause(whereCLause);
+        assertThat(fieldNames.size(),equalTo(3));
+    }
+
+    @Test
+    void extractFieldNamesUpperCase(){
+        EasyQueryImpl easyQuery = new EasyQueryImpl("DELETE FROM ContactEntity where firstName = :nameParam AND lastName = :lastNameParam");
+        String whereCLause = easyQuery.extractWhereClause();
+        List<String> fieldNames= easyQuery.extractFieldNamesAfterWhereClause(whereCLause);
+        assertThat(fieldNames.size(),equalTo(2));
+    }
 
 
 

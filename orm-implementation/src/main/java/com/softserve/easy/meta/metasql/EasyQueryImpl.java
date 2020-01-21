@@ -3,7 +3,7 @@ package com.softserve.easy.meta.metasql;
 import com.healthmarketscience.sqlbuilder.DeleteQuery;
 import com.softserve.easy.exception.OrmException;
 
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -112,7 +112,7 @@ public class EasyQueryImpl implements EasyQuery {
         Pattern pattern;
         this.validate();
         if (queryType.equals(QueryType.FROM)) {
-            pattern = Pattern.compile("from\\s+(\\w+)", Pattern.CASE_INSENSITIVE);
+            pattern = Pattern.compile("^\\s*from\\s+(\\w+)", Pattern.CASE_INSENSITIVE);
         } else if (queryType.equals(QueryType.DELETE)) {
             pattern = Pattern.compile("delete(?:\\sfrom)*\\s+(\\w+)", Pattern.CASE_INSENSITIVE);
         } else if (queryType.equals(QueryType.UPDATE)) {
@@ -131,7 +131,31 @@ public class EasyQueryImpl implements EasyQuery {
         return tableName;
     }
 
-//    public String extract
+    public String extractWhereClause() {
+        Pattern pattern = Pattern.compile("where ((?!and$|or$).*)",Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(userQuery);
+        String match = "";
+        if (matcher.find()) {
+             match = matcher.group(1);
+        }
+        return match.trim();
+    }
+
+    public List<String> extractFieldNamesAfterWhereClause(String extractedPart){
+        List<String> temp = Arrays.asList(extractedPart.split("\\s*=\\s*:?\\w+\\s*|\\s*AND\\s*|\\s*OR\\s*|\\s*and\\s*|\\s*or\\s*"));
+        ArrayList<String> fieldNames = new ArrayList<>(temp);
+        //delete possible empty strings
+        fieldNames.removeIf(String::isEmpty);
+        return fieldNames;
+    }
+
+    public boolean containsWhereClause(){
+        Pattern pattern = Pattern.compile(".+where .+",Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(userQuery);
+
+        return matcher.matches();
+    }
+
 
 
 }
