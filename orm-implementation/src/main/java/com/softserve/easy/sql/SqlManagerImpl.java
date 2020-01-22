@@ -9,6 +9,9 @@ import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
 import com.softserve.easy.meta.field.ExternalMetaField;
 import com.softserve.easy.meta.field.InternalMetaField;
+import com.softserve.easy.meta.primarykey.AbstractMetaPrimaryKey;
+import com.softserve.easy.meta.primarykey.EmbeddedPrimaryKey;
+import com.softserve.easy.meta.primarykey.SinglePrimaryKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class SqlManagerImpl implements SqlManager {
     private static final Logger LOG = LoggerFactory.getLogger(SqlManagerImpl.class);
@@ -29,78 +33,158 @@ public class SqlManagerImpl implements SqlManager {
 
     @Override
     public SelectQuery buildSelectByPkQuery(MetaData entityMetaData, Serializable id) {
-        SelectQuery selectQuery = new SelectQuery();
+        final SelectQuery selectQuery = new SelectQuery();
 
-        List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
-        for (InternalMetaField metaField : internalMetaFields) {
-            selectQuery.addAliasedColumn(metaField.getInternalDbColumn(), metaField.getDbFieldFullName());
-        }
+        AbstractMetaPrimaryKey pk = entityMetaData.getPrimaryKey();
+        handlePrimaryKey(pk, selectQuery, id);
 
-        List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
-        for (ExternalMetaField metaField : externalMetaFields) {
-            selectQuery.addAliasedColumn(metaField.getExternalDbColumn(), metaField.getForeignKeyFieldFullName());
-            if (metaField.getEntityFetchType().equals(FetchType.EAGER)) {
-                    addDependencyToQuery(selectQuery, metaField);
-            }
-        }
+        handleInternalMetaFields(
+                metaField ->
+                        selectQuery.addAliasedColumn(metaField.getInternalDbColumn(), metaField.getDbFieldFullName()),
+                entityMetaData.getInternalMetaField()
+        );
 
-        selectQuery.addCondition(BinaryCondition.equalTo(entityMetaData.getMetaPrimaryKey().getInternalDbColumn(), id));
+        handleExternalMetaFields(metaField -> {
+                    selectQuery.addAliasedColumn(metaField.getExternalDbColumn(), metaField.getForeignKeyFieldFullName());
+                    if (metaField.getEntityFetchType().equals(FetchType.EAGER)) {
+                        addDependencyToQuery(selectQuery, metaField);
+                    }
+                },
+                entityMetaData.getExternalMetaField()
+        );
+
         selectQuery.validate();
         LOG.info("Built a select query for {} entity with id: {}.\n{}",
                 entityMetaData.getEntityClass().getSimpleName(), id, selectQuery.toString());
         return selectQuery;
     }
 
+    private void handlePrimaryKey(AbstractMetaPrimaryKey pk, SelectQuery selectQuery, Serializable id) {
+        switch (pk.getPrimaryKeyType()) {
+            case SINGLE:
+                handleSinglePrimaryKey(
+                        singlePrimaryKey -> {
+                            InternalMetaField pkMeta = singlePrimaryKey.getPrimaryKey();
+                            selectQuery.addAliasedColumn(pkMeta.getInternalDbColumn(),
+                                    pkMeta.getDbFieldFullName());
+                            selectQuery.addCondition(BinaryCondition.equalTo(pkMeta.getInternalDbColumn(), id));
+                        },
+                        (SinglePrimaryKey) pk
+                );
+                break;
+            case COMPLEX:
+                handleEmbeddedPrimaryKey(
+                        embeddedPrimaryKey -> {
+                            List<InternalMetaField> pksMeta = embeddedPrimaryKey.getPrimaryKeys();
+                            handleInternalMetaFields(pkMeta -> {
+                                        selectQuery.addAliasedColumn(pkMeta.getInternalDbColumn(),
+                                                pkMeta.getDbFieldFullName());
+                                        try {
+                                            selectQuery.addCondition(
+                                                    BinaryCondition.equalTo(pkMeta.getInternalDbColumn(), pkMeta.retrieveValue(id))
+                                            );
+                                        } catch (IllegalAccessException e) {
+                                            LOG.error("Couldn't retrieve a value from the embeddable object's field." +
+                                                            "Field: {}, Embeddable object {}", pkMeta.getFieldName(),
+                                                    embeddedPrimaryKey.getEmbeddableMetaData().getEmbeddableEntity().getSimpleName());
+                                            throw new OrmException("Couldn't handle an id object.");
+                                        }
+                                    },
+                                    pksMeta);
+                        },
+                        (EmbeddedPrimaryKey) pk
+                );
+
+        }
+    }
+
+    private void handleSinglePrimaryKey(Consumer<SinglePrimaryKey> consumer, SinglePrimaryKey singlePrimaryKey) {
+        consumer.accept(singlePrimaryKey);
+    }
+
+    private void handleEmbeddedPrimaryKey(Consumer<EmbeddedPrimaryKey> consumer, EmbeddedPrimaryKey embeddedPrimaryKey) {
+        consumer.accept(embeddedPrimaryKey);
+    }
+
+    private void handleInternalMetaFields(Consumer<InternalMetaField> consumer, List<InternalMetaField> internalMetaFields) {
+        for (InternalMetaField metaField : internalMetaFields) {
+            consumer.accept(metaField);
+        }
+    }
+
+    private void handleExternalMetaFields(Consumer<ExternalMetaField> consumer, List<ExternalMetaField> externalMetaFields) {
+        for (ExternalMetaField metaField : externalMetaFields) {
+            consumer.accept(metaField);
+        }
+    }
+
     @Override
     public SelectQuery buildLazySelectByPkQuery(MetaData entityMetaData, Serializable id) {
-        SelectQuery selectQuery = new SelectQuery();
+        final SelectQuery selectQuery = new SelectQuery();
 
-        List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
-        for (InternalMetaField metaField : internalMetaFields) {
-            selectQuery.addAliasedColumn(metaField.getInternalDbColumn(), metaField.getDbFieldFullName());
-        }
+        AbstractMetaPrimaryKey pk = entityMetaData.getPrimaryKey();
+        handlePrimaryKey(pk, selectQuery, id);
 
-        List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
-        for (ExternalMetaField metaField : externalMetaFields) {
-            selectQuery.addAliasedColumn(metaField.getExternalDbColumn(), metaField.getForeignKeyFieldFullName());
-        }
+        handleInternalMetaFields(
+                metaField ->
+                        selectQuery.addAliasedColumn(metaField.getInternalDbColumn(), metaField.getDbFieldFullName()),
+                entityMetaData.getInternalMetaField());
 
-        selectQuery.addCondition(BinaryCondition.equalTo(entityMetaData.getMetaPrimaryKey().getInternalDbColumn(), id));
+        handleExternalMetaFields(metaField ->
+                        selectQuery.addAliasedColumn(metaField.getExternalDbColumn(), metaField.getForeignKeyFieldFullName()),
+                entityMetaData.getExternalMetaField()
+        );
+
         selectQuery.validate();
         LOG.info("Built a lazy select query for {} entity with id: {}.\n{}",
                 entityMetaData.getEntityClass().getSimpleName(), id, selectQuery.toString());
         return selectQuery;
     }
 
-    private void addDependencyToQuery(SelectQuery selectQuery, ExternalMetaField metaField) {
-        MetaData parentMetaData = metaField.getMetaData();
-        MetaData childMetaData = metaContext.getMetaDataMap().get(metaField.getFieldType());
 
-        List<InternalMetaField> internalMetaFields = childMetaData.getInternalMetaField();
-        for (InternalMetaField internalMetaField : internalMetaFields) {
-            selectQuery.addAliasedColumn(internalMetaField.getInternalDbColumn(), internalMetaField.getDbFieldFullName());
-        }
+    // this method does not support a composite fk yet
+    private void addDependencyToQuery(SelectQuery selectQuery, ExternalMetaField externalMetaField) {
+        MetaData parentMetaData = externalMetaField.getMetaData();
+        MetaData childMetaData = metaContext.getMetaDataMap().get(externalMetaField.getFieldType());
 
-        List<ExternalMetaField> externalMetaFields = childMetaData.getExternalMetaField();
-        for (ExternalMetaField externalMetaField : externalMetaFields) {
-            selectQuery.addAliasedColumn(externalMetaField.getExternalDbColumn(), externalMetaField.getForeignKeyFieldFullName());
-        }
+        SinglePrimaryKey pk = (SinglePrimaryKey) childMetaData.getPrimaryKey();
+
+        handleSinglePrimaryKey(
+                singlePrimaryKey -> {
+                    InternalMetaField pkMeta = singlePrimaryKey.getPrimaryKey();
+                    selectQuery.addAliasedColumn(pkMeta.getInternalDbColumn(),
+                            pkMeta.getDbFieldFullName());
+                },
+                pk
+        );
+
+        handleInternalMetaFields(
+                metaField ->
+                        selectQuery.addAliasedColumn(metaField.getInternalDbColumn(), metaField.getDbFieldFullName()),
+                childMetaData.getInternalMetaField()
+        );
+
+        handleExternalMetaFields(metaField ->
+                        selectQuery.addAliasedColumn(metaField.getExternalDbColumn(), metaField.getForeignKeyFieldFullName()),
+                childMetaData.getExternalMetaField()
+        );
 
         DbJoin dbJoin = new DbJoin(parentMetaData.getDbTable().getSpec(),
                 parentMetaData.getDbTable(),
                 childMetaData.getDbTable(),
-                new DbColumn[]{metaField.getExternalDbColumn()},
-                new DbColumn[]{childMetaData.getMetaPrimaryKey().getInternalDbColumn()});
+                new DbColumn[]{externalMetaField.getExternalDbColumn()},
+                new DbColumn[]{pk.getPrimaryKey().getInternalDbColumn()}
+        );
 
         selectQuery.addJoins(SelectQuery.JoinType.INNER, dbJoin);
     }
 
     @Override
     public SelectQuery buildSelectAllQuery(MetaData entityMetaData) {
-        SelectQuery selectQuery = new SelectQuery();
+        final SelectQuery selectQuery = new SelectQuery();
         LOG.debug("Built a select all query for {} entity.\n{}"
                 , entityMetaData.getEntityClass().getSimpleName(), selectQuery.toString());
-        return selectQuery;
+        throw new UnsupportedOperationException();
     }
 
     @Override

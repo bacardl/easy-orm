@@ -204,7 +204,7 @@ public class Configuration {
                         + "must be annotated by @Id or @EmbeddedId."));
         switch (primaryKeyType) {
             case SINGLE:
-                return new SinglePrimaryKey(getPrimaryKeyInternalMetaField(pkField, metaData), metaData);
+                return new SinglePrimaryKey(getPrimaryKeyInternalMetaField(pkField, metaData), metaData, pkField);
             case COMPLEX:
                 Class<?> embeddedFieldClass = pkField.getDeclaringClass();
                 EmbeddableMetaData embeddableMetaData = embeddedEntityConfig.get(embeddedFieldClass);
