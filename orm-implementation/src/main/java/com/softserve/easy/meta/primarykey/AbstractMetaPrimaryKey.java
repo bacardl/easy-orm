@@ -37,6 +37,7 @@ public abstract class AbstractMetaPrimaryKey implements Retrievable<Serializable
     @Override
     public Serializable retrieveValue(Object object) throws IllegalAccessException {
         boolean previous = this.field.isAccessible();
+        this.field.setAccessible(true);
         Serializable value = (Serializable) this.field.get(object);
         this.field.setAccessible(previous);
         return value;

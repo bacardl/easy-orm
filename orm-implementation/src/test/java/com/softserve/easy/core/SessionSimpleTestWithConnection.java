@@ -96,7 +96,7 @@ public class SessionSimpleTestWithConnection extends SimpleDbUnitTest {
         session.update(user);
     }
     @ExpectedDataSet(value = "dataset/simple/yml/data.yml")
-    @Test
+    @Test(expected = OrmException.class)
     public void shouldNotUpdateUser(){
         Country country = new Country();
         country.setId(100);
