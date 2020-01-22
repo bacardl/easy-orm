@@ -189,6 +189,7 @@ class EasyQueryImplTest {
         List<String> fieldNamesAndValues = easyQuery.extractFieldNamesAndValuesAfterWhereClause(whereCLause);
         Map<String, String> fieldValuePairs = easyQuery.convertFieldsAndValuesToMap(fieldNamesAndValues);
         for (Map.Entry<String, String> entry : fieldValuePairs.entrySet()) {
+            System.out.print(entry.getKey() + " - key, value - ");
             System.out.println(entry.getValue());
             assertThat(entry.getValue(), containsString(":"));
         }

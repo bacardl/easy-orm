@@ -1,16 +1,31 @@
 grammar Easyql;
-eql :
- query
- ;
 query :
  selectq
 | deleteq
 | updateq;
 selectq :
-SELECT SPACE FROM SPACE TNAME (where_clause)? (limit_clause)?
+SELECT SPACE FROM SPACE ANYNAME (where_clause)? (limit_clause)?
+;
+updateq:
+UPDATE SPACE ANYNAME SPACE set_clause (where_clause)?
+;
+deleteq:
+DELETE SPACE FROM ANYNAME (where_clause)?
+;
+SELECT:
+'SELECT'|'select'
+;
+DELETE:
+'DELETE'|'delete'
+;
+UPDATE:
+'UPDATE'|'update'
+;
+FROM:
+'FROM'|'from'
 ;
 SPACE :
- '\s+'
+
  ;
 where_clause :
 WHERE SPACE pair (agr pair)*;
@@ -29,10 +44,11 @@ OR :
 'OR'|'or'
 ;
 pair:
-column SPACE condition SPACE value;
+ANYNAME SPACE condition SPACE VALUE;
 condition:
 LIKE
 | EQUAL
+| NOTEQUAL
 ;
 LIKE:
 'LIKE'
@@ -41,25 +57,35 @@ LIKE:
 EQUAL:
 '='
 ;
-column:
+NOTEQUAL:
+'!='
 ;
-value:
+ANYNAME:
+[a-zA-Z]+
 ;
-updateq:
+VALUE:
+.+
 ;
-deleteq:
-;
-FROM:
-'FROM'|'from'
-;
-TNAME:
-'[a-zA-Z]+'
-;
-SELECT:
-'SELECT'|'select'
-;
+
 limit_clause:
-'LIMIT'|'limit' SPACE '[0-9]+'
+'LIMIT'|'limit' SPACE NUMBER
 ;
+SET:
+'SET'|'set'
+;
+set_clause:
+SET SPACE pair SPACE (COMMA SPACE pair)*
+;
+COMMA:
+','
+;
+WS:
+ [ \t\n\r] + -> skip
+;
+NUMBER:
+[0-9]
+;
+
+
 
 
