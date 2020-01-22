@@ -59,8 +59,10 @@ NOTEQUAL:
 ANYNAME:
 [a-zA-Z]+
 ;
-VALUE:
-[a-zA-Z0-9_]+
+value:
+ANYNAME
+|
+NUMBER
 ;
 SET:
 'SET'|'set'
@@ -69,9 +71,9 @@ set_clause:
 SET  equalpair  (COMMA  equalpair)*
 ;
 equalpair:
-ANYNAME  EQUAL  VALUE;
+ANYNAME  EQUAL  value;
 pair:
-ANYNAME  condition  VALUE;
+ANYNAME  condition  value;
 limit_clause:
 'LIMIT'|'limit'  NUMBER
 ;
@@ -84,7 +86,3 @@ WS:
 NUMBER:
 [0-9]
 ;
-
-
-
-
