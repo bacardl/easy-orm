@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,64 +58,6 @@ public class SqlManagerImpl implements SqlManager {
         return selectQuery;
     }
 
-    private void handlePrimaryKey(AbstractMetaPrimaryKey pk, SelectQuery selectQuery, Serializable id) {
-        switch (pk.getPrimaryKeyType()) {
-            case SINGLE:
-                handleSinglePrimaryKey(
-                        singlePrimaryKey -> {
-                            InternalMetaField pkMeta = singlePrimaryKey.getPrimaryKey();
-                            selectQuery.addAliasedColumn(pkMeta.getInternalDbColumn(),
-                                    pkMeta.getDbFieldFullName());
-                            selectQuery.addCondition(BinaryCondition.equalTo(pkMeta.getInternalDbColumn(), id));
-                        },
-                        (SinglePrimaryKey) pk
-                );
-                break;
-            case COMPLEX:
-                handleEmbeddedPrimaryKey(
-                        embeddedPrimaryKey -> {
-                            List<InternalMetaField> pksMeta = embeddedPrimaryKey.getPrimaryKeys();
-                            handleInternalMetaFields(pkMeta -> {
-                                        selectQuery.addAliasedColumn(pkMeta.getInternalDbColumn(),
-                                                pkMeta.getDbFieldFullName());
-                                        try {
-                                            selectQuery.addCondition(
-                                                    BinaryCondition.equalTo(pkMeta.getInternalDbColumn(), pkMeta.retrieveValue(id))
-                                            );
-                                        } catch (IllegalAccessException e) {
-                                            LOG.error("Couldn't retrieve a value from the embeddable object's field." +
-                                                            "Field: {}, Embeddable object {}", pkMeta.getFieldName(),
-                                                    embeddedPrimaryKey.getEmbeddableMetaData().getEmbeddableEntity().getSimpleName());
-                                            throw new OrmException("Couldn't handle an id object.");
-                                        }
-                                    },
-                                    pksMeta);
-                        },
-                        (EmbeddedPrimaryKey) pk
-                );
-
-        }
-    }
-
-    private void handleSinglePrimaryKey(Consumer<SinglePrimaryKey> consumer, SinglePrimaryKey singlePrimaryKey) {
-        consumer.accept(singlePrimaryKey);
-    }
-
-    private void handleEmbeddedPrimaryKey(Consumer<EmbeddedPrimaryKey> consumer, EmbeddedPrimaryKey embeddedPrimaryKey) {
-        consumer.accept(embeddedPrimaryKey);
-    }
-
-    private void handleInternalMetaFields(Consumer<InternalMetaField> consumer, List<InternalMetaField> internalMetaFields) {
-        for (InternalMetaField metaField : internalMetaFields) {
-            consumer.accept(metaField);
-        }
-    }
-
-    private void handleExternalMetaFields(Consumer<ExternalMetaField> consumer, List<ExternalMetaField> externalMetaFields) {
-        for (ExternalMetaField metaField : externalMetaFields) {
-            consumer.accept(metaField);
-        }
-    }
 
     @Override
     public SelectQuery buildLazySelectByPkQuery(MetaData entityMetaData, Serializable id) {
@@ -189,94 +130,98 @@ public class SqlManagerImpl implements SqlManager {
 
     @Override
     public UpdateQuery buildUpdateByPkQuery(MetaData entityMetaData, Object object) {
-        UpdateQuery updateQuery = new UpdateQuery(entityMetaData.getDbTable());
-        InternalMetaField pkMetaField = entityMetaData.getMetaPrimaryKey();
-        Field pkField = pkMetaField.getField();
-        boolean previous = pkField.isAccessible();
-        Object pkValue = null;
-        Map<DbColumn, Object> dbColumnObjectMap = null;
-        pkField.setAccessible(true);
+        final UpdateQuery updateQuery = new UpdateQuery(entityMetaData.getDbTable());
+        AbstractMetaPrimaryKey primaryKey = entityMetaData.getPrimaryKey();
+
+        Serializable primaryKeyValue = null;
         try {
-            pkValue = pkField.get(object);
-            dbColumnObjectMap = collectParameters(
-                    entityMetaData.getInternalMetaFieldWithoutPk(),
-                    entityMetaData.getExternalMetaField(), object);
+            primaryKeyValue = primaryKey.retrieveValue(object);
         } catch (IllegalAccessException e) {
             LOG.error("Couldn't get access to field: {}", e.getMessage());
         }
-        pkField.setAccessible(previous);
-        if (Objects.isNull(pkValue)) {
+
+        Map<DbColumn, Serializable> dbColumnObjectMap = collectParameters(
+                entityMetaData.getInternalMetaField(),
+                entityMetaData.getExternalMetaField(),
+                object);
+
+        if (Objects.isNull(primaryKeyValue)) {
             throw new OrmException("Couldn't build update query. Pk field doesn't have value.");
         }
 
         Objects.requireNonNull(dbColumnObjectMap).forEach(updateQuery::addSetClause);
-        updateQuery.addCondition(BinaryCondition.equalTo(pkMetaField.getInternalDbColumn(), pkValue));
+
+        handlePrimaryKey(primaryKey, updateQuery, primaryKeyValue);
         updateQuery.validate();
         return updateQuery;
     }
 
-    private Map<DbColumn, Object> collectParameters(List<InternalMetaField> internalMetaFields,
-                                                    List<ExternalMetaField> externalMetaFields,
-                                                    Object object)
-            throws IllegalAccessException {
-        Map<DbColumn, Object> dbColumnObjectMap = new LinkedHashMap<>();
-        for (ExternalMetaField externalMetaField : externalMetaFields) {
-            checkAndProvideAccessibility(externalMetaField.getField());
-            Object value = externalMetaField.getField().get(object);
-            if (Objects.isNull(value)) {
-                dbColumnObjectMap.put(externalMetaField.getExternalDbColumn(), null);
-            } else {
-                MetaData valueEntityMetaData = metaContext.getMetaDataMap().get(value.getClass());
-                checkAndProvideAccessibility(valueEntityMetaData.getPrimaryKey());
-                Object externalObjectsPkValue = valueEntityMetaData.getPrimaryKey().get(value);
-                if (Objects.isNull(externalObjectsPkValue)) {
-                    LOG.warn("The field {} of the external entity {} should be defined.",
-                            valueEntityMetaData.getPrimaryKey(), valueEntityMetaData.getClass().getSimpleName());
-                    throw new OrmException("Entity has a wrong state. The object of the external field's should has" +
-                            "a defined primary key field.");
-                }
-                dbColumnObjectMap.put(externalMetaField.getExternalDbColumn(), externalObjectsPkValue);
-            }
-        }
-        for (InternalMetaField internalMetaField : internalMetaFields) {
-            checkAndProvideAccessibility(internalMetaField.getField());
-            Object internalObject = internalMetaField.getField().get(object);
-            if (Objects.isNull(internalObject)) {
-                dbColumnObjectMap.put(internalMetaField.getInternalDbColumn(), null);
-            } else {
-                dbColumnObjectMap.put(internalMetaField.getInternalDbColumn(),
-                        internalMetaField.getField().get(object));
-            }
+    private Map<DbColumn, Serializable> collectParameters(List<InternalMetaField> internalMetaFields,
+                                                          List<ExternalMetaField> externalMetaFields,
+                                                          Object object) {
+        Map<DbColumn, Serializable> dbColumnObjectMap = new LinkedHashMap<>();
 
-        }
+        handleExternalMetaFields(metaField -> {
+                    try {
+                        Object value = metaField.retrieveValue(object);
+                        if (Objects.isNull(value)) {
+                            dbColumnObjectMap.put(metaField.getExternalDbColumn(), null);
+                        } else {
+                            MetaData valueEntityMetaData = metaContext.getMetaDataMap().get(value.getClass());
+                            Serializable externalObjectsPkValue = valueEntityMetaData.getPrimaryKey().retrieveValue(value);
+                            if (Objects.isNull(externalObjectsPkValue)) {
+                                LOG.error("The field {} of the external entity {} should be defined.",
+                                        valueEntityMetaData.getPrimaryKey(), valueEntityMetaData.getClass().getSimpleName());
+                                throw new OrmException("Entity has a wrong state. The object of the external field's should has" +
+                                        "a defined primary key field.");
+                            }
+                            dbColumnObjectMap.put(metaField.getExternalDbColumn(), externalObjectsPkValue);
+                        }
+                    } catch (IllegalAccessException e) {
+                        LOG.error("Couldn't retrieve a value from the external object's field." +
+                                        "Field: {}, external object {}", metaField.getFieldName(),
+                                metaField.getFieldType().getSimpleName());
+                        throw new OrmException("Couldn't handle an object's field.", e);
+                    }
+                },
+                externalMetaFields
+        );
+        handleInternalMetaFields(metaField -> {
+                    try {
+                        Serializable internalObject = metaField.retrieveValue(object);
+                        if (Objects.isNull(internalObject)) {
+                            dbColumnObjectMap.put(metaField.getInternalDbColumn(), null);
+                        } else {
+                            dbColumnObjectMap.put(metaField.getInternalDbColumn(), internalObject);
+                        }
+                    } catch (IllegalAccessException e) {
+                        LOG.error("Couldn't retrieve a value from the external object's field." +
+                                        "Field: {}, external object {}", metaField.getFieldName(),
+                                metaField.getFieldType().getSimpleName());
+                        throw new OrmException("Couldn't handle an object's field.", e);
+                    }
+                },
+                internalMetaFields
+        );
         return dbColumnObjectMap;
-    }
-
-    private void checkAndProvideAccessibility(Field field) {
-        if (!field.isAccessible()) {
-            field.setAccessible(true);
-        }
     }
 
     @Override
     public DeleteQuery buildDeleteByPkQuery(MetaData entityMetaData, Object object) {
-        DeleteQuery deleteQuery = new DeleteQuery(entityMetaData.getDbTable());
-        InternalMetaField pkMetaField = entityMetaData.getMetaPrimaryKey();
-        Field pkField = pkMetaField.getField();
-        boolean accessible = pkField.isAccessible();
-        pkField.setAccessible(true);
-        Object pkValue = null;
+        final DeleteQuery deleteQuery = new DeleteQuery(entityMetaData.getDbTable());
+        AbstractMetaPrimaryKey primaryKey = entityMetaData.getPrimaryKey();
+        Serializable primaryKeyValue = null;
         try {
-            pkValue = pkField.get(object);
+            primaryKeyValue = primaryKey.retrieveValue(object);
         } catch (IllegalAccessException e) {
-            LOG.error("Couldn't get access to PK field: {}", pkField.getName());
-        }
-        pkField.setAccessible(accessible);
-        if (Objects.isNull(pkValue)) {
-            throw new OrmException("Couldn't build delete query. Pk field doesn't have value.");
+            LOG.error("Couldn't get access to field: {}", e.getMessage());
         }
 
-        deleteQuery.addCondition(BinaryCondition.equalTo(pkMetaField.getInternalDbColumn(), pkValue));
+        if (Objects.isNull(primaryKeyValue)) {
+            throw new OrmException("Couldn't build delete query. Pk field doesn't have value.");
+        }
+        handlePrimaryKey(primaryKey,deleteQuery, primaryKeyValue);
+
         deleteQuery.validate();
         return deleteQuery;
     }
@@ -284,7 +229,7 @@ public class SqlManagerImpl implements SqlManager {
     @Override
     public InsertQuery buildInsertQueryWithPk(MetaData entityMetaData, Object object, Serializable id) {
         InsertQuery insertQuery = buildInsertQuery(entityMetaData, object);
-        insertQuery.addColumn(entityMetaData.getMetaPrimaryKey().getInternalDbColumn(), id);
+        handlePrimaryKey(entityMetaData.getPrimaryKey(), insertQuery, id);
         insertQuery.validate();
         return insertQuery;
     }
@@ -292,17 +237,176 @@ public class SqlManagerImpl implements SqlManager {
     @Override
     public InsertQuery buildInsertQuery(MetaData entityMetaData, Object object) {
         InsertQuery insertQuery = new InsertQuery(entityMetaData.getDbTable());
-        Map<DbColumn, Object> dbColumnObjectMap = null;
-        try {
-            dbColumnObjectMap = collectParameters(
-                    entityMetaData.getInternalMetaFieldWithoutPk(),
-                    entityMetaData.getExternalMetaField(), object);
-        } catch (IllegalAccessException e) {
-            LOG.error("Couldn't get access to field: {}", e.getMessage());
-        }
+        Map<DbColumn, Serializable> dbColumnObjectMap = collectParameters(
+                    entityMetaData.getInternalMetaField(),
+                    entityMetaData.getExternalMetaField(),
+                    object);
+
         Objects.requireNonNull(dbColumnObjectMap).forEach(insertQuery::addColumn);
         insertQuery.validate();
         return insertQuery;
+    }
+
+    private void handlePrimaryKey(AbstractMetaPrimaryKey pk, SelectQuery selectQuery, Serializable id) {
+        switch (pk.getPrimaryKeyType()) {
+            case SINGLE:
+                handleSinglePrimaryKey(
+                        singlePrimaryKey -> {
+                            InternalMetaField pkMeta = singlePrimaryKey.getPrimaryKey();
+                            selectQuery.addAliasedColumn(pkMeta.getInternalDbColumn(),
+                                    pkMeta.getDbFieldFullName());
+                            selectQuery.addCondition(BinaryCondition.equalTo(pkMeta.getInternalDbColumn(), id));
+                        },
+                        (SinglePrimaryKey) pk
+                );
+                break;
+            case COMPLEX:
+                handleEmbeddedPrimaryKey(
+                        embeddedPrimaryKey -> {
+                            List<InternalMetaField> pksMeta = embeddedPrimaryKey.getPrimaryKeys();
+                            handleInternalMetaFields(pkMeta -> {
+                                        selectQuery.addAliasedColumn(pkMeta.getInternalDbColumn(),
+                                                pkMeta.getDbFieldFullName());
+                                        try {
+                                            selectQuery.addCondition(
+                                                    BinaryCondition.equalTo(pkMeta.getInternalDbColumn(), pkMeta.retrieveValue(id))
+                                            );
+                                        } catch (IllegalAccessException e) {
+                                            LOG.error("Couldn't retrieve a value from the embeddable object's field." +
+                                                            "Field: {}, Embeddable object {}", pkMeta.getFieldName(),
+                                                    embeddedPrimaryKey.getEmbeddableMetaData().getEmbeddableEntity().getSimpleName());
+                                            throw new OrmException("Couldn't handle an id object.", e);
+                                        }
+                                    },
+                                    pksMeta);
+                        },
+                        (EmbeddedPrimaryKey) pk
+                );
+
+        }
+    }
+
+    private void handlePrimaryKey(AbstractMetaPrimaryKey pk, UpdateQuery updateQuery, Serializable id) {
+        switch (pk.getPrimaryKeyType()) {
+            case SINGLE:
+                handleSinglePrimaryKey(
+                        singlePrimaryKey -> {
+                            InternalMetaField pkMeta = singlePrimaryKey.getPrimaryKey();
+                            updateQuery.addCondition(BinaryCondition.equalTo(pkMeta.getInternalDbColumn(), id));
+                        },
+                        (SinglePrimaryKey) pk
+                );
+                break;
+            case COMPLEX:
+                handleEmbeddedPrimaryKey(
+                        embeddedPrimaryKey -> {
+                            List<InternalMetaField> pksMeta = embeddedPrimaryKey.getPrimaryKeys();
+                            handleInternalMetaFields(pkMeta -> {
+                                        try {
+                                            updateQuery.addCondition(
+                                                    BinaryCondition.equalTo(pkMeta.getInternalDbColumn(), pkMeta.retrieveValue(id))
+                                            );
+                                        } catch (IllegalAccessException e) {
+                                            LOG.error("Couldn't retrieve a value from the embeddable object's field." +
+                                                            "Field: {}, Embeddable object {}", pkMeta.getFieldName(),
+                                                    embeddedPrimaryKey.getEmbeddableMetaData().getEmbeddableEntity().getSimpleName());
+                                            throw new OrmException("Couldn't handle an id object.");
+                                        }
+                                    },
+                                    pksMeta);
+                        },
+                        (EmbeddedPrimaryKey) pk
+                );
+
+        }
+    }
+
+    private void handlePrimaryKey(AbstractMetaPrimaryKey pk, DeleteQuery deleteQuery, Serializable id) {
+        switch (pk.getPrimaryKeyType()) {
+            case SINGLE:
+                handleSinglePrimaryKey(
+                        singlePrimaryKey -> {
+                            InternalMetaField pkMeta = singlePrimaryKey.getPrimaryKey();
+                            deleteQuery.addCondition(BinaryCondition.equalTo(pkMeta.getInternalDbColumn(), id));
+                        },
+                        (SinglePrimaryKey) pk
+                );
+                break;
+            case COMPLEX:
+                handleEmbeddedPrimaryKey(
+                        embeddedPrimaryKey -> {
+                            List<InternalMetaField> pksMeta = embeddedPrimaryKey.getPrimaryKeys();
+                            handleInternalMetaFields(pkMeta -> {
+                                        try {
+                                            deleteQuery.addCondition(
+                                                    BinaryCondition.equalTo(pkMeta.getInternalDbColumn(), pkMeta.retrieveValue(id))
+                                            );
+                                        } catch (IllegalAccessException e) {
+                                            LOG.error("Couldn't retrieve a value from the embeddable object's field." +
+                                                            "Field: {}, Embeddable object {}", pkMeta.getFieldName(),
+                                                    embeddedPrimaryKey.getEmbeddableMetaData().getEmbeddableEntity().getSimpleName());
+                                            throw new OrmException("Couldn't handle an id object.");
+                                        }
+                                    },
+                                    pksMeta);
+                        },
+                        (EmbeddedPrimaryKey) pk
+                );
+
+        }
+    }
+
+    private void handlePrimaryKey(AbstractMetaPrimaryKey pk, InsertQuery insertQuery, Serializable id) {
+        switch (pk.getPrimaryKeyType()) {
+            case SINGLE:
+                handleSinglePrimaryKey(
+                        singlePrimaryKey -> {
+                            InternalMetaField pkMeta = singlePrimaryKey.getPrimaryKey();
+                            insertQuery.addColumn(pkMeta.getInternalDbColumn(), id);
+                        },
+                        (SinglePrimaryKey) pk
+                );
+                break;
+            case COMPLEX:
+                handleEmbeddedPrimaryKey(
+                        embeddedPrimaryKey -> {
+                            List<InternalMetaField> pksMeta = embeddedPrimaryKey.getPrimaryKeys();
+                            handleInternalMetaFields(pkMeta -> {
+                                        try {
+                                            insertQuery.addColumn(pkMeta.getInternalDbColumn(), pkMeta.retrieveValue(id));
+                                        } catch (IllegalAccessException e) {
+                                            LOG.error("Couldn't retrieve a value from the embeddable object's field." +
+                                                            "Field: {}, Embeddable object {}", pkMeta.getFieldName(),
+                                                    embeddedPrimaryKey.getEmbeddableMetaData().getEmbeddableEntity().getSimpleName());
+                                            throw new OrmException("Couldn't handle an id object.");
+                                        }
+                                    },
+                                    pksMeta);
+                        },
+                        (EmbeddedPrimaryKey) pk
+                );
+
+        }
+    }
+
+    private void handleSinglePrimaryKey(Consumer<SinglePrimaryKey> consumer, SinglePrimaryKey singlePrimaryKey) {
+        consumer.accept(singlePrimaryKey);
+    }
+
+    private void handleEmbeddedPrimaryKey(Consumer<EmbeddedPrimaryKey> consumer, EmbeddedPrimaryKey embeddedPrimaryKey) {
+        consumer.accept(embeddedPrimaryKey);
+    }
+
+    private void handleInternalMetaFields(Consumer<InternalMetaField> consumer, List<InternalMetaField> internalMetaFields) {
+        for (InternalMetaField metaField : internalMetaFields) {
+            consumer.accept(metaField);
+        }
+    }
+
+    private void handleExternalMetaFields(Consumer<ExternalMetaField> consumer, List<ExternalMetaField> externalMetaFields) {
+        for (ExternalMetaField metaField : externalMetaFields) {
+            consumer.accept(metaField);
+        }
     }
 
 }
