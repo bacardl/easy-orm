@@ -1,28 +1,30 @@
 package com.softserve.easy.entity.complex;
 
+import com.google.common.base.MoreObjects;
 import com.softserve.easy.annotation.*;
 
+import java.util.Objects;
 import java.util.Set;
-import java.util.StringJoiner;
 
 @Entity(name = "User")
 @Table(name = "users")
 public class User {
-    // TODO: resolve @OneToOne relation to Person entity
 
     @Id
+    @Column(name = "person_id")
     private Long id;
 
-    @Column(name = "login")
     private String username;
     private String password;
     private String email;
 
     @OneToOne
     // @PrimaryKeyJoinColumn
+    @Column(name = "person_id")
     private Person person;
 
     @ManyToOne
+    @Column(name = "country_code")
     private Country country;
 
     @OneToMany
@@ -84,14 +86,32 @@ public class User {
         this.country = country;
     }
 
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof User)) return false;
+        User user = (User) object;
+        return getUsername().equals(user.getUsername()) &&
+                getPassword().equals(user.getPassword()) &&
+                getEmail().equals(user.getEmail());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getUsername(), getPassword(), getEmail());
+    }
+
     @Override
     public String toString() {
-        return new StringJoiner(", ", User.class.getSimpleName() + "[", "]")
-                .add("id=" + id)
-                .add("username='" + username + "'")
-                .add("password='" + password + "'")
-                .add("email='" + email + "'")
-                .add("country=" + country)
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("username", username)
+                .add("password", password)
+                .add("email", email)
+                .add("person", person)
+                .add("country", country)
+                .add("orders", orders)
                 .toString();
     }
 }

@@ -62,7 +62,7 @@ public abstract class AbstractMetaPrimaryKey implements Retrievable<Serializable
         return checkIdCompatibility(value.getClass());
     }
     public boolean checkIdCompatibility(Class<?> idClazz) {
-        return field.getClass().isAssignableFrom(idClazz);
+        return field.getType().isAssignableFrom(idClazz);
     }
 
 }

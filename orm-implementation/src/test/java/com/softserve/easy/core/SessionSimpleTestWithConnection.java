@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.notNullValue;
 
 
 public class SessionSimpleTestWithConnection extends SimpleDbUnitTest {
-    private static SessionImpl session;
+    private SessionImpl session;
 
     @Before
     public void init() {

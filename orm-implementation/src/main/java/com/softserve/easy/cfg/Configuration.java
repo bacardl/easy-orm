@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,6 +54,7 @@ public class Configuration {
         this.observedEntities = new HashSet<>();
         this.observedEmbeddableEntities = new HashSet<>();
         this.entityConfig = new HashMap<>();
+        this.embeddedEntityConfig = new HashMap<>();
     }
 
     private void initObservedClasses() {
@@ -127,6 +129,7 @@ public class Configuration {
             addEmbeddableEntityToConfig(observedEmbeddableEntity);
         }
     }
+
     private void initEntityConfig() {
         for (Class<?> observedEntity : observedEntities) {
             addEntityToConfig(observedEntity);
@@ -178,12 +181,15 @@ public class Configuration {
 
     private EmbeddableMetaData analyzeEmbeddableClass(Class<?> annotatedClass) {
         Field[] declaredFields = annotatedClass.getDeclaredFields();
-        boolean isAllInternalFields = Arrays.stream(declaredFields).allMatch(field ->
-                MappingType.getFieldType(field.getDeclaringClass()) == FieldType.INTERNAL);
+        List<Field> nonStaticDeclaredFields = Arrays.stream(declaredFields)
+                .filter(field -> !Modifier.isStatic(field.getModifiers())).collect(Collectors.toList());
+        boolean isAllInternalFields = nonStaticDeclaredFields.stream()
+                .allMatch(field ->
+                        MappingType.getFieldType(field.getType()).equals(FieldType.INTERNAL));
         if (!isAllInternalFields) {
             throw new ClassValidationException("Embeddable class must have only INTERNAL fields");
         }
-        return new EmbeddableMetaData(annotatedClass, Arrays.asList(declaredFields));
+        return new EmbeddableMetaData(annotatedClass, nonStaticDeclaredFields);
     }
 
     /**
@@ -195,7 +201,9 @@ public class Configuration {
         for (Field field : metaData.getFields()) {
             if (!isTransientField(field)) {
                 if (!isPrimaryKeyField(field)) {
-                    metaFields.put(field, initMetaField(field, metaData));
+                    if (!Modifier.isStatic(field.getModifiers())) {
+                        metaFields.put(field, initMetaField(field, metaData));
+                    }
                 }
             }
         }
@@ -210,7 +218,7 @@ public class Configuration {
             case SINGLE:
                 return new SinglePrimaryKey(getPrimaryKeyInternalMetaField(pkField, metaData), metaData, pkField);
             case COMPLEX:
-                Class<?> embeddedFieldClass = pkField.getDeclaringClass();
+                Class<?> embeddedFieldClass = pkField.getType();
                 EmbeddableMetaData embeddableMetaData = embeddedEntityConfig.get(embeddedFieldClass);
                 Objects.requireNonNull(embeddableMetaData, "Embeddable type must be initialized!");
                 List<InternalMetaField> primaryKeys = embeddableMetaData

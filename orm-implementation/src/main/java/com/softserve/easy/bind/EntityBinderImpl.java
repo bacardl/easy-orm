@@ -8,6 +8,7 @@ import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
 import com.softserve.easy.meta.field.ExternalMetaField;
 import com.softserve.easy.meta.field.InternalMetaField;
+import com.softserve.easy.meta.primarykey.AbstractMetaPrimaryKey;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.implementation.MethodDelegation;
@@ -38,10 +39,15 @@ public class EntityBinderImpl implements EntityBinder {
     @Override
     public <T> Optional<T> buildEntity(Class<T> entityType, ResultSet resultSet) throws Exception {
         MetaData entityMetaData = metaContext.getMetaDataMap().get(entityType);
+        AbstractMetaPrimaryKey primaryKey = entityMetaData.getPrimaryKey();
         List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
         List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
 
         final T instance = getInstance(entityMetaData, resultSet);
+
+        // populate pk value (single or composite)
+        primaryKey.injectValue(primaryKey.parseIdValue(resultSet), instance);
+
         for (InternalMetaField metaField : internalMetaFields) {
             metaField.injectValue(metaField.parseValue(resultSet), instance);
         }
@@ -60,7 +66,9 @@ public class EntityBinderImpl implements EntityBinder {
     @Override
     public <T> T buildLazyEntity(Class<T> entityType, ResultSet resultSet) throws Exception {
         MetaData entityMetaData = metaContext.getMetaDataMap().get(entityType);
+        AbstractMetaPrimaryKey primaryKey = entityMetaData.getPrimaryKey();
         final T lazyEntity = getLazyInstance(entityMetaData, resultSet);
+        primaryKey.injectValue(primaryKey.parseIdValue(resultSet), lazyEntity);
         List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
         for (InternalMetaField metaField : internalMetaFields) {
             metaField.injectValue(metaField.parseValue(resultSet), lazyEntity);

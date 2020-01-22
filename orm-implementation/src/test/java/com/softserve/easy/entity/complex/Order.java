@@ -2,7 +2,7 @@ package com.softserve.easy.entity.complex;
 
 import com.softserve.easy.annotation.*;
 
-import java.util.Date;
+import java.sql.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -18,6 +18,7 @@ public class Order {
     @ManyToOne
     private User user;
     private String status;
+    @Column(name = "created_at")
     private Date createdAt;
 
     //    @OneToMany(
@@ -25,6 +26,7 @@ public class Order {
 //            cascade = CascadeType.ALL,
 //            orphanRemoval = true
 //    )
+    @OneToMany
     private List<OrderProduct> orderProducts;
 
     public Order() {
