@@ -4,9 +4,11 @@ import com.softserve.easy.meta.metasql.EasyQueryImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+
 
 class EasyQueryImplTest {
 
@@ -59,49 +61,49 @@ class EasyQueryImplTest {
     }
 
     @Test
-    void checkSelectMatcherLowerCase(){
+    void checkSelectMatcherLowerCase() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("select something from ContactEntity where firstName = :param");
         assertThat(easyQuery.matchesSelect(), equalTo(true));
     }
 
     @Test
-    void checkSelectMatcherUpperCase(){
+    void checkSelectMatcherUpperCase() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("SELECT something FROM ContactEntity WHERE firstName = :param");
         assertThat(easyQuery.matchesSelect(), equalTo(true));
     }
 
     @Test
-    void checkSelectMatcherWithoutSelect(){
+    void checkSelectMatcherWithoutSelect() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("from ContactEntity where firstName = :param");
         assertThat(easyQuery.matchesSelect(), equalTo(false));
     }
 
     @Test
-    void checkSelectMatcherWithoutFrom(){
+    void checkSelectMatcherWithoutFrom() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("ContactEntity WHERE firstName = :param");
         assertThat(easyQuery.matchesSelect(), equalTo(false));
     }
 
     @Test
-    void checkDeleteDoesNotMatchSelect(){
+    void checkDeleteDoesNotMatchSelect() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("delete from Emp where id= :other");
         assertThat(easyQuery.matchesSelect(), equalTo(false));
     }
 
     @Test
-    void checkFromMatcherLowerCase(){
+    void checkFromMatcherLowerCase() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("from Employee");
         assertThat(easyQuery.matchesFrom(), equalTo(true));
     }
 
     @Test
-    void checkFromMatcherUpperCase(){
+    void checkFromMatcherUpperCase() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("FROM Employee WHERE a=:b");
         assertThat(easyQuery.matchesFrom(), equalTo(true));
     }
 
     @Test
-    void checkFromDoesNotMatchSelect(){
+    void checkFromDoesNotMatchSelect() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("FROM Employee WHERE a=:b");
         assertThat(easyQuery.matchesSelect(), equalTo(false));
     }
@@ -131,25 +133,25 @@ class EasyQueryImplTest {
 //    }
 
     @Test
-    void findTableNameInFromTest(){
+    void findTableNameInFromTest() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("from ContactEntity where firstName = :param");
-        assertThat(easyQuery.extractClassName(),equalTo("ContactEntity"));
+        assertThat(easyQuery.extractClassName(), equalTo("ContactEntity"));
     }
 
     @Test
-    void findTableNameInDeleteTest(){
+    void findTableNameInDeleteTest() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("delete from Emp where id= :other");
-        assertThat(easyQuery.extractClassName(),equalTo("Emp"));
+        assertThat(easyQuery.extractClassName(), equalTo("Emp"));
     }
 
     @Test
-    void findTableNameInUpdateTest(){
+    void findTableNameInUpdateTest() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("update ContactEntity set firstName = :nameParam, lastName = :lastNameParam");
-        assertThat(easyQuery.extractClassName(),equalTo("ContactEntity"));
+        assertThat(easyQuery.extractClassName(), equalTo("ContactEntity"));
     }
 
     @Test
-    void extractorTest(){
+    void extractorTest() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("delete from ContactEntity where firstName = :nameParam and lastName = :lastNameParam");
         String expected = "firstName = :nameParam and lastName = :lastNameParam";
         assertThat(easyQuery.extractWhereClause(), equalTo(expected));
@@ -157,30 +159,41 @@ class EasyQueryImplTest {
     }
 
     @Test
-    void extractorMultipleConditionsTest(){
+    void extractorMultipleConditionsTest() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("delete from ContactEntity where firstName = :nameParam and lastName = :lastNameParam or kiko = :naibude");
         String expected = "firstName = :nameParam and lastName = :lastNameParam or kiko = :naibude";
         assertThat(easyQuery.extractWhereClause(), equalTo(expected));
     }
 
     @Test
-    void extractFieldNamesTest(){
+    void extractFieldNamesAndValuesTest() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("delete from ContactEntity where firstName = :nameParam and lastName = :lastNameParam or kiko = :naibude");
         String whereCLause = easyQuery.extractWhereClause();
-        List<String> fieldNames= easyQuery.extractFieldNamesAfterWhereClause(whereCLause);
-        assertThat(fieldNames.size(),equalTo(3));
+        List<String> fieldNames = easyQuery.extractFieldNamesAndValuesAfterWhereClause(whereCLause);
+        fieldNames.forEach(System.out::println);
+        assertThat(fieldNames.size(), equalTo(3));
     }
 
     @Test
-    void extractFieldNamesUpperCase(){
+    void extractFieldNamesAndValuesUpperCase() {
         EasyQueryImpl easyQuery = new EasyQueryImpl("DELETE FROM ContactEntity where firstName = :nameParam AND lastName = :lastNameParam");
         String whereCLause = easyQuery.extractWhereClause();
-        List<String> fieldNames= easyQuery.extractFieldNamesAfterWhereClause(whereCLause);
-        assertThat(fieldNames.size(),equalTo(2));
+        List<String> fieldNames = easyQuery.extractFieldNamesAndValuesAfterWhereClause(whereCLause);
+        assertThat(fieldNames.size(), equalTo(2));
     }
 
+    @Test
+    void convertToFieldValueMap() {
+        EasyQueryImpl easyQuery = new EasyQueryImpl("delete from ContactEntity where firstName = :nameParam AND lastName = :lastNameParam or kiko = :naibude");
+        String whereCLause = easyQuery.extractWhereClause();
+        List<String> fieldNamesAndValues = easyQuery.extractFieldNamesAndValuesAfterWhereClause(whereCLause);
+        Map<String, String> fieldValuePairs = easyQuery.convertFieldsAndValuesToMap(fieldNamesAndValues);
+        for (Map.Entry<String, String> entry : fieldValuePairs.entrySet()) {
+            System.out.println(entry.getValue());
+            assertThat(entry.getValue(), containsString(":"));
+        }
 
-
+    }
 
 
 }

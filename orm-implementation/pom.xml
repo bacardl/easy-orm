@@ -27,13 +27,16 @@
         <junit-platform-launcher.version>1.5.2</junit-platform-launcher.version>
         <junit-vintage-engine.version>5.5.2</junit-vintage-engine.version>
         <!--End https://junit.org/junit5/docs/current/user-guide/#running-tests-ide-->
-        <!--plugin-->
+        <!--plugins-->
         <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
-        <!--plugin-->
+        <antlr4-maven-plugin.version>4.7</antlr4-maven-plugin.version>
+        <!--plugins-->
         <junit-platform-runner.version>1.5.2</junit-platform-runner.version>
         <hamcrest-library.version>2.1</hamcrest-library.version>
         <mockito-core.version>3.2.4</mockito-core.version>
         <sqlbuilder.version>3.0.0</sqlbuilder.version>
+        <antlr.version>4.7</antlr.version>
+
     </properties>
 
     <dependencies>
@@ -112,6 +115,11 @@
             <artifactId>sqlbuilder</artifactId>
             <version>${sqlbuilder.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>${antlr.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -120,6 +128,18 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>${antlr4-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

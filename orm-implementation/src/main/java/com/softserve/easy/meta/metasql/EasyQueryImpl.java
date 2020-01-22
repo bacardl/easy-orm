@@ -11,6 +11,7 @@ public class EasyQueryImpl implements EasyQuery {
     private String userQuery;
     private StringBuilder query;
     private QueryType queryType;
+    protected String hui = "s";
 
     public EasyQueryImpl(String query) {
         this.userQuery = query;
@@ -132,30 +133,42 @@ public class EasyQueryImpl implements EasyQuery {
     }
 
     public String extractWhereClause() {
-        Pattern pattern = Pattern.compile("where ((?!and$|or$).*)",Pattern.CASE_INSENSITIVE);
+        Pattern pattern = Pattern.compile("where ((?!and$|or$).*)", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(userQuery);
         String match = "";
         if (matcher.find()) {
-             match = matcher.group(1);
+            match = matcher.group(1);
         }
         return match.trim();
     }
 
-    public List<String> extractFieldNamesAfterWhereClause(String extractedPart){
-        List<String> temp = Arrays.asList(extractedPart.split("\\s*=\\s*:?\\w+\\s*|\\s*AND\\s*|\\s*OR\\s*|\\s*and\\s*|\\s*or\\s*"));
-        ArrayList<String> fieldNames = new ArrayList<>(temp);
-        //delete possible empty strings
-        fieldNames.removeIf(String::isEmpty);
-        return fieldNames;
+    public List<String> extractFieldNamesAndValuesAfterWhereClause(String extractedPart) {
+        List<String> fieldsAndValues = Arrays.asList(extractedPart.split("\\s*AND\\s*|\\s*OR\\s*|\\s*and\\s*|\\s*or\\s*"));
+//        ArrayList<String> fieldNames = new ArrayList<>(temp);
+//        //delete possible empty strings
+//        fieldNames.removeIf(String::isEmpty);
+        return fieldsAndValues;
     }
 
-    public boolean containsWhereClause(){
-        Pattern pattern = Pattern.compile(".+where .+",Pattern.CASE_INSENSITIVE);
+    public boolean containsWhereClause() {
+        Pattern pattern = Pattern.compile(".+where .+", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(userQuery);
-
         return matcher.matches();
     }
 
+    public Map<String,String> convertFieldsAndValuesToMap(List<String> fieldsAndValues){
+        Map<String, String> fieldValuePair = new HashMap<>();
+        Pattern pattern = Pattern.compile("(\\w+)\\s*=\\s*(:*\\w+)", Pattern.CASE_INSENSITIVE);
+        for(String fieldAndValue : fieldsAndValues){
+            Matcher matcher = pattern.matcher(fieldAndValue);
+            if(matcher.find()){
+                fieldValuePair.put(matcher.group(1),matcher.group(2));
+            }
+        }
+        return fieldValuePair;
+    }
+
+//    public String extractUpdateParameters()
 
 
 }
