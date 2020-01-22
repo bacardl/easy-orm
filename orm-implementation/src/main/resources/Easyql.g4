@@ -4,13 +4,13 @@ query :
 | deleteq
 | updateq;
 selectq :
-SELECT SPACE FROM SPACE ANYNAME (where_clause)? (limit_clause)?
+SELECT  FROM  ANYNAME (where_clause)? (limit_clause)?
 ;
 updateq:
-UPDATE SPACE ANYNAME SPACE set_clause (where_clause)?
+UPDATE  ANYNAME  set_clause (where_clause)?
 ;
 deleteq:
-DELETE SPACE FROM ANYNAME (where_clause)?
+DELETE  FROM ANYNAME (where_clause)?
 ;
 SELECT:
 'SELECT'|'select'
@@ -24,11 +24,8 @@ UPDATE:
 FROM:
 'FROM'|'from'
 ;
-SPACE :
-
- ;
 where_clause :
-WHERE SPACE pair (agr pair)*;
+WHERE  pair (agr pair)*;
 
 WHERE :
  'where'|'WHERE'
@@ -43,8 +40,7 @@ AND :
 OR :
 'OR'|'or'
 ;
-pair:
-ANYNAME SPACE condition SPACE VALUE;
+
 condition:
 LIKE
 | EQUAL
@@ -64,17 +60,20 @@ ANYNAME:
 [a-zA-Z]+
 ;
 VALUE:
-.+
-;
-
-limit_clause:
-'LIMIT'|'limit' SPACE NUMBER
+[a-zA-Z0-9_]+
 ;
 SET:
 'SET'|'set'
 ;
 set_clause:
-SET SPACE pair SPACE (COMMA SPACE pair)*
+SET  equalpair  (COMMA  equalpair)*
+;
+equalpair:
+ANYNAME  EQUAL  VALUE;
+pair:
+ANYNAME  condition  VALUE;
+limit_clause:
+'LIMIT'|'limit'  NUMBER
 ;
 COMMA:
 ','
