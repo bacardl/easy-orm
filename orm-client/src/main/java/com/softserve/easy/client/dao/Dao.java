@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
-public interface AbstractDao<T> {
+public interface Dao<T> {
     Optional<T> get(Serializable id);
     void save(T t);
     void update(T t);

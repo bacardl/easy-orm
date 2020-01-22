@@ -8,13 +8,12 @@ import org.junit.jupiter.api.Test;
 import java.text.ParseException;
 
 class CountryDaoImplTest {
-    AbstractDao dao;
+    CountryDaoImpl dao;
 
     @Before
     public void init() {
-        dao = new CountryDaoImpl();
+        //dao = new CountryDaoImpl();
     }
-
 
     @Test
     void get() {

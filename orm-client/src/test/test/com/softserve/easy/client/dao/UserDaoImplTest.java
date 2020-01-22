@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Test;
 import java.text.ParseException;
 
 class UserDaoImplTest {
-    AbstractDao dao;
+    UserDaoImpl dao;
 
     @Before
     public void init() {
-        dao = new UserDaoImpl();
+        //dao = new UserDaoImpl();
     }
 
     @Test

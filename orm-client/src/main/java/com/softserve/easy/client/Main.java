@@ -18,7 +18,7 @@ public class Main {
         user.setEmail("FredJPhillips@teleworm.us");
         user.setCountry(country);
 
-        UserDao userDao = new UserDaoImpl();
-        userDao.get(1L);
+        //UserDao userDao = new UserDaoImpl();
+        //userDao.get(1L);
     }
 }
