@@ -19,7 +19,7 @@ public class SinglePrimaryKey extends AbstractMetaPrimaryKey {
 
 
     @Override
-    public Serializable initGeneratedId(ResultSet resultSet) throws SQLException {
+    public Serializable parseIdValue(ResultSet resultSet) throws SQLException {
         return (Serializable) resultSet.getObject(primaryKey.getDbFieldFullName());
     }
 

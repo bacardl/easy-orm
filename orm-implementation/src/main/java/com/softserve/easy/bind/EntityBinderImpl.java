@@ -17,17 +17,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 public class EntityBinderImpl implements EntityBinder {
     private static final Logger LOG = LoggerFactory.getLogger(EntityBinderImpl.class);
 
-    private final Map<Class<?>, Class<?>> entityProxyMap = new HashMap<>();
-    private final Map<Class<?>, Class<?>> entityLazyProxyMap = new HashMap<>();
     private final MetaContext metaContext;
     private final Persister persister;
 
@@ -44,22 +43,14 @@ public class EntityBinderImpl implements EntityBinder {
 
         final T instance = getInstance(entityMetaData, resultSet);
         for (InternalMetaField metaField : internalMetaFields) {
-            Field field = metaField.getField();
-            boolean accessible = field.isAccessible();
-            field.setAccessible(true);
-            field.set(instance, resultSet.getObject(metaField.getDbFieldName(), metaField.getFieldType()));
-            field.setAccessible(accessible);
+            metaField.injectValue(metaField.parseValue(resultSet), instance);
         }
 
         for (ExternalMetaField metaField : externalMetaFields) {
             if (metaField.getEntityFetchType().equals(FetchType.EAGER)) {
-                Field field = metaField.getField();
-                if (Objects.nonNull(resultSet.getObject(metaField.getForeignKeyFieldFullName()))) {
+                if (Objects.nonNull(metaField.parseValue(resultSet))) {
                     Object childInstance = buildLazyEntity(metaField.getFieldType(), resultSet);
-                    boolean accessible = field.isAccessible();
-                    field.setAccessible(true);
-                    field.set(instance, childInstance);
-                    field.setAccessible(accessible);
+                    metaField.injectValue(childInstance, instance);
                 }
             }
         }
@@ -72,11 +63,7 @@ public class EntityBinderImpl implements EntityBinder {
         final T lazyEntity = getLazyInstance(entityMetaData, resultSet);
         List<InternalMetaField> internalMetaFields = entityMetaData.getInternalMetaField();
         for (InternalMetaField metaField : internalMetaFields) {
-            Field field = metaField.getField();
-            boolean accessible = field.isAccessible();
-            field.setAccessible(true);
-            field.set(lazyEntity, resultSet.getObject(metaField.getDbFieldName(), metaField.getFieldType()));
-            field.setAccessible(accessible);
+            metaField.injectValue(metaField.parseValue(resultSet), lazyEntity);
         }
         return lazyEntity;
     }
@@ -86,33 +73,29 @@ public class EntityBinderImpl implements EntityBinder {
         Class<?> entityType = entityMetaData.getEntityClass();
         List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
         if (hasLazyExternalFields(externalMetaFields)) {
-            if (entityProxyMap.containsKey(entityType)) {
-                return (T) entityProxyMap.get(entityType).newInstance();
-            } else {
-                DynamicType.Builder<?> subclass = new ByteBuddy().subclass(entityType);
-                for (ExternalMetaField metaField : externalMetaFields) {
-                    if (metaField.getEntityFetchType().equals(FetchType.LAZY)) {
-                        Optional<Method> getterForField = ClassScanner.getGetterForField(entityType, metaField.getField());
-                        if (getterForField.isPresent()) {
-                            Serializable fkValue = null;
-                            try {
-                                fkValue = (Serializable) resultSet.getObject(metaField.getForeignKeyFieldFullName());
-                            } catch (SQLException e) {
-                                LOG.error("Couldn't get fk value from {} column.", metaField.getForeignKeyFieldFullName());
-                                throw new OrmException(e);
-                            }
-                            Method getter = getterForField.get();
-                            subclass = subclass.method(ElementMatchers.anyOf(getter))
-                                    .intercept(MethodDelegation
-                                            .to(new LazyLoadingInterceptor(this.persister, metaField, fkValue))
-                                            .andThen(SuperMethodCall.INSTANCE));
+            DynamicType.Builder<?> subclass = new ByteBuddy().subclass(entityType);
+            for (ExternalMetaField metaField : externalMetaFields) {
+                if (metaField.getEntityFetchType().equals(FetchType.LAZY)) {
+                    Optional<Method> getterForField = ClassScanner.getGetterForField(entityType, metaField.getField());
+                    if (getterForField.isPresent()) {
+                        Serializable fkValue = null;
+                        try {
+                            fkValue = (Serializable) metaField.parseValue(resultSet);
+                        } catch (SQLException e) {
+                            LOG.error("Couldn't get fk value from {} column.", metaField.getForeignKeyFieldFullName());
+                            throw new OrmException(e);
                         }
+                        Method getter = getterForField.get();
+                        subclass = subclass.method(ElementMatchers.anyOf(getter))
+                                .intercept(MethodDelegation
+                                        .to(new LazyLoadingInterceptor(this.persister, metaField, fkValue))
+                                        .andThen(SuperMethodCall.INSTANCE));
                     }
                 }
-                Class<?> proxyClass = subclass.make().load(getClass().getClassLoader()).getLoaded();
-                entityProxyMap.put(entityType, proxyClass);
-                return (T) proxyClass.newInstance();
             }
+            Class<?> proxyClass = subclass.make().load(getClass().getClassLoader()).getLoaded();
+            return (T) proxyClass.newInstance();
+
         }
         return (T) entityType.newInstance();
     }
@@ -125,9 +108,6 @@ public class EntityBinderImpl implements EntityBinder {
     @SuppressWarnings(value = "unchecked")
     private <T> T getLazyInstance(final MetaData entityMetaData, ResultSet resultSet) throws IllegalAccessException, InstantiationException {
         Class<?> entityType = entityMetaData.getEntityClass();
-        if (entityLazyProxyMap.containsKey(entityType)) {
-            return (T) entityLazyProxyMap.get(entityType);
-        }
         List<ExternalMetaField> externalMetaFields = entityMetaData.getExternalMetaField();
         DynamicType.Builder<?> subclass = new ByteBuddy().subclass(entityType);
         for (ExternalMetaField metaField : externalMetaFields) {
@@ -136,7 +116,7 @@ public class EntityBinderImpl implements EntityBinder {
                 Method getter = getterForField.get();
                 Serializable fkValue = null;
                 try {
-                    fkValue = (Serializable) resultSet.getObject(metaField.getForeignKeyFieldFullName());
+                    fkValue = (Serializable) metaField.parseValue(resultSet);
                 } catch (SQLException e) {
                     LOG.error("Couldn't get fk value from {} column.", metaField.getForeignKeyFieldFullName());
                     throw new OrmException(e);
@@ -148,7 +128,6 @@ public class EntityBinderImpl implements EntityBinder {
             }
         }
         Class<?> proxyClass = subclass.make().load(getClass().getClassLoader()).getLoaded();
-        entityLazyProxyMap.put(entityType, proxyClass);
         return (T) proxyClass.newInstance();
     }
 }

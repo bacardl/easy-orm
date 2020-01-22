@@ -5,6 +5,8 @@ import com.softserve.easy.constant.FetchType;
 import com.softserve.easy.meta.MetaData;
 
 import java.lang.reflect.Field;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
 
 public class CollectionMetaField  extends AbstractMetaField {
@@ -26,6 +28,12 @@ public class CollectionMetaField  extends AbstractMetaField {
         this.field.setAccessible(previous);
         return value;
     }
+
+    @Override
+    public Object parseValue(ResultSet resultSet) throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
         private Class<?> genericType;
         private FetchType collectionFetchType;

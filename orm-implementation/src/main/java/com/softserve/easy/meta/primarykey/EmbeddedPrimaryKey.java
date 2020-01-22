@@ -34,7 +34,7 @@ public class EmbeddedPrimaryKey extends AbstractMetaPrimaryKey {
     }
 
     @Override
-    public Serializable initGeneratedId(ResultSet resultSet) throws SQLException {
+    public Serializable parseIdValue(ResultSet resultSet) throws SQLException {
         Class<?> embeddableEntityClass = embeddableMetaData.getEmbeddableEntity();
         Object embeddableId = null;
         try {
@@ -43,8 +43,8 @@ public class EmbeddedPrimaryKey extends AbstractMetaPrimaryKey {
                 Serializable value = (Serializable) resultSet.getObject(primaryKey.getDbFieldFullName());
                 primaryKey.injectValue(value, embeddableId);
             }
-        } catch (Exception e) {
-            throw new OrmException("Couldn't instantiate embedded id.");
+        } catch (IllegalAccessException | InstantiationException e) {
+            throw new OrmException("Couldn't instantiate embedded id.", e);
         }
         return (Serializable) embeddableId;
     }

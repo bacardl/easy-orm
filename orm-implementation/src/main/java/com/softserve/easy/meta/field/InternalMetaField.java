@@ -6,6 +6,8 @@ import com.softserve.easy.meta.MetaData;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class InternalMetaField extends AbstractMetaField {
     private final String dbFieldName;
@@ -35,6 +37,10 @@ public class InternalMetaField extends AbstractMetaField {
         Serializable value = (Serializable) this.field.get(object);
         this.field.setAccessible(previous);
         return value;
+    }
+
+    public Object parseValue(ResultSet resultSet) throws SQLException {
+        return resultSet.getObject(getDbFieldFullName());
     }
 
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {

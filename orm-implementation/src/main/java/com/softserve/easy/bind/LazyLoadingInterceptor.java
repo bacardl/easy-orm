@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 
 public class LazyLoadingInterceptor {
     private static final Logger LOG = LoggerFactory.getLogger(LazyLoadingInterceptor.class);
@@ -28,12 +27,8 @@ public class LazyLoadingInterceptor {
             LOG.info("Loading value to field {} for entity {}", metaField.getFieldName(), metaField.getMetaData().getEntityClass().getSimpleName());
             Object lazyObject = persister.getLazyEntityById(metaField.getFieldType(), fkValue);
             LOG.debug("Loaded lazy object is {}", lazyObject);
-            Field lazyField = metaField.getField();
-            boolean accessible = lazyField.isAccessible();
-            lazyField.setAccessible(true);
-            lazyField.set(object, lazyObject);
-            lazyField.setAccessible(accessible);
-            LOG.debug("Lazy field {} has been defined.", lazyField.getName());
+            metaField.injectValue(lazyObject, object);
+            LOG.debug("Lazy field {} has been defined.", metaField.getFieldType().getName());
             return;
         }
         LOG.info("Field {} has already been initialized.", metaField.getFieldName());

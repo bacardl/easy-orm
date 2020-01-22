@@ -6,6 +6,8 @@ import com.softserve.easy.constant.FetchType;
 import com.softserve.easy.meta.MetaData;
 
 import java.lang.reflect.Field;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class ExternalMetaField extends AbstractMetaField {
     private final String foreignKeyFieldName;
@@ -38,6 +40,10 @@ public class ExternalMetaField extends AbstractMetaField {
         return value;
     }
 
+    @Override
+    public Object parseValue(ResultSet resultSet) throws SQLException {
+        return resultSet.getObject(getForeignKeyFieldFullName());
+    }
 
 
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {

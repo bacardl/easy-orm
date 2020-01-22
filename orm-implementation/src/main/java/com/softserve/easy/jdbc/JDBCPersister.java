@@ -156,7 +156,7 @@ public class JDBCPersister implements Persister {
                 if (affectedRow == 1) {
                     try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
                         if (generatedKeys.next()) {
-                            Serializable generatedId = primaryKey.initGeneratedId(generatedKeys);
+                            Serializable generatedId = primaryKey.parseIdValue(generatedKeys);
                             primaryKey.injectValue(generatedId, object);
                             LOG.info("Entity {} has been inserted successfully to the database with generated id {}.",
                                     entityType.getSimpleName(), generatedId);

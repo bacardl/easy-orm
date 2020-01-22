@@ -7,6 +7,8 @@ import com.softserve.easy.meta.MetaData;
 import com.softserve.easy.meta.Retrievable;
 
 import java.lang.reflect.Field;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public abstract class AbstractMetaField implements Retrievable<Object>, Injectable<Object> {
     protected final Class<?> fieldType;
@@ -52,6 +54,8 @@ public abstract class AbstractMetaField implements Retrievable<Object>, Injectab
         this.field.set(object, value);
         this.field.setAccessible(accessible);
     }
+
+    public abstract Object parseValue(ResultSet resultSet) throws SQLException;
 
 
     protected static abstract class Init<T extends Init<T>> {
