@@ -41,40 +41,7 @@ public class EntityBinderLazyTest extends SimpleDbUnitTest {
         configuration.addAnnotatedClass(LAZY_COUNTRY_CLASS);
         entityBinder = new EntityBinderImpl(configuration.getMetaContext(), persister);
     }
-    @Test
-    public void shouldBuildUserProxyInstance() throws IllegalAccessException, InstantiationException, NoSuchFieldException {
-//        MetaContext metaContext = getConfiguration().getMetaContext();
-//        MetaData userMeta = metaContext.getMetaDataMap().get(USER_CLASS);
-//        List<ExternalMetaField> externalMetaField = userMeta.getExternalMetaField();
-//        Class<User> subjectClass = USER_CLASS;
-//
-//        DynamicType.Builder<?> subclass = new ByteBuddy().subclass(subjectClass);
-////
-//        for (ExternalMetaField metaField : externalMetaField) {
-//            Optional<Method> getterForField = ClassScanner.getGetterForField(subjectClass, metaField.getField());
-//            if (getterForField.isPresent()) {
-//                Method getter = getterForField.get();
-//                subclass = subclass.method(ElementMatchers.anyOf(getter))
-//                        .intercept(MethodDelegation
-//                                .to(new LazyLoadingInterceptor())
-//                                    .andThen(SuperMethodCall.INSTANCE));
-//            }
-//        }
-//
-//        Class<?> proxyClass = subclass.make().load(getClass().getClassLoader()).getLoaded();
-//
-//        User user = (User) proxyClass.newInstance();
-//        user.getCountry();
-//
-//        Country country = new Country();
-//        country.setId(1);
-//        country.setName("USA");
-//
-//        user.setCountry(country);
-//
-//        Country sameCountry = user.getCountry();
-//        System.out.println(sameCountry);
-    }
+
     @Test
     public void assertGetLazyEntityByIdHasBeenCalled() throws Exception {
         Country country = new Country();

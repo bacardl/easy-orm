@@ -51,6 +51,7 @@ public class Configuration {
     public Configuration() {
         this.properties = Environment.getProperties();
         this.observedEntities = new HashSet<>();
+        this.observedEmbeddableEntities = new HashSet<>();
         this.entityConfig = new HashMap<>();
     }
 
@@ -111,7 +112,8 @@ public class Configuration {
             this.dbSchema = dbSpec.createSchema(schemaName);
         }
         initMetaConfig();
-        return new MetaContext(entityConfig, dependencyGraph, properties, observedEntities, dbSpec, dbSchema);
+        return new MetaContext(entityConfig, embeddedEntityConfig, dependencyGraph, properties, observedEntities,
+                observedEmbeddableEntities, dbSpec, dbSchema);
     }
 
     private void initMetaConfig() {
@@ -191,8 +193,10 @@ public class Configuration {
         Objects.requireNonNull(metaData);
         Map<Field, AbstractMetaField> metaFields = new LinkedHashMap<>();
         for (Field field : metaData.getFields()) {
-            if (!isTransientField(field) || isPrimaryKeyField(field)) {
-                metaFields.put(field, initMetaField(field, metaData));
+            if (!isTransientField(field)) {
+                if (!isPrimaryKeyField(field)) {
+                    metaFields.put(field, initMetaField(field, metaData));
+                }
             }
         }
         return metaFields;

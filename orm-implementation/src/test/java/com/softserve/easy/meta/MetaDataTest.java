@@ -41,8 +41,5 @@ class MetaDataTest {
         assertThat(META_USER_DATA.getCountExternalFields(), is(NUMBER_OF_EXTERNAL_FIELDS_FOR_CLASS_USER));
     }
 
-    @Test
-    void shouldReturnListOfInternalFieldsWithoutPrimaryKeyForUser() {
-        assertThat(META_USER_DATA.getJoinedInternalFieldsNamesWithoutPrimaryKey(), is(STRING_OF_INTERNAL_FIELDS_WITHOUT_PK_CLASS_USER));
-    }
+
 }

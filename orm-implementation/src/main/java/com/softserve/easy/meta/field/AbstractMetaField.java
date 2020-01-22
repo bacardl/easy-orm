@@ -46,7 +46,7 @@ public abstract class AbstractMetaField implements Retrievable<Object>, Injectab
 
     @Override
     public void injectValue(Object value, Object object) throws IllegalAccessException {
-        if (checkTypeCompatibility(value)) {
+        if (!checkTypeCompatibility(value)) {
             throw new OrmException("Value cannot be injected to the object's field. Reason: incompatibility types.");
         }
         boolean accessible = this.field.isAccessible();

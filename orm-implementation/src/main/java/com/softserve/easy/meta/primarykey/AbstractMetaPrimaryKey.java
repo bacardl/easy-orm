@@ -44,7 +44,7 @@ public abstract class AbstractMetaPrimaryKey implements Retrievable<Serializable
 
     @Override
     public void injectValue(Serializable value, Object object) throws IllegalAccessException {
-        if (checkTypeCompatibility(value)) {
+        if (!checkTypeCompatibility(value)) {
             throw new OrmException("Value cannot be injected to the object's field. Reason: incompatibility types.");
         }
         boolean accessible = this.field.isAccessible();
