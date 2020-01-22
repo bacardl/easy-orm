@@ -124,7 +124,7 @@ public class JDBCPersister implements Persister {
     @Override
     public Serializable insertEntity(Object object) {
         MetaData entityMetaData = metaContext.getMetaDataMap().get(object.getClass());
-        InternalMetaField pkMetaField = entityMetaData.getPkMetaField();
+        InternalMetaField pkMetaField = entityMetaData.getMetaPrimaryKey();
         Field pkField = pkMetaField.getField();
         boolean accessible = pkField.isAccessible();
         Serializable pkValue = null;

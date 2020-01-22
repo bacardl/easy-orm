@@ -10,7 +10,7 @@ import java.util.StringJoiner;
 public class User {
     // TODO: resolve @OneToOne relation to Person entity
 
-    @Id // @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id
     private Long id;
 
     @Column(name = "login")

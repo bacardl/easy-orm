@@ -1,4 +1,4 @@
-package com.softserve.easy.meta;
+package com.softserve.easy.constant;
 
 import com.softserve.easy.exception.OrmException;
 
@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import static com.softserve.easy.meta.FieldType.*;
+import static com.softserve.easy.constant.FieldType.*;
 
 public enum MappingType {
     INTEGER(Integer.class, "INTEGER", INTERNAL),

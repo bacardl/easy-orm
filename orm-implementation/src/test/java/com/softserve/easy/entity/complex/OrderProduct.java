@@ -1,26 +1,29 @@
 package com.softserve.easy.entity.complex;
 
+import com.softserve.easy.annotation.EmbeddedId;
 import com.softserve.easy.annotation.Entity;
+import com.softserve.easy.annotation.ManyToOne;
+import com.softserve.easy.annotation.Table;
+import com.softserve.easy.constant.FetchType;
 
 import java.util.Objects;
 import java.util.StringJoiner;
 
 @Entity(name = "OrderProduct")
-// @Table(name = "order_items")
+@Table(name = "order_items")
 public class OrderProduct {
 
-    // @EmbeddedId
+    @EmbeddedId
     private OrderProductId id;
 
-    // @ManyToOne(fetch = FetchType.LAZY)
+     @ManyToOne(fetch = FetchType.LAZY)
     // @MapsId("order_id")
     private Order order;
 
-    // @ManyToOne(fetch = FetchType.LAZY)
+     @ManyToOne(fetch = FetchType.LAZY)
     // @MapsId("product_id")
     private Product product;
 
-    // @Column(name = "quantity")
     private Integer quantity;
 
     public OrderProduct(Order order, Product product, Integer quantity) {

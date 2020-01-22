@@ -3,6 +3,7 @@ package com.softserve.easy.meta;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
 import com.softserve.easy.meta.field.AbstractMetaField;
+import com.softserve.easy.meta.primarykey.AbstractMetaPrimaryKey;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -18,7 +19,7 @@ public class MetaDataBuilder {
 
     private String entityDbName;
 
-    private Field primaryKey;
+    private AbstractMetaPrimaryKey primaryKey;
     private Map<Field, AbstractMetaField> metaFields;
 
     private DbSchema dbSchema;
@@ -38,7 +39,7 @@ public class MetaDataBuilder {
         return this;
     }
 
-    public MetaDataBuilder setPrimaryKey(Field primaryKey) {
+    public MetaDataBuilder setPrimaryKey(AbstractMetaPrimaryKey primaryKey) {
         this.primaryKey = primaryKey;
         return this;
     }
@@ -68,7 +69,7 @@ public class MetaDataBuilder {
         return entityDbName;
     }
 
-    public Field getPrimaryKey() {
+    public AbstractMetaPrimaryKey getPrimaryKey() {
         return primaryKey;
     }
 

@@ -1,10 +1,12 @@
 package com.softserve.easy.meta;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
+import com.softserve.easy.constant.FieldType;
 import com.softserve.easy.meta.field.AbstractMetaField;
 import com.softserve.easy.meta.field.CollectionMetaField;
 import com.softserve.easy.meta.field.ExternalMetaField;
 import com.softserve.easy.meta.field.InternalMetaField;
+import com.softserve.easy.meta.primarykey.AbstractMetaPrimaryKey;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -21,10 +23,9 @@ public class MetaData {
     private final List<Annotation> annotations;
     private final String entityDbName;
 
-    private final Field primaryKey;
-
     private final DbTable dbTable;
 
+    private AbstractMetaPrimaryKey primaryKey;
     private Map<Field, AbstractMetaField> metaFields;
 
     public MetaData(Class<?> entityClass,
@@ -32,7 +33,7 @@ public class MetaData {
                     List<Field> fields,
                     List<Annotation> annotations,
                     String entityDbName,
-                    Field primaryKey,
+                    AbstractMetaPrimaryKey primaryKey,
                     Map<Field, AbstractMetaField> metaFields,
                     DbTable dbTable) {
         this.entityClass = entityClass;
@@ -49,20 +50,10 @@ public class MetaData {
         return dbTable;
     }
 
-    public InternalMetaField getPkMetaField() {
-        return (InternalMetaField) metaFields.get(primaryKey);
-    }
-
     public List<InternalMetaField> getInternalMetaField() {
         return metaFields.values().stream()
                 .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.INTERNAL))
                 .map(abstractMetaField -> (InternalMetaField) abstractMetaField)
-                .collect(Collectors.toList());
-    }
-
-    public List<InternalMetaField> getInternalMetaFieldWithoutPk() {
-        return getInternalMetaField().stream()
-                .filter(internalMetaField -> (!internalMetaField.isPrimaryKey()))
                 .collect(Collectors.toList());
     }
 
@@ -89,40 +80,9 @@ public class MetaData {
                 .collect(Collectors.joining(","));
     }
 
-    public String getJoinedInternalFieldsNamesNotFull() {
-        return getInternalMetaField().stream()
-                .map(InternalMetaField::getDbFieldName)
-                .collect(Collectors.joining(","));
-    }
-
-    public String getJoinedInternalFieldsNamesWithoutPrimaryKey() {
-        return getInternalMetaFieldWithoutPk().stream()
-                .map(InternalMetaField::getDbFieldFullName)
-                .collect(Collectors.joining(","));
-    }
-
-    public String getJoinedInternalFieldsNamesNotFullWithoutPrimaryKey() {
-        return getInternalMetaFieldWithoutPk().stream()
-                .map(InternalMetaField::getDbFieldName)
-                .collect(Collectors.joining(","));
-    }
-
-    public String getJoinedExternalFieldsNames() {
-        return getExternalMetaField().stream()
-                .map(ExternalMetaField::getForeignKeyFieldFullName).collect(Collectors.joining(","));
-    }
-
-    public String getJoinedExternalFieldsNamesNotFull() {
-        return getExternalMetaField().stream()
-                .map(ExternalMetaField::getForeignKeyFieldName).collect(Collectors.joining(","));
-    }
 
     public long getCountInternalFields() {
         return getInternalMetaField().size();
-    }
-
-    public long getCountInternalFieldsWithoutPrimaryKey() {
-        return getInternalMetaFieldWithoutPk().size();
     }
 
     public long getCountExternalFields() {
@@ -130,7 +90,7 @@ public class MetaData {
     }
 
     public <T> boolean checkIdCompatibility(Class<T> idClazz) {
-        return metaFields.get(primaryKey).getFieldType().isAssignableFrom(idClazz);
+        return primaryKey.checkIdCompatibility(idClazz);
     }
 
     public Class<?> getEntityClass() {
@@ -153,7 +113,7 @@ public class MetaData {
         return entityDbName;
     }
 
-    public Field getPrimaryKey() {
+    public AbstractMetaPrimaryKey getPrimaryKey() {
         return primaryKey;
     }
 
@@ -163,5 +123,9 @@ public class MetaData {
 
     public void setMetaFields(Map<Field, AbstractMetaField> metaFields) {
         this.metaFields = metaFields;
+    }
+
+    public void setPrimaryKey(AbstractMetaPrimaryKey primaryKey) {
+        this.primaryKey = primaryKey;
     }
 }

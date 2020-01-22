@@ -44,7 +44,7 @@ public class SqlManagerImpl implements SqlManager {
             }
         }
 
-        selectQuery.addCondition(BinaryCondition.equalTo(entityMetaData.getPkMetaField().getInternalDbColumn(), id));
+        selectQuery.addCondition(BinaryCondition.equalTo(entityMetaData.getMetaPrimaryKey().getInternalDbColumn(), id));
         selectQuery.validate();
         LOG.info("Built a select query for {} entity with id: {}.\n{}",
                 entityMetaData.getEntityClass().getSimpleName(), id, selectQuery.toString());
@@ -65,7 +65,7 @@ public class SqlManagerImpl implements SqlManager {
             selectQuery.addAliasedColumn(metaField.getExternalDbColumn(), metaField.getForeignKeyFieldFullName());
         }
 
-        selectQuery.addCondition(BinaryCondition.equalTo(entityMetaData.getPkMetaField().getInternalDbColumn(), id));
+        selectQuery.addCondition(BinaryCondition.equalTo(entityMetaData.getMetaPrimaryKey().getInternalDbColumn(), id));
         selectQuery.validate();
         LOG.info("Built a lazy select query for {} entity with id: {}.\n{}",
                 entityMetaData.getEntityClass().getSimpleName(), id, selectQuery.toString());
@@ -90,7 +90,7 @@ public class SqlManagerImpl implements SqlManager {
                 parentMetaData.getDbTable(),
                 childMetaData.getDbTable(),
                 new DbColumn[]{metaField.getExternalDbColumn()},
-                new DbColumn[]{childMetaData.getPkMetaField().getInternalDbColumn()});
+                new DbColumn[]{childMetaData.getMetaPrimaryKey().getInternalDbColumn()});
 
         selectQuery.addJoins(SelectQuery.JoinType.INNER, dbJoin);
     }
@@ -106,7 +106,7 @@ public class SqlManagerImpl implements SqlManager {
     @Override
     public UpdateQuery buildUpdateByPkQuery(MetaData entityMetaData, Object object) {
         UpdateQuery updateQuery = new UpdateQuery(entityMetaData.getDbTable());
-        InternalMetaField pkMetaField = entityMetaData.getPkMetaField();
+        InternalMetaField pkMetaField = entityMetaData.getMetaPrimaryKey();
         Field pkField = pkMetaField.getField();
         boolean previous = pkField.isAccessible();
         Object pkValue = null;
@@ -177,7 +177,7 @@ public class SqlManagerImpl implements SqlManager {
     @Override
     public DeleteQuery buildDeleteByPkQuery(MetaData entityMetaData, Object object) {
         DeleteQuery deleteQuery = new DeleteQuery(entityMetaData.getDbTable());
-        InternalMetaField pkMetaField = entityMetaData.getPkMetaField();
+        InternalMetaField pkMetaField = entityMetaData.getMetaPrimaryKey();
         Field pkField = pkMetaField.getField();
         boolean accessible = pkField.isAccessible();
         pkField.setAccessible(true);
@@ -200,7 +200,7 @@ public class SqlManagerImpl implements SqlManager {
     @Override
     public InsertQuery buildInsertQueryWithPk(MetaData entityMetaData, Object object, Serializable id) {
         InsertQuery insertQuery = buildInsertQuery(entityMetaData, object);
-        insertQuery.addColumn(entityMetaData.getPkMetaField().getInternalDbColumn(), id);
+        insertQuery.addColumn(entityMetaData.getMetaPrimaryKey().getInternalDbColumn(), id);
         insertQuery.validate();
         return insertQuery;
     }

@@ -2,6 +2,7 @@ package com.softserve.easy.helper;
 
 import com.softserve.easy.annotation.*;
 import com.softserve.easy.constant.FetchType;
+import com.softserve.easy.constant.PrimaryKeyType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -14,10 +15,15 @@ public class MetaDataParser {
         return Objects.nonNull(annotation);
     }
 
+    public static boolean isEmbeddableEntityAnnotatedClass(Class<?> annotatedClass) {
+        Embeddable annotation = annotatedClass.getAnnotation(Embeddable.class);
+        return Objects.nonNull(annotation);
+    }
+
     public static Optional<Field> getPrimaryKeyField(Class<?> clazz) {
         Objects.requireNonNull(clazz);
         for (Field declaredField : clazz.getDeclaredFields()) {
-            if (Objects.nonNull(declaredField.getAnnotation(Id.class))) {
+            if (isPrimaryKeyField(declaredField)) {
                 return Optional.of(declaredField);
             }
         }
@@ -71,7 +77,18 @@ public class MetaDataParser {
     }
 
     public static boolean isPrimaryKeyField(Field field) {
-        return Objects.nonNull(field.getAnnotation(Id.class));
+        return Objects.nonNull(field.getAnnotation(Id.class)) ||
+                Objects.nonNull(field.getAnnotation(EmbeddedId.class));
+    }
+
+    public static Optional<PrimaryKeyType> getPrimaryKeyType(Field field) {
+        if (Objects.nonNull(field.getAnnotation(Id.class))) {
+            return Optional.of(PrimaryKeyType.SINGLE);
+        }
+        if (Objects.nonNull(field.getAnnotation(EmbeddedId.class))) {
+            return Optional.of(PrimaryKeyType.COMPLEX);
+        }
+        return Optional.empty();
     }
 
 
@@ -101,5 +118,4 @@ public class MetaDataParser {
         }
         return Optional.empty();
     }
-
 }

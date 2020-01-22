@@ -2,8 +2,12 @@ package com.softserve.easy.cfg;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
+import com.softserve.easy.annotation.Embeddable;
 import com.softserve.easy.annotation.Entity;
 import com.softserve.easy.constant.FetchType;
+import com.softserve.easy.constant.FieldType;
+import com.softserve.easy.constant.MappingType;
+import com.softserve.easy.constant.PrimaryKeyType;
 import com.softserve.easy.core.SessionFactory;
 import com.softserve.easy.core.SessionFactoryImpl;
 import com.softserve.easy.exception.ClassValidationException;
@@ -15,6 +19,9 @@ import com.softserve.easy.meta.field.AbstractMetaField;
 import com.softserve.easy.meta.field.CollectionMetaField;
 import com.softserve.easy.meta.field.ExternalMetaField;
 import com.softserve.easy.meta.field.InternalMetaField;
+import com.softserve.easy.meta.primarykey.AbstractMetaPrimaryKey;
+import com.softserve.easy.meta.primarykey.EmbeddedPrimaryKey;
+import com.softserve.easy.meta.primarykey.SinglePrimaryKey;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
@@ -23,30 +30,35 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.softserve.easy.constant.ConfigPropertyConstant.*;
 import static com.softserve.easy.helper.MetaDataParser.*;
 
 public class Configuration {
     private static final Logger LOG = LoggerFactory.getLogger(Configuration.class);
-    private Set<Class<?>> observedClasses;
-    private Map<Class<?>, MetaData> classConfig;
+    private Set<Class<?>> observedEntities;
+    private Set<Class<?>> observedEmbeddableEntities;
+    private Map<Class<?>, MetaData> entityConfig;
+    private Map<Class<?>, EmbeddableMetaData> embeddedEntityConfig;
     private DependencyGraph dependencyGraph;
     private Properties properties;
+
 
     private DbSpec dbSpec = new DbSpec();
     private DbSchema dbSchema = dbSpec.getDefaultSchema();
 
     public Configuration() {
         this.properties = Environment.getProperties();
-        this.observedClasses = new HashSet<>();
-        this.classConfig = new HashMap<>();
+        this.observedEntities = new HashSet<>();
+        this.entityConfig = new HashMap<>();
     }
 
     private void initObservedClasses() {
         String scanPackage = properties.getProperty(ENTITY_PACKAGE_PROPERTY);
         if (Objects.nonNull(scanPackage)) {
-            this.observedClasses = ClassScanner.getAnnotatedClasses(Entity.class, scanPackage);
+            this.observedEntities = ClassScanner.getAnnotatedClasses(Entity.class, scanPackage);
+            this.observedEmbeddableEntities = ClassScanner.getAnnotatedClasses(Embeddable.class, scanPackage);
         }
     }
 
@@ -54,28 +66,19 @@ public class Configuration {
         if (Objects.isNull(annotatedClass)) {
             throw new IllegalArgumentException("The annotatedClass value must be not Null");
         }
-        if (!observedClasses.contains(annotatedClass))
-        {
-            if (MetaDataParser.isEntityAnnotatedClass(annotatedClass))
-            {
-                observedClasses.add(annotatedClass);
+        if (!observedEntities.contains(annotatedClass)) {
+            if (MetaDataParser.isEntityAnnotatedClass(annotatedClass)) {
+                observedEntities.add(annotatedClass);
+            } else if (MetaDataParser.isEmbeddableEntityAnnotatedClass(annotatedClass)) {
+                observedEmbeddableEntities.add(annotatedClass);
             } else {
-                throw new IllegalArgumentException("annotatedClass must be annotated by @Entity");
+                throw new IllegalArgumentException("annotatedClass must be annotated by @Entity or @Embeddable");
             }
         } else {
             LOG.info("Class {} has already been mapped from classpath", annotatedClass.getSimpleName());
         }
         return this;
     }
-
-    // creates meta data, creates meta fields and populates(links) meta fields to meta data
-    private void addEntityToConfig(Class<?> annotatedClass) {
-        MetaData metaData = analyzeClass(annotatedClass);
-        Map<Field, AbstractMetaField> metaFields = createMetaFields(metaData);
-        metaData.setMetaFields(metaFields);
-        classConfig.put(annotatedClass, metaData);
-    }
-
 
     public Configuration setProperty(String propertyName, String value) {
         properties.setProperty(propertyName, value);
@@ -107,19 +110,29 @@ public class Configuration {
         if (Objects.nonNull(schemaName)) {
             this.dbSchema = dbSpec.createSchema(schemaName);
         }
+        initMetaConfig();
+        return new MetaContext(entityConfig, dependencyGraph, properties, observedEntities, dbSpec, dbSchema);
+    }
+
+    private void initMetaConfig() {
+        initEmbeddableEntityConfig();
+        initEntityConfig();
         initDependencyGraph();
-        initClassConfig();
-        return new MetaContext(classConfig, dependencyGraph, properties, observedClasses, dbSpec, dbSchema );
+    }
+
+    private void initEmbeddableEntityConfig() {
+        for (Class<?> observedEmbeddableEntity : observedEmbeddableEntities) {
+            addEmbeddableEntityToConfig(observedEmbeddableEntity);
+        }
+    }
+    private void initEntityConfig() {
+        for (Class<?> observedEntity : observedEntities) {
+            addEntityToConfig(observedEntity);
+        }
     }
 
     private void initDependencyGraph() {
-        this.dependencyGraph = new DependencyGraph(observedClasses);
-    }
-
-    private void initClassConfig() {
-        for (Class<?> observedClass : observedClasses) {
-            addEntityToConfig(observedClass);
-        }
+        this.dependencyGraph = new DependencyGraph(observedEntities);
     }
 
     private DataSource initHikariDataSource() {
@@ -134,19 +147,41 @@ public class Configuration {
         return new HikariDataSource(config);
     }
 
+    // creates a meta data, creates meta fields and populates(links) meta fields to meta data
+    private void addEntityToConfig(Class<?> annotatedClass) {
+        MetaData metaData = analyzeEntityClass(annotatedClass);
+        Map<Field, AbstractMetaField> metaFields = createMetaFields(metaData);
+        metaData.setMetaFields(metaFields);
+        Field primaryKeyField = getPrimaryKeyField(annotatedClass)
+                .orElseThrow(() -> new ClassValidationException("Entity class must have an primary key field."));
+        AbstractMetaPrimaryKey primaryKey = getMetaPrimaryKey(primaryKeyField, metaData);
+        metaData.setPrimaryKey(primaryKey);
+        entityConfig.put(annotatedClass, metaData);
+    }
+
+    private void addEmbeddableEntityToConfig(Class<?> annotatedClass) {
+        EmbeddableMetaData embeddableMetaData = analyzeEmbeddableClass(annotatedClass);
+        embeddedEntityConfig.put(annotatedClass, embeddableMetaData);
+    }
+
     /**
      * @throws ClassValidationException
      */
-    public MetaData analyzeClass(Class<?> clazz) {
+    public MetaData analyzeEntityClass(Class<?> clazz) {
         MetaDataBuilder metaDataBuilder = new MetaDataBuilder(clazz, this.dbSchema);
-
-        Optional<Field> primaryKeyField = MetaDataParser.getPrimaryKeyField(clazz);
-        metaDataBuilder.setPrimaryKey(primaryKeyField
-                .orElseThrow(() -> new ClassValidationException(
-                        String.format("Class %s must have field marked with @Id", clazz))));
         Optional<String> entityName = MetaDataParser.getDbTableName(clazz);
         entityName.ifPresent(s -> metaDataBuilder.setEntityDbName(entityName.get()));
         return metaDataBuilder.build();
+    }
+
+    private EmbeddableMetaData analyzeEmbeddableClass(Class<?> annotatedClass) {
+        Field[] declaredFields = annotatedClass.getDeclaredFields();
+        boolean isAllInternalFields = Arrays.stream(declaredFields).allMatch(field ->
+                MappingType.getFieldType(field.getDeclaringClass()) == FieldType.INTERNAL);
+        if (!isAllInternalFields) {
+            throw new ClassValidationException("Embeddable class must have only INTERNAL fields");
+        }
+        return new EmbeddableMetaData(annotatedClass, Arrays.asList(declaredFields));
     }
 
     /**
@@ -156,21 +191,56 @@ public class Configuration {
         Objects.requireNonNull(metaData);
         Map<Field, AbstractMetaField> metaFields = new LinkedHashMap<>();
         for (Field field : metaData.getFields()) {
-            if (!isTransientField(field)) {
-                metaFields.put(field, getMetaField(field, metaData));
+            if (!isTransientField(field) || isPrimaryKeyField(field)) {
+                metaFields.put(field, initMetaField(field, metaData));
             }
         }
         return metaFields;
     }
 
+    private AbstractMetaPrimaryKey getMetaPrimaryKey(Field pkField, MetaData metaData) {
+        PrimaryKeyType primaryKeyType = MetaDataParser.getPrimaryKeyType(pkField)
+                .orElseThrow(() -> new ClassValidationException("The field " + pkField.getName()
+                        + "must be annotated by @Id or @EmbeddedId."));
+        switch (primaryKeyType) {
+            case SINGLE:
+                return new SinglePrimaryKey(getPrimaryKeyInternalMetaField(pkField, metaData), metaData);
+            case COMPLEX:
+                Class<?> embeddedFieldClass = pkField.getDeclaringClass();
+                EmbeddableMetaData embeddableMetaData = embeddedEntityConfig.get(embeddedFieldClass);
+                Objects.requireNonNull(embeddableMetaData, "Embeddable type must be initialized!");
+                List<InternalMetaField> primaryKeys = embeddableMetaData
+                        .getFields().stream()
+                        .map(field -> getPrimaryKeyInternalMetaField(field, metaData))
+                        .collect(Collectors.toList());
+                return new EmbeddedPrimaryKey(embeddableMetaData, primaryKeys, metaData);
+            default:
+                throw new OrmException("AbstractMetaPrimaryKey should have a SINGLE or COMPLEX type.");
+        }
+    }
+
+    private InternalMetaField getPrimaryKeyInternalMetaField(Field field, MetaData metaData) {
+        Class<?> fieldType = field.getType();
+        MappingType mappingType = MappingType.getMappingType(fieldType);
+        String fieldName = field.getName();
+        Optional<String> dbColumnName = getDbColumnName(field);
+        return new InternalMetaField.Builder(field, metaData)
+                .fieldType(fieldType)
+                .mappingType(mappingType)
+                .fieldName(fieldName)
+                .dbFieldName(dbColumnName.orElse(fieldName.toLowerCase()))
+                .setPrimaryKey(true)
+                .build();
+    }
 
     /**
      * Factory method
+     *
      * @param field
      * @param metaData
      * @return object of Internal, External or Collection + MetaField
      */
-    private AbstractMetaField getMetaField(Field field, MetaData metaData) {
+    private AbstractMetaField initMetaField(Field field, MetaData metaData) {
         Class<?> fieldType = field.getType();
         MappingType mappingType = MappingType.getMappingType(fieldType);
         String fieldName = field.getName();
@@ -214,7 +284,5 @@ public class Configuration {
             default:
                 throw new OrmException("The framework doesn't support this type of field: " + fieldType);
         }
-
-
     }
 }

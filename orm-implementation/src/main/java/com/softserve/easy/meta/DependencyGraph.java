@@ -2,6 +2,8 @@ package com.softserve.easy.meta;
 
 
 import com.google.common.base.MoreObjects;
+import com.softserve.easy.constant.FieldType;
+import com.softserve.easy.constant.MappingType;
 import com.softserve.easy.helper.MetaDataParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,15 +1,20 @@
 package com.softserve.easy.entity.complex;
 
+import com.softserve.easy.annotation.Column;
+import com.softserve.easy.annotation.Embeddable;
+
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-//@Embeddable
-public class OrderProductId {
+@Embeddable
+public class OrderProductId implements Serializable {
+    private static final long serialVersionUID = -7353289935705585165L;
 
-    //@Column(name = "order_id")
+    @Column(name = "order_id")
     private Long orderId;
 
-    //@Column(name = "product_id")
+    @Column(name = "product_id")
     private Long productId;
 
     private OrderProductId() {

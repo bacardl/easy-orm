@@ -1,6 +1,6 @@
 package com.softserve.easy.meta.field;
 
-import com.softserve.easy.meta.MappingType;
+import com.softserve.easy.constant.MappingType;
 import com.softserve.easy.meta.MetaData;
 
 import java.lang.reflect.Field;
