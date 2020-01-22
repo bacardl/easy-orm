@@ -12,9 +12,6 @@ public interface UserDao extends AbstractDao<User>{
     Optional<User> get(Serializable id);
 
     @Override
-    List<User> getAll();
-
-    @Override
     void save(User user);
 
     @Override

@@ -1,0 +1,21 @@
+connectionConfig:
+  driver: "org.hsqldb.jdbcDriver"
+  url: "jdbc:hsqldb:mem:test;DB_CLOSE_DELAY=-1;syntax_db2=true;"
+  user: "admin"
+  password: "12345678"
+mergeDataSets: false
+cacheConnection: true
+caseInsensitiveStrategy: !!com.github.database.rider.core.api.configuration.Orthography 'UPPERCASE'
+properties:
+  caseSensitiveTableNames: true
+#cacheTableNames: true
+#leakHunter: false
+#properties:
+#  batchedStatements:  false
+#  qualifiedTableNames: false
+#  caseSensitiveTableNames: false
+#  batchSize: 100
+#  fetchSize: 100
+#  allowEmptyFields: false
+#  escapePattern:
+#  datatypeFactory: !!com.github.database.rider.core.configuration.DBUnitConfigTest$MockDataTypeFactory {}

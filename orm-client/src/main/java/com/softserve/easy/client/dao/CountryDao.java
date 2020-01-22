@@ -12,9 +12,6 @@ public interface CountryDao extends AbstractDao<Country> {
     Optional<Country> get(Serializable id);
 
     @Override
-    List<Country> getAll();
-
-    @Override
     void save(Country country);
 
     @Override
