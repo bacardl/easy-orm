@@ -7,14 +7,13 @@ import com.softserve.easy.bind.EntityBinderImpl;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
-import com.softserve.easy.meta.field.InternalMetaField;
+import com.softserve.easy.meta.primarykey.AbstractMetaPrimaryKey;
 import com.softserve.easy.sql.SqlManager;
 import com.softserve.easy.sql.SqlManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.Objects;
 
@@ -98,10 +97,15 @@ public class JDBCPersister implements Persister {
     public void updateEntity(Object object) {
         Class<?> entityType = object.getClass();
         MetaData metaData = metaContext.getMetaDataMap().get(entityType);
+        LOG.info("Try to update entity {} from database.", entityType.getSimpleName());
         String updateQuery = sqlManager.buildUpdateByPkQuery(metaData, object).toString();
         try (PreparedStatement statement = connection.prepareStatement(updateQuery)) {
             int rows = statement.executeUpdate();
-            LOG.info("-------ROWS AFFECTED " + rows + "-------");
+            if (rows == 1) {
+                LOG.info("Entity {} has been updated successfully from the database.", entityType.getSimpleName());
+            } else if (rows == 0) {
+                throw new OrmException("There is no current entity in database. Nothing to update.");
+            }
         } catch (Exception e) {
             LOG.error("There was an exception {}, during update query for {} ", e, entityType.getSimpleName());
             throw new OrmException(e);
@@ -111,10 +115,17 @@ public class JDBCPersister implements Persister {
 
     @Override
     public void deleteEntity(Object object) {
-        MetaData metaData = metaContext.getMetaDataMap().get(object.getClass());
+        Class<?> entityType = object.getClass();
+        MetaData metaData = metaContext.getMetaDataMap().get(entityType);
+        LOG.info("Try to delete entity {} from database.", entityType.getSimpleName());
         String deleteQuery = sqlManager.buildDeleteByPkQuery(metaData, object).toString();
         try (PreparedStatement statement = connection.prepareStatement(deleteQuery)) {
-            statement.execute();
+            int rows = statement.executeUpdate();
+            if (rows == 1) {
+                LOG.info("Entity {} has been delete successfully from the database.", entityType.getSimpleName());
+            } else if (rows == 0) {
+                throw new OrmException("There is no current entity in database. Nothing to delete.");
+            }
         } catch (SQLException e) {
             LOG.error("There was an exception {}, during delete query for {} by {}", e, object.getClass().getSimpleName(), object.toString());
             throw new OrmException(e);
@@ -123,18 +134,17 @@ public class JDBCPersister implements Persister {
 
     @Override
     public Serializable insertEntity(Object object) {
+        Class<?> entityType = object.getClass();
         MetaData entityMetaData = metaContext.getMetaDataMap().get(object.getClass());
-        InternalMetaField pkMetaField = entityMetaData.getMetaPrimaryKey();
-        Field pkField = pkMetaField.getField();
-        boolean accessible = pkField.isAccessible();
+        AbstractMetaPrimaryKey primaryKey = entityMetaData.getPrimaryKey();
         Serializable pkValue = null;
-        pkField.setAccessible(true);
         try {
-            pkValue = (Serializable) pkField.get(object);
+            pkValue = primaryKey.retrieveValue(object);
         } catch (IllegalAccessException e) {
             LOG.error("Couldn't get access to field: {}", e.getMessage());
         }
-        pkField.setAccessible(accessible);
+
+        LOG.info("Try to insert entity {} with primary key {} to database.", entityType.getSimpleName(), pkValue);
 
         InsertQuery insertQuery = null;
 
@@ -144,17 +154,20 @@ public class JDBCPersister implements Persister {
                     Statement.RETURN_GENERATED_KEYS)) {
                 int affectedRow = preparedStatement.executeUpdate();
                 if (affectedRow == 1) {
-                    try(ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                    try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
                         if (generatedKeys.next()) {
-                            Serializable generatedId = (Serializable) generatedKeys.getObject(1);
-                            pasteGeneratedId(object, pkField, generatedId);
+                            Serializable generatedId = primaryKey.initGeneratedId(generatedKeys);
+                            primaryKey.injectValue(generatedId, object);
+                            LOG.info("Entity {} has been inserted successfully to the database with generated id {}.",
+                                    entityType.getSimpleName(), generatedId);
                             return generatedId;
                         }
                     }
                 } else {
+                    LOG.error("Unexpected behaviour, entity {} wasn't inserted.", object.getClass().getSimpleName());
                     throw new IllegalStateException("Should insert only one row.");
                 }
-            } catch (SQLException e) {
+            } catch (SQLException | IllegalAccessException e) {
                 LOG.error("There was an exception {}, during insert {}", e, object.getClass().getSimpleName());
                 throw new OrmException(e);
             }
@@ -163,28 +176,19 @@ public class JDBCPersister implements Persister {
         insertQuery = sqlManager.buildInsertQueryWithPk(entityMetaData, object, pkValue);
         try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery.toString(),
                 Statement.NO_GENERATED_KEYS)) {
-            int affectedRow = preparedStatement.executeUpdate();
-            if (affectedRow == 1) {
+            int rows = preparedStatement.executeUpdate();
+            if (rows == 1) {
+                LOG.info("Entity {} has been inserted successfully to the database with id {}.",
+                        entityType.getSimpleName(), pkValue);
                 return pkValue;
             } else {
+                LOG.error("Unexpected behaviour, entity {} wasn't inserted.", object.getClass().getSimpleName());
                 throw new IllegalStateException("Should insert only one row.");
             }
         } catch (SQLException e) {
             LOG.error("There was an exception {}, during insert {}", e, object.getClass().getSimpleName());
             throw new OrmException(e);
         }
-
-    }
-
-    private void pasteGeneratedId(Object object, Field pkField, Serializable generatedId) {
-        boolean accessible = pkField.isAccessible();
-        pkField.setAccessible(true);
-        try {
-            pkField.set(object, generatedId);
-        } catch (IllegalAccessException e) {
-            LOG.error("Couldn't get access to field: {}", e.getMessage());
-        }
-        pkField.setAccessible(accessible);
     }
 
 }

@@ -5,6 +5,7 @@ import com.softserve.easy.constant.FetchType;
 import com.softserve.easy.meta.MetaData;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
 
 public class CollectionMetaField  extends AbstractMetaField {
     private final Class<?> genericType;
@@ -17,6 +18,14 @@ public class CollectionMetaField  extends AbstractMetaField {
         return collectionFetchType;
     }
 
+    @Override
+    public Collection<?> retrieveValue(Object object) throws IllegalAccessException {
+        boolean previous = this.field.isAccessible();
+        this.field.setAccessible(true);
+        Collection<?> value = (Collection<?>) this.field.get(object);
+        this.field.setAccessible(previous);
+        return value;
+    }
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
         private Class<?> genericType;
         private FetchType collectionFetchType;

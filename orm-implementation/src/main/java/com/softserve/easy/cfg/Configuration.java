@@ -213,7 +213,7 @@ public class Configuration {
                         .getFields().stream()
                         .map(field -> getPrimaryKeyInternalMetaField(field, metaData))
                         .collect(Collectors.toList());
-                return new EmbeddedPrimaryKey(embeddableMetaData, primaryKeys, metaData);
+                return new EmbeddedPrimaryKey(embeddableMetaData, primaryKeys, metaData, pkField);
             default:
                 throw new OrmException("AbstractMetaPrimaryKey should have a SINGLE or COMPLEX type.");
         }

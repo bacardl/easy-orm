@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.softserve.easy.meta.MetaData;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 
 public class InternalMetaField extends AbstractMetaField {
@@ -25,6 +26,15 @@ public class InternalMetaField extends AbstractMetaField {
 
     public String getDbFieldFullName() {
         return metaData.getEntityDbName() + "." + dbFieldName;
+    }
+
+    @Override
+    public Serializable retrieveValue(Object object) throws IllegalAccessException {
+        boolean previous = this.field.isAccessible();
+        this.field.setAccessible(true);
+        Serializable value = (Serializable) this.field.get(object);
+        this.field.setAccessible(previous);
+        return value;
     }
 
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {

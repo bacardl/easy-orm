@@ -1,11 +1,14 @@
 package com.softserve.easy.meta.field;
 
 import com.softserve.easy.constant.MappingType;
+import com.softserve.easy.exception.OrmException;
+import com.softserve.easy.meta.Injectable;
 import com.softserve.easy.meta.MetaData;
+import com.softserve.easy.meta.Retrievable;
 
 import java.lang.reflect.Field;
 
-public abstract class AbstractMetaField {
+public abstract class AbstractMetaField implements Retrievable<Object>, Injectable<Object> {
     protected final Class<?> fieldType;
     protected final MappingType mappingType;
     protected final String fieldName;
@@ -17,6 +20,7 @@ public abstract class AbstractMetaField {
     public Class<?> getFieldType() {
         return fieldType;
     }
+
     public MappingType getMappingType() {
         return mappingType;
     }
@@ -33,6 +37,23 @@ public abstract class AbstractMetaField {
         return metaData;
     }
 
+    @Override
+    public boolean checkTypeCompatibility(Object value) {
+        return fieldType.isAssignableFrom(value.getClass());
+    }
+
+    @Override
+    public void injectValue(Object value, Object object) throws IllegalAccessException {
+        if (checkTypeCompatibility(value)) {
+            throw new OrmException("Value cannot be injected to the object's field. Reason: incompatibility types.");
+        }
+        boolean accessible = this.field.isAccessible();
+        this.field.setAccessible(true);
+        this.field.set(object, value);
+        this.field.setAccessible(accessible);
+    }
+
+
     protected static abstract class Init<T extends Init<T>> {
         protected Class<?> fieldType;
         protected MappingType mappingType;
@@ -48,10 +69,12 @@ public abstract class AbstractMetaField {
             this.fieldType = fieldType;
             return self();
         }
+
         public T mappingType(MappingType mappingType) {
             this.mappingType = mappingType;
             return self();
         }
+
         public T fieldName(String fieldName) {
             this.fieldName = fieldName;
             return self();

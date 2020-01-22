@@ -19,4 +19,5 @@ public class EmbeddableMetaData {
     public List<Field> getFields() {
         return fields;
     }
+
 }

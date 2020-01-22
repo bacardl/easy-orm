@@ -1,18 +1,23 @@
 package com.softserve.easy.meta.primarykey;
 
 import com.softserve.easy.constant.PrimaryKeyType;
+import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.EmbeddableMetaData;
 import com.softserve.easy.meta.MetaData;
 import com.softserve.easy.meta.field.InternalMetaField;
 
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 public class EmbeddedPrimaryKey extends AbstractMetaPrimaryKey {
     private final List<InternalMetaField> primaryKeys;
     private final EmbeddableMetaData embeddableMetaData;
 
-    public EmbeddedPrimaryKey(EmbeddableMetaData embeddableMetaData, List<InternalMetaField> primaryKeys, MetaData entity) {
-        super(entity, PrimaryKeyType.COMPLEX);
+    public EmbeddedPrimaryKey(EmbeddableMetaData embeddableMetaData, List<InternalMetaField> primaryKeys, MetaData entity, Field field) {
+        super(entity, PrimaryKeyType.COMPLEX, field);
         if (primaryKeys.size() < 2) {
             throw new IllegalArgumentException("Embedded primary key must have at least 2 InternalMetaFields.");
         }
@@ -24,14 +29,29 @@ public class EmbeddedPrimaryKey extends AbstractMetaPrimaryKey {
         return primaryKeys;
     }
 
-    @Override
-    public <T> boolean checkIdCompatibility(Class<T> idClazz) {
-        return embeddableMetaData.getEmbeddableEntity().isAssignableFrom(idClazz);
+    public EmbeddableMetaData getEmbeddableMetaData() {
+        return embeddableMetaData;
     }
 
+    @Override
+    public Serializable initGeneratedId(ResultSet resultSet) throws SQLException {
+        Class<?> embeddableEntityClass = embeddableMetaData.getEmbeddableEntity();
+        Object embeddableId = null;
+        try {
+            embeddableId = embeddableEntityClass.newInstance();
+            for (InternalMetaField primaryKey : primaryKeys) {
+                Serializable value = (Serializable) resultSet.getObject(primaryKey.getDbFieldFullName());
+                primaryKey.injectValue(value, embeddableId);
+            }
+        } catch (Exception e) {
+            throw new OrmException("Couldn't instantiate embedded id.");
+        }
+        return (Serializable) embeddableId;
+    }
 
     @Override
     public int getNumberOfPrimaryKeys() {
         return this.primaryKeys.size();
     }
+
 }

@@ -29,6 +29,17 @@ public class ExternalMetaField extends AbstractMetaField {
         return metaData.getEntityDbName() + "." + foreignKeyFieldName;
     }
 
+    @Override
+    public Object retrieveValue(Object object) throws IllegalAccessException {
+        boolean previous = this.field.isAccessible();
+        this.field.setAccessible(true);
+        Object value = this.field.get(object);
+        this.field.setAccessible(previous);
+        return value;
+    }
+
+
+
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
         private String foreignKeyFieldName;
         private FetchType fetchType;
