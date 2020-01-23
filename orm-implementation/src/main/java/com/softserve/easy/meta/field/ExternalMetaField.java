@@ -3,6 +3,7 @@ package com.softserve.easy.meta.field;
 import com.google.common.base.MoreObjects;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.softserve.easy.constant.FetchType;
+import com.softserve.easy.constant.ForeignKeyType;
 import com.softserve.easy.meta.MetaData;
 
 import java.lang.reflect.Field;
@@ -11,9 +12,14 @@ import java.sql.SQLException;
 
 public class ExternalMetaField extends AbstractMetaField {
     private final String foreignKeyFieldName;
+    private final ForeignKeyType foreignKeyType;
     private final DbColumn externalDbColumn;
 
     private final FetchType entityFetchType;
+
+    public ForeignKeyType getForeignKeyType() {
+        return foreignKeyType;
+    }
 
     public FetchType getEntityFetchType() {
         return entityFetchType;
@@ -49,6 +55,7 @@ public class ExternalMetaField extends AbstractMetaField {
     protected static abstract class Init<T extends Init<T>> extends AbstractMetaField.Init<T> {
         private String foreignKeyFieldName;
         private FetchType fetchType;
+        private ForeignKeyType foreignKeyType;
 
         public T foreignKeyFieldName(String foreignKeyFieldName) {
             this.foreignKeyFieldName = foreignKeyFieldName;
@@ -57,6 +64,11 @@ public class ExternalMetaField extends AbstractMetaField {
 
         public T fetchType(FetchType fetchType) {
             this.fetchType = fetchType;
+            return self();
+        }
+
+        public T foreignKeyType(ForeignKeyType foreignKeyType) {
+            this.foreignKeyType = foreignKeyType;
             return self();
         }
 
@@ -81,6 +93,7 @@ public class ExternalMetaField extends AbstractMetaField {
         this.foreignKeyFieldName = init.foreignKeyFieldName;
         this.externalDbColumn = getMetaData().getDbTable().addColumn(foreignKeyFieldName);
         this.entityFetchType = init.fetchType;
+        this.foreignKeyType = init.foreignKeyType;
     }
 
     @Override
