@@ -14,13 +14,13 @@ public class Order {
     // @GeneratedValue
     private Long id;
 
-    @Column(name = "user_id")
-    @ManyToOne
-    private User user;
     private String status;
     @Column(name = "created_at")
     private Date createdAt;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
     //    @OneToMany(
 //            mappedBy = "orders",
 //            cascade = CascadeType.ALL,

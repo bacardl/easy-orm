@@ -153,6 +153,8 @@ public class SqlManagerImpl implements SqlManager {
 
         handlePrimaryKey(primaryKey, updateQuery, primaryKeyValue);
         updateQuery.validate();
+        LOG.info("Built an update query for {} entity with id: {}.\n{}",
+                entityMetaData.getEntityClass().getSimpleName(), primaryKeyValue, updateQuery.toString());
         return updateQuery;
     }
 
@@ -223,6 +225,8 @@ public class SqlManagerImpl implements SqlManager {
         handlePrimaryKey(primaryKey,deleteQuery, primaryKeyValue);
 
         deleteQuery.validate();
+        LOG.info("Built an delete query for {} entity with id: {}.\n{}",
+                entityMetaData.getEntityClass().getSimpleName(), primaryKeyValue, deleteQuery.toString());
         return deleteQuery;
     }
 
@@ -231,6 +235,8 @@ public class SqlManagerImpl implements SqlManager {
         InsertQuery insertQuery = buildInsertQuery(entityMetaData, object);
         handlePrimaryKey(entityMetaData.getPrimaryKey(), insertQuery, id);
         insertQuery.validate();
+        LOG.info("Built an insert query for {} entity with id: {}.\n{}",
+                entityMetaData.getEntityClass().getSimpleName(), id, insertQuery.toString());
         return insertQuery;
     }
 
@@ -244,6 +250,8 @@ public class SqlManagerImpl implements SqlManager {
 
         Objects.requireNonNull(dbColumnObjectMap).forEach(insertQuery::addColumn);
         insertQuery.validate();
+        LOG.info("Built an insert query for {} entity without id.\n{}",
+                entityMetaData.getEntityClass().getSimpleName(), insertQuery.toString());
         return insertQuery;
     }
 

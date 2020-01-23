@@ -16,10 +16,13 @@ public abstract class AbstractMetaPrimaryKey implements Retrievable<Serializable
     protected final PrimaryKeyType primaryKeyType;
     protected final Field field;
 
-    public AbstractMetaPrimaryKey(MetaData entityMetaData, PrimaryKeyType primaryKeyType, Field field) {
+    protected final boolean isGeneratedPk;
+
+    public AbstractMetaPrimaryKey(MetaData entityMetaData, PrimaryKeyType primaryKeyType, Field field, boolean isGeneratedPk) {
         this.entityMetaData = entityMetaData;
         this.primaryKeyType = primaryKeyType;
         this.field = field;
+        this.isGeneratedPk = isGeneratedPk;
     }
 
     public PrimaryKeyType getPrimaryKeyType() {
@@ -32,6 +35,10 @@ public abstract class AbstractMetaPrimaryKey implements Retrievable<Serializable
 
     public Field getField() {
         return field;
+    }
+
+    public boolean isGeneratedPk() {
+        return isGeneratedPk;
     }
 
     @Override
@@ -62,8 +69,8 @@ public abstract class AbstractMetaPrimaryKey implements Retrievable<Serializable
     public boolean checkTypeCompatibility(Serializable value) {
         return checkIdCompatibility(value.getClass());
     }
+
     public boolean checkIdCompatibility(Class<?> idClazz) {
         return field.getType().isAssignableFrom(idClazz);
     }
-
 }

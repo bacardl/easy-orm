@@ -53,13 +53,14 @@ public class ComplexTestEnvironment {
         REFERENCE_PRODUCT.setDescription("15-Inch Laptop with Retina Display (2.2 GHz Intel Core i7 Processor, 16GB RAM, 256GB SSD) (Renewed)");
 
         REFERENCE_ORDER = new Order();
-        REFERENCE_ORDER.setId(1L);
+        REFERENCE_ORDER.setId(ORDER_ID);
         REFERENCE_ORDER.setUser(REFERENCE_USER);
         REFERENCE_ORDER.setStatus("DELIVERED");
         REFERENCE_ORDER.setCreatedAt(Date.valueOf("2019-09-20"));
 
-        REFERENCE_ORDER_PRODUCT_ID = new OrderProductId(1L, 2L);
+        REFERENCE_ORDER_PRODUCT_ID = new OrderProductId(ORDER_ID, PRODUCT_ID);
 
         REFERENCE_ORDER_PRODUCT = new OrderProduct(REFERENCE_ORDER, REFERENCE_PRODUCT, 2);
     }
+
 }

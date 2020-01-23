@@ -1,9 +1,6 @@
 package com.softserve.easy.entity.complex;
 
-import com.softserve.easy.annotation.EmbeddedId;
-import com.softserve.easy.annotation.Entity;
-import com.softserve.easy.annotation.ManyToOne;
-import com.softserve.easy.annotation.Table;
+import com.softserve.easy.annotation.*;
 import com.softserve.easy.constant.FetchType;
 
 import java.util.Objects;
@@ -16,12 +13,12 @@ public class OrderProduct {
     @EmbeddedId
     private OrderProductId id;
 
-     @ManyToOne(fetch = FetchType.LAZY)
-    // @MapsId("order_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("order_id")
     private Order order;
 
-     @ManyToOne(fetch = FetchType.LAZY)
-    // @MapsId("product_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("product_id")
     private Product product;
 
     private Integer quantity;
@@ -75,12 +72,14 @@ public class OrderProduct {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof OrderProduct)) return false;
-        OrderProduct that = (OrderProduct) o;
-        return Objects.equals(getOrder(), that.getOrder()) &&
-                Objects.equals(getProduct(), that.getProduct());
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof OrderProduct)) return false;
+
+        OrderProduct that = (OrderProduct) object;
+
+        if (!getId().equals(that.getId())) return false;
+        return getQuantity().equals(that.getQuantity());
     }
 
     @Override

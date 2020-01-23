@@ -149,6 +149,11 @@ public class JDBCPersister implements Persister {
         InsertQuery insertQuery = null;
 
         if (Objects.isNull(pkValue)) {
+            if (!primaryKey.isGeneratedPk()) {
+                LOG.error("Entity {} doesn't have a generated primary key option.",entityType.getSimpleName());
+                throw new OrmException("Primary key is null. Entity " + entityMetaData.getEntityClassName() +
+                        " cannot be inserted without pk value.");
+            }
             insertQuery = sqlManager.buildInsertQuery(entityMetaData, object);
             try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery.toString(),
                     Statement.RETURN_GENERATED_KEYS)) {

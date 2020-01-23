@@ -16,8 +16,9 @@ public class EmbeddedPrimaryKey extends AbstractMetaPrimaryKey {
     private final List<InternalMetaField> primaryKeys;
     private final EmbeddableMetaData embeddableMetaData;
 
-    public EmbeddedPrimaryKey(EmbeddableMetaData embeddableMetaData, List<InternalMetaField> primaryKeys, MetaData entity, Field field) {
-        super(entity, PrimaryKeyType.COMPLEX, field);
+    public EmbeddedPrimaryKey(EmbeddableMetaData embeddableMetaData, List<InternalMetaField> primaryKeys, MetaData entity,
+                              Field field, boolean isGeneratedPk) {
+        super(entity, PrimaryKeyType.COMPLEX, field, isGeneratedPk);
         if (primaryKeys.size() < 2) {
             throw new IllegalArgumentException("Embedded primary key must have at least 2 InternalMetaFields.");
         }

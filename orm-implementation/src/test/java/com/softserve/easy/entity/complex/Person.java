@@ -1,7 +1,10 @@
 package com.softserve.easy.entity.complex;
 
 import com.google.common.base.MoreObjects;
-import com.softserve.easy.annotation.*;
+import com.softserve.easy.annotation.Column;
+import com.softserve.easy.annotation.Entity;
+import com.softserve.easy.annotation.Id;
+import com.softserve.easy.annotation.Table;
 
 import java.sql.Date;
 import java.util.Objects;
@@ -20,11 +23,6 @@ public class Person {
     private String lastName;
     @Column(name = "date_of_birth")
     private Date dateOfBirth;
-
-    @OneToOne
-    // PrimaryKeyJoinColumn
-    @Column(name = "id")
-    private User user;
 
     public Long getId() {
         return id;
@@ -58,14 +56,6 @@ public class Person {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -78,7 +68,7 @@ public class Person {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getFirstName(), getLastName(), getDateOfBirth(), getUser());
+        return Objects.hash(getFirstName(), getLastName(), getDateOfBirth());
     }
 
     @Override
@@ -88,7 +78,6 @@ public class Person {
                 .add("firstName", firstName)
                 .add("lastName", lastName)
                 .add("dateOfBirth", dateOfBirth)
-                .add("user", user)
                 .toString();
     }
 }

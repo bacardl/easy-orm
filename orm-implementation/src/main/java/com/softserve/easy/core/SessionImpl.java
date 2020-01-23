@@ -30,7 +30,6 @@ public class SessionImpl implements Session {
 
     @Override
     public Serializable save(Object object) {
-        // checks Object
         if (Objects.isNull(object)) {
             throw new IllegalArgumentException("The arguments cannot be null.");
         }
@@ -68,6 +67,7 @@ public class SessionImpl implements Session {
         if (Objects.isNull(metaData)) {
             throw new OrmException(String.format("The %s class isn't mapped by Orm", object.getClass().getSimpleName()));
         }
+
 
         persister.updateEntity(object);
     }

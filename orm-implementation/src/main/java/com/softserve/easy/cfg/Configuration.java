@@ -172,9 +172,9 @@ public class Configuration {
     /**
      * @throws ClassValidationException
      */
-    public MetaData analyzeEntityClass(Class<?> clazz) {
-        MetaDataBuilder metaDataBuilder = new MetaDataBuilder(clazz, this.dbSchema);
-        Optional<String> entityName = MetaDataParser.getDbTableName(clazz);
+    public MetaData analyzeEntityClass(Class<?> entityClass) {
+        MetaDataBuilder metaDataBuilder = new MetaDataBuilder(entityClass, this.dbSchema);
+        Optional<String> entityName = MetaDataParser.getDbTableName(entityClass);
         entityName.ifPresent(s -> metaDataBuilder.setEntityDbName(entityName.get()));
         return metaDataBuilder.build();
     }
@@ -214,9 +214,10 @@ public class Configuration {
         PrimaryKeyType primaryKeyType = MetaDataParser.getPrimaryKeyType(pkField)
                 .orElseThrow(() -> new ClassValidationException("The field " + pkField.getName()
                         + "must be annotated by @Id or @EmbeddedId."));
+        boolean isGeneratedPk = MetaDataParser.isGeneratedPk(pkField);
         switch (primaryKeyType) {
             case SINGLE:
-                return new SinglePrimaryKey(getPrimaryKeyInternalMetaField(pkField, metaData), metaData, pkField);
+                return new SinglePrimaryKey(getPrimaryKeyInternalMetaField(pkField, metaData), metaData, pkField, isGeneratedPk);
             case COMPLEX:
                 Class<?> embeddedFieldClass = pkField.getType();
                 EmbeddableMetaData embeddableMetaData = embeddedEntityConfig.get(embeddedFieldClass);
@@ -225,7 +226,7 @@ public class Configuration {
                         .getFields().stream()
                         .map(field -> getPrimaryKeyInternalMetaField(field, metaData))
                         .collect(Collectors.toList());
-                return new EmbeddedPrimaryKey(embeddableMetaData, primaryKeys, metaData, pkField);
+                return new EmbeddedPrimaryKey(embeddableMetaData, primaryKeys, metaData, pkField, isGeneratedPk);
             default:
                 throw new OrmException("AbstractMetaPrimaryKey should have a SINGLE or COMPLEX type.");
         }

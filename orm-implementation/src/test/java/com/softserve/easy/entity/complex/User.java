@@ -19,12 +19,11 @@ public class User {
     private String email;
 
     @OneToOne
-    // @PrimaryKeyJoinColumn
-    @Column(name = "person_id")
+    @PrimaryKeyJoinColumn(name = "person_id")
     private Person person;
 
     @ManyToOne
-    @Column(name = "country_code")
+    @JoinColumn(name = "country_code")
     private Country country;
 
     @OneToMany

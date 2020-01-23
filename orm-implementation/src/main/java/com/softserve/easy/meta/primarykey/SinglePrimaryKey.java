@@ -12,8 +12,8 @@ import java.sql.SQLException;
 public class SinglePrimaryKey extends AbstractMetaPrimaryKey {
     private final InternalMetaField primaryKey;
 
-    public SinglePrimaryKey(InternalMetaField primaryKey, MetaData entityMetaData, Field field) {
-        super(entityMetaData, PrimaryKeyType.SINGLE, field);
+    public SinglePrimaryKey(InternalMetaField primaryKey, MetaData entityMetaData, Field field, boolean isGeneratedPk) {
+        super(entityMetaData, PrimaryKeyType.SINGLE, field, isGeneratedPk);
         this.primaryKey = primaryKey;
     }
 

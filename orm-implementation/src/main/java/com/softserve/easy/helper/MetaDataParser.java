@@ -91,6 +91,10 @@ public class MetaDataParser {
         return Optional.empty();
     }
 
+    public static boolean isGeneratedPk(Field pkField) {
+        return Objects.nonNull(pkField.getAnnotation(GeneratedValue.class));
+    }
+
 
     public static boolean hasOneToManyAnnotation(Field field) {
         return Objects.nonNull(field.getAnnotation(OneToMany.class));
