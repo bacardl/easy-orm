@@ -17,7 +17,7 @@ public class OrderProductId implements Serializable {
     @Column(name = "product_id")
     private Long productId;
 
-    private OrderProductId() {
+    public OrderProductId() {
     }
 
     public OrderProductId(Long orderId, Long productId) {

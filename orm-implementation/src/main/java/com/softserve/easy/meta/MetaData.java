@@ -2,6 +2,7 @@ package com.softserve.easy.meta;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
 import com.softserve.easy.constant.FieldType;
+import com.softserve.easy.constant.ForeignKeyType;
 import com.softserve.easy.meta.field.AbstractMetaField;
 import com.softserve.easy.meta.field.CollectionMetaField;
 import com.softserve.easy.meta.field.ExternalMetaField;
@@ -61,6 +62,12 @@ public class MetaData {
         return metaFields.values().stream()
                 .filter(abstractMetaField -> abstractMetaField.getMappingType().getFieldType().equals(FieldType.EXTERNAL))
                 .map(abstractMetaField -> (ExternalMetaField) abstractMetaField)
+                .collect(Collectors.toList());
+    }
+
+    public List<ExternalMetaField> getExternalMetaField(ForeignKeyType type) {
+        return getExternalMetaField().stream()
+                .filter(metaField -> metaField.getForeignKeyType().equals(type))
                 .collect(Collectors.toList());
     }
 

@@ -2,6 +2,8 @@ package com.softserve.easy.core;
 
 import com.github.database.rider.core.api.dataset.ExpectedDataSet;
 import com.softserve.easy.ComplexDbUnitTest;
+import com.softserve.easy.entity.complex.Country;
+import com.softserve.easy.entity.complex.Order;
 import com.softserve.easy.entity.complex.User;
 import com.softserve.easy.exception.OrmException;
 import org.hamcrest.Matchers;
@@ -43,6 +45,14 @@ public class SessionComplexTestWithConnection extends ComplexDbUnitTest {
     @Test
     public void getOrderByLongId() {
         assertThat(session.get(ORDER_CLASS, ORDER_ID), is(REFERENCE_ORDER));
+    }
+
+    @Test
+    public void assertThatOrderHasEagerLoadedUsersInstance() {
+        Order order = session.get(ORDER_CLASS, ORDER_ID);
+        User user = order.getUser();
+        Country country = user.getCountry();
+        System.out.println(country.getName());
     }
 
     @Test

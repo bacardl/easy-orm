@@ -13,16 +13,17 @@ public class OrderProduct {
     @EmbeddedId
     private OrderProductId id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("order_id")
     private Order order;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @MapsId("product_id")
     private Product product;
 
     private Integer quantity;
 
+    public OrderProduct() {}
     public OrderProduct(Order order, Product product, Integer quantity) {
         this.order = order;
         this.product = product;

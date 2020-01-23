@@ -4,10 +4,7 @@ import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
 import com.softserve.easy.annotation.Embeddable;
 import com.softserve.easy.annotation.Entity;
-import com.softserve.easy.constant.FetchType;
-import com.softserve.easy.constant.FieldType;
-import com.softserve.easy.constant.MappingType;
-import com.softserve.easy.constant.PrimaryKeyType;
+import com.softserve.easy.constant.*;
 import com.softserve.easy.core.SessionFactory;
 import com.softserve.easy.core.SessionFactoryImpl;
 import com.softserve.easy.exception.ClassValidationException;
@@ -155,12 +152,14 @@ public class Configuration {
     // creates a meta data, creates meta fields and populates(links) meta fields to meta data
     private void addEntityToConfig(Class<?> annotatedClass) {
         MetaData metaData = analyzeEntityClass(annotatedClass);
-        Map<Field, AbstractMetaField> metaFields = createMetaFields(metaData);
-        metaData.setMetaFields(metaFields);
         Field primaryKeyField = getPrimaryKeyField(annotatedClass)
                 .orElseThrow(() -> new ClassValidationException("Entity class must have an primary key field."));
         AbstractMetaPrimaryKey primaryKey = getMetaPrimaryKey(primaryKeyField, metaData);
         metaData.setPrimaryKey(primaryKey);
+
+        Map<Field, AbstractMetaField> metaFields = createMetaFields(metaData);
+        metaData.setMetaFields(metaFields);
+
         entityConfig.put(annotatedClass, metaData);
     }
 
@@ -278,14 +277,17 @@ public class Configuration {
                     String joinColumnName = getJoinColumnName(field)
                             .orElseThrow(() -> new OrmException("@JoinColumn must be initialized. Field: " + fieldName));
                     externalFieldBuilder.foreignKeyFieldName(joinColumnName);
+                    externalFieldBuilder.foreignKeyType(ForeignKeyType.SELF);
                 } else if (hasPrimaryKeyJoinColumnAnnotation(field)) {
                     String primaryKeyJoinColumnName = getPrimaryKeyJoinColumnName(field)
                             .orElseThrow(() -> new OrmException("@PrimaryKeyJoinColumn must be initialized. Field: " + fieldName));
                     externalFieldBuilder.foreignKeyFieldName(primaryKeyJoinColumnName);
+                    externalFieldBuilder.foreignKeyType(ForeignKeyType.SINGLE_FK);
                 } else if (hasMapsIdAnnotation(field)) {
                     String mapsIdColumnName = getMapsIdColumnName(field)
                             .orElseThrow(() -> new OrmException("@MapsId must be initialized. Field: " + fieldName));
                     externalFieldBuilder.foreignKeyFieldName(mapsIdColumnName);
+                    externalFieldBuilder.foreignKeyType(ForeignKeyType.COMPLEX_FK);
                 }
 
                 return externalFieldBuilder

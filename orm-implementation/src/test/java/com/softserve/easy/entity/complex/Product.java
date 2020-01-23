@@ -48,6 +48,26 @@ public class Product {
     }
 
     @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Product)) return false;
+
+        Product product = (Product) object;
+
+        if (!getName().equals(product.getName())) return false;
+        if (!getPrice().equals(product.getPrice())) return false;
+        return getDescription().equals(product.getDescription());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName().hashCode();
+        result = 31 * result + getPrice().hashCode();
+        result = 31 * result + getDescription().hashCode();
+        return result;
+    }
+
+    @Override
     public String toString() {
         return new StringJoiner(", ", Product.class.getSimpleName() + "[", "]")
                 .add("id=" + id)

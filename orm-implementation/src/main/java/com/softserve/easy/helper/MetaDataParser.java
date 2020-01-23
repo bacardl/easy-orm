@@ -133,10 +133,10 @@ public class MetaDataParser {
     }
 
     public static Optional<String> getPrimaryKeyJoinColumnName(Field field) {
-        MapsId mapsId = field.getAnnotation(MapsId.class);
+        PrimaryKeyJoinColumn mapsId = field.getAnnotation(PrimaryKeyJoinColumn.class);
         if (Objects.nonNull(mapsId)) {
-            if (!mapsId.value().isEmpty()) {
-                return Optional.of(mapsId.value());
+            if (!mapsId.name().isEmpty()) {
+                return Optional.of(mapsId.name());
             }
         }
         return Optional.empty();

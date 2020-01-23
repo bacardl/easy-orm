@@ -4,6 +4,7 @@ import com.healthmarketscience.sqlbuilder.*;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbJoin;
 import com.softserve.easy.constant.FetchType;
+import com.softserve.easy.constant.ForeignKeyType;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
@@ -44,7 +45,9 @@ public class SqlManagerImpl implements SqlManager {
         );
 
         handleExternalMetaFields(metaField -> {
-                    selectQuery.addAliasedColumn(metaField.getExternalDbColumn(), metaField.getForeignKeyFieldFullName());
+                    if (metaField.getForeignKeyType().equals(ForeignKeyType.SELF)) {
+                        selectQuery.addAliasedColumn(metaField.getExternalDbColumn(), metaField.getForeignKeyFieldFullName());
+                    }
                     if (metaField.getEntityFetchType().equals(FetchType.EAGER)) {
                         addDependencyToQuery(selectQuery, metaField);
                     }
@@ -107,7 +110,7 @@ public class SqlManagerImpl implements SqlManager {
 
         handleExternalMetaFields(metaField ->
                         selectQuery.addAliasedColumn(metaField.getExternalDbColumn(), metaField.getForeignKeyFieldFullName()),
-                childMetaData.getExternalMetaField()
+                childMetaData.getExternalMetaField(ForeignKeyType.SELF)
         );
 
         DbJoin dbJoin = new DbJoin(parentMetaData.getDbTable().getSpec(),
@@ -116,9 +119,9 @@ public class SqlManagerImpl implements SqlManager {
                 new DbColumn[]{externalMetaField.getExternalDbColumn()},
                 new DbColumn[]{pk.getPrimaryKey().getInternalDbColumn()}
         );
-
         selectQuery.addJoins(SelectQuery.JoinType.INNER, dbJoin);
     }
+
 
     @Override
     public SelectQuery buildSelectAllQuery(MetaData entityMetaData) {
