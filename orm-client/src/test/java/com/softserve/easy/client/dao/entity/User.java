@@ -1,4 +1,4 @@
-package com.softserve.easy.client.entity;
+package com.softserve.easy.client.dao.entity;
 
 import com.softserve.easy.annotation.*;
 
