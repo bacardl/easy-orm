@@ -1,10 +1,7 @@
 package com.softserve.easy.entity.complex;
 
 import com.google.common.base.MoreObjects;
-import com.softserve.easy.annotation.Column;
-import com.softserve.easy.annotation.Entity;
-import com.softserve.easy.annotation.Id;
-import com.softserve.easy.annotation.Table;
+import com.softserve.easy.annotation.*;
 
 import java.sql.Date;
 import java.util.Objects;
@@ -13,8 +10,7 @@ import java.util.Objects;
 @Table(name = "persons")
 public class Person {
 
-    @Id
-    // @GeneratedValue(generator = "custom-generator")
+    @Id @GeneratedValue
     private Long id;
 
     @Column(name = "first_name")

@@ -10,8 +10,7 @@ import java.util.StringJoiner;
 @Entity(name = "Order")
 @Table(name = "orders")
 public class Order {
-    @Id
-    // @GeneratedValue
+    @Id @GeneratedValue
     private Long id;
 
     private String status;

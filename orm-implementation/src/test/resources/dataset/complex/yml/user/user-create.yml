@@ -1,3 +1,28 @@
+PERSONS:
+  - ID: 1
+    FIRST_NAME: "Fred"
+    LAST_NAME: "Phillips"
+    DATE_OF_BIRTH: "1990-01-20"
+  - ID: 2
+    FIRST_NAME: "Calvin"
+    LAST_NAME: "Henry"
+    DATE_OF_BIRTH: "1995-02-25"
+  - ID: 3
+    FIRST_NAME: "Virginia"
+    LAST_NAME: "Cook"
+    DATE_OF_BIRTH: "1980-12-14"
+  - ID: 4
+    FIRST_NAME: "Walter"
+    LAST_NAME: "Alvarado"
+    DATE_OF_BIRTH: "1999-09-27"
+  - ID: 5
+    FIRST_NAME: "Kelly"
+    LAST_NAME: "Stoller"
+    DATE_OF_BIRTH: "1999-06-26"
+  - ID: 6
+    FIRST_NAME: "FIRST_NAME_TEST"
+    LAST_NAME: "LAST_NAME_TEST"
+    DATE_OF_BIRTH: "1999-09-09"
 USERS:
   - PERSON_ID: 1
     USERNAME: "Youghoss1978"

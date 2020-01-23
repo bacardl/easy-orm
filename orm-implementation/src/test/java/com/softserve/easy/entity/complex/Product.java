@@ -1,6 +1,7 @@
 package com.softserve.easy.entity.complex;
 
 import com.softserve.easy.annotation.Entity;
+import com.softserve.easy.annotation.GeneratedValue;
 import com.softserve.easy.annotation.Id;
 import com.softserve.easy.annotation.Table;
 
@@ -9,7 +10,7 @@ import java.util.StringJoiner;
 @Entity(name = "Product")
 @Table(name = "products")
 public class Product {
-    @Id
+    @Id @GeneratedValue
     private Long id;
     private String name;
     private Double price;

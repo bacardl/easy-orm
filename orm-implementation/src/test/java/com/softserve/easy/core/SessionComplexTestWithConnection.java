@@ -2,8 +2,7 @@ package com.softserve.easy.core;
 
 import com.github.database.rider.core.api.dataset.ExpectedDataSet;
 import com.softserve.easy.ComplexDbUnitTest;
-import com.softserve.easy.entity.complex.Country;
-import com.softserve.easy.entity.complex.Order;
+import com.softserve.easy.entity.complex.Person;
 import com.softserve.easy.entity.complex.User;
 import com.softserve.easy.exception.OrmException;
 import org.hamcrest.Matchers;
@@ -11,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.Serializable;
+import java.sql.Date;
 
 import static com.softserve.easy.ComplexTestEnvironment.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -45,14 +45,6 @@ public class SessionComplexTestWithConnection extends ComplexDbUnitTest {
     @Test
     public void getOrderByLongId() {
         assertThat(session.get(ORDER_CLASS, ORDER_ID), is(REFERENCE_ORDER));
-    }
-
-    @Test
-    public void assertThatOrderHasEagerLoadedUsersInstance() {
-        Order order = session.get(ORDER_CLASS, ORDER_ID);
-        User user = order.getUser();
-        Country country = user.getCountry();
-        System.out.println(country.getName());
     }
 
     @Test
@@ -96,23 +88,55 @@ public class SessionComplexTestWithConnection extends ComplexDbUnitTest {
     // --------------------------------------create---------------------------------------------------------------------
     @ExpectedDataSet(value = "dataset/complex/yml/user/user-create.yml")
     @Test
-    public void insertUserWithId() {
+    public void insertUserAndPersonWithId() {
+        Person insertedPerson = new Person();
+        insertedPerson.setId(6L);
+        insertedPerson.setFirstName("FIRST_NAME_TEST");
+        insertedPerson.setLastName("LAST_NAME_TEST");
+        insertedPerson.setDateOfBirth(Date.valueOf("1999-09-09"));
+        Serializable returnedPersonId = session.save(insertedPerson);
+        assertThat(returnedPersonId, notNullValue());
+        assertThat(returnedPersonId, is(6L));
+
         User insertedUser = new User();
         insertedUser.setId(6L);
         insertedUser.setUsername("USERNAME_TEST");
         insertedUser.setPassword("PASSWORD_TEST");
+        insertedUser.setEmail("EMAIL_TEST");
+        insertedUser.setPerson(insertedPerson);
+        insertedUser.setCountry(REFERENCE_COUNTRY);
+        Serializable returnedUserId = session.save(insertedUser);
+        assertThat(returnedUserId, notNullValue());
+        assertThat(returnedUserId, is(6L));
+    }
+
+    @ExpectedDataSet(value = "dataset/complex/yml/user/user-create.yml")
+    @Test
+    public void insertUserAndPersonWithoutId() {
+        Person insertedPerson = new Person();
+        insertedPerson.setFirstName("FIRST_NAME_TEST");
+        insertedPerson.setLastName("LAST_NAME_TEST");
+        insertedPerson.setDateOfBirth(Date.valueOf("1999-09-09"));
+        Serializable returnedPersonId = session.save(insertedPerson);
+        assertThat(returnedPersonId, notNullValue());
+        assertThat(returnedPersonId, is(6L));
+
+        User insertedUser = new User();
+        insertedUser.setUsername("USERNAME_TEST");
+        insertedUser.setPassword("PASSWORD_TEST");
+        insertedUser.setEmail("EMAIL_TEST");
         insertedUser.setCountry(REFERENCE_COUNTRY);
         Serializable returnedId = session.save(insertedUser);
         assertThat(returnedId, notNullValue());
         assertThat(returnedId, is(6L));
     }
 
-    @ExpectedDataSet(value = "dataset/complex/yml/user/user-create.yml")
-    @Test
-    public void insertUserWithoutId() {
+    @Test(expected = OrmException.class)
+    public void assertThatUserWillNotBeInsertedCauseForeignKeyConstrain() {
         User insertedUser = new User();
         insertedUser.setUsername("USERNAME_TEST");
         insertedUser.setPassword("PASSWORD_TEST");
+        insertedUser.setEmail("EMAIL_TEST");
         insertedUser.setCountry(REFERENCE_COUNTRY);
         Serializable returnedId = session.save(insertedUser);
         assertThat(returnedId, notNullValue());

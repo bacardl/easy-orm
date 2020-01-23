@@ -1,9 +1,6 @@
 package com.softserve.easy.entity.complex;
 
-import com.softserve.easy.annotation.Column;
-import com.softserve.easy.annotation.Entity;
-import com.softserve.easy.annotation.Id;
-import com.softserve.easy.annotation.Table;
+import com.softserve.easy.annotation.*;
 
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -12,8 +9,7 @@ import java.util.StringJoiner;
 @Table(name = "countries")
 public class Country {
 
-    @Id
-    // @GeneratedValue
+    @Id @GeneratedValue
     @Column(name = "code")
     private Integer id;
     private String name;

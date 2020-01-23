@@ -9,7 +9,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.sql.Connection;
 
-class SessionSimpleMockTest {
+class SessionMockTest {
 
     @InjectMocks
     private Session session;

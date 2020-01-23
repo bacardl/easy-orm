@@ -248,7 +248,7 @@ public class SqlManagerImpl implements SqlManager {
         InsertQuery insertQuery = new InsertQuery(entityMetaData.getDbTable());
         Map<DbColumn, Serializable> dbColumnObjectMap = collectParameters(
                     entityMetaData.getInternalMetaField(),
-                    entityMetaData.getExternalMetaField(),
+                    entityMetaData.getExternalMetaField(ForeignKeyType.SELF),
                     object);
 
         Objects.requireNonNull(dbColumnObjectMap).forEach(insertQuery::addColumn);
