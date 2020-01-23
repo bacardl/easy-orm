@@ -1,10 +1,7 @@
 package com.softserve.easy.client.dao;
 
-import com.softserve.easy.cfg.Configuration;
 import com.softserve.easy.client.entity.Country;
 import com.softserve.easy.core.Session;
-import com.softserve.easy.core.SessionFactory;
-import com.softserve.easy.core.SessionImpl;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -18,8 +15,7 @@ public class CountryDaoImpl implements CountryDao {
 
     @Override
     public Optional<Country> get(Serializable id) {
-        //return session.get(Country.class, id);
-        return Optional.empty();
+        return Optional.of(session.get(Country.class, id));
     }
 
     @Override
