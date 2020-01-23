@@ -257,11 +257,11 @@ public class Configuration {
         Class<?> fieldType = field.getType();
         MappingType mappingType = MappingType.getMappingType(fieldType);
         String fieldName = field.getName();
-        Optional<String> dbColumnName = getDbColumnName(field);
         Optional<FetchType> fetchType = getFetchTypeValue(field);
 
         switch (mappingType.getFieldType()) {
             case INTERNAL:
+                Optional<String> dbColumnName = getDbColumnName(field);
                 return new InternalMetaField.Builder(field, metaData)
                         .fieldType(fieldType)
                         .mappingType(mappingType)
@@ -273,11 +273,25 @@ public class Configuration {
                 if (hasOneToOneAnnotation(field) == hasManyToOneAnnotation(field)) {
                     throw new ClassValidationException(String.format("EXTERNAL field %s must have either @OneToOne or @ManyToOne annotation", field));
                 }
-                return new ExternalMetaField.Builder(field, metaData)
+                ExternalMetaField.Builder externalFieldBuilder = new ExternalMetaField.Builder(field, metaData);
+                if (hasJoinColumnAnnotation(field)) {
+                    String joinColumnName = getJoinColumnName(field)
+                            .orElseThrow(() -> new OrmException("@JoinColumn must be initialized. Field: " + fieldName));
+                    externalFieldBuilder.foreignKeyFieldName(joinColumnName);
+                } else if (hasPrimaryKeyJoinColumnAnnotation(field)) {
+                    String primaryKeyJoinColumnName = getPrimaryKeyJoinColumnName(field)
+                            .orElseThrow(() -> new OrmException("@PrimaryKeyJoinColumn must be initialized. Field: " + fieldName));
+                    externalFieldBuilder.foreignKeyFieldName(primaryKeyJoinColumnName);
+                } else if (hasMapsIdAnnotation(field)) {
+                    String mapsIdColumnName = getMapsIdColumnName(field)
+                            .orElseThrow(() -> new OrmException("@MapsId must be initialized. Field: " + fieldName));
+                    externalFieldBuilder.foreignKeyFieldName(mapsIdColumnName);
+                }
+
+                return externalFieldBuilder
                         .fieldType(fieldType)
                         .mappingType(mappingType)
                         .fieldName(fieldName)
-                        .foreignKeyFieldName(dbColumnName.orElse(fieldName.toLowerCase()))
                         .fetchType(fetchType.orElse(FetchType.EAGER))
                         .build();
             case COLLECTION:

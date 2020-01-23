@@ -21,7 +21,6 @@ public class MetaDataParser {
     }
 
     public static Optional<Field> getPrimaryKeyField(Class<?> clazz) {
-        Objects.requireNonNull(clazz);
         for (Field declaredField : clazz.getDeclaredFields()) {
             if (isPrimaryKeyField(declaredField)) {
                 return Optional.of(declaredField);
@@ -31,7 +30,6 @@ public class MetaDataParser {
     }
 
     public static Optional<String> getDbTableName(Class<?> clazz) {
-        Objects.requireNonNull(clazz);
         Table table = clazz.getAnnotation(Table.class);
         if (Objects.nonNull(table)) {
             return Optional.of(table.name());
@@ -40,7 +38,6 @@ public class MetaDataParser {
     }
 
     public static Optional<String> getDbColumnName(Field field) {
-        Objects.requireNonNull(field);
         Column column = field.getAnnotation(Column.class);
         if (Objects.nonNull(column)) {
             if (!column.name().isEmpty()) {
@@ -51,7 +48,6 @@ public class MetaDataParser {
     }
 
     public static Optional<FetchType> getFetchTypeValue(Field field) {
-        Objects.requireNonNull(field);
         ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
         OneToOne oneToOne = field.getAnnotation(OneToOne.class);
         OneToMany oneToMany = field.getAnnotation(OneToMany.class);
@@ -110,6 +106,47 @@ public class MetaDataParser {
 
     public static boolean hasManyToManyAnnotation(Field field) {
         return Objects.nonNull(field.getAnnotation(ManyToMany.class));
+    }
+
+    public static boolean hasJoinColumnAnnotation(Field field) {
+        return Objects.nonNull(field.getAnnotation(JoinColumn.class));
+    }
+
+    public static Optional<String> getJoinColumnName(Field field) {
+        JoinColumn joinedColumn = field.getAnnotation(JoinColumn.class);
+        if (Objects.nonNull(joinedColumn)) {
+            if (!joinedColumn.name().isEmpty()) {
+                return Optional.of(joinedColumn.name());
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<String> getMapsIdColumnName(Field field) {
+        MapsId mapsId = field.getAnnotation(MapsId.class);
+        if (Objects.nonNull(mapsId)) {
+            if (!mapsId.value().isEmpty()) {
+                return Optional.of(mapsId.value());
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<String> getPrimaryKeyJoinColumnName(Field field) {
+        MapsId mapsId = field.getAnnotation(MapsId.class);
+        if (Objects.nonNull(mapsId)) {
+            if (!mapsId.value().isEmpty()) {
+                return Optional.of(mapsId.value());
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static boolean hasPrimaryKeyJoinColumnAnnotation(Field field) {
+        return Objects.nonNull(field.getAnnotation(PrimaryKeyJoinColumn.class));
+    }
+    public static boolean hasMapsIdAnnotation(Field field) {
+        return Objects.nonNull(field.getAnnotation(MapsId.class));
     }
 
     public static Optional<Class<?>> getGenericType(Field field) {
