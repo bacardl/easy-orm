@@ -3,18 +3,12 @@ package com.softserve.easy.client.dao;
 import com.github.database.rider.core.api.dataset.ExpectedDataSet;
 import com.softserve.easy.client.entity.Country;
 import com.softserve.easy.client.entity.User;
-
-import static com.softserve.easy.client.dao.SimpleTestEnvironment.*;
 import com.softserve.easy.core.Session;
 import com.softserve.easy.core.SessionFactory;
-import com.softserve.easy.core.SessionImpl;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 
 import java.text.ParseException;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 
 //@RunWith(JUnit4.class)
 //@DataSet(
@@ -36,10 +30,10 @@ public class UserDaoImplTest extends DbUnitTest {
         dao = new UserDaoImpl(session);
     }
 
-    @Test
-    void getUserByLongId() {
-       assertThat(dao.get(USER_ID), is(REFERENCE_USER));
-    }
+//    @Test
+//    void getUserByLongId() {
+//       assertThat(dao.get(USER_ID), is(REFERENCE_USER));
+//    }
 
     @ExpectedDataSet(value = "dataset/simple/yml/data-delete.yml")
     @Test

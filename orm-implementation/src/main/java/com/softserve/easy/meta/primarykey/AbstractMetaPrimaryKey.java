@@ -63,6 +63,9 @@ public abstract class AbstractMetaPrimaryKey implements Retrievable<Serializable
 
 
     public abstract Serializable parseIdValue(ResultSet resultSet) throws SQLException;
+
+    public abstract Serializable parseIdValueByNameColumn(ResultSet resultSet) throws SQLException;
+
     public abstract int getNumberOfPrimaryKeys();
 
     @Override

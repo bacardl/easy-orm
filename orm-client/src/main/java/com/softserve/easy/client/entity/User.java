@@ -1,25 +1,49 @@
 package com.softserve.easy.client.entity;
 
+import com.google.common.base.MoreObjects;
 import com.softserve.easy.annotation.*;
 
 import java.util.Objects;
-import java.util.StringJoiner;
+import java.util.Set;
 
 @Entity(name = "User")
 @Table(name = "users")
 public class User {
 
-    @Id
+    @Id @GeneratedValue
+    @Column(name = "person_id")
     private Long id;
 
-    @Column(name = "username")
     private String username;
     private String password;
     private String email;
 
+    @OneToOne
+    @PrimaryKeyJoinColumn(name = "person_id")
+    private Person person;
+
     @ManyToOne
-    @Column(name = "country_code")
+    @JoinColumn(name = "country_code")
     private Country country;
+
+    @OneToMany
+    private Set<Order> orders;
+
+    public Person getPerson() {
+        return person;
+    }
+
+    public void setPerson(Person person) {
+        this.person = person;
+    }
+
+    public Set<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(Set<Order> orders) {
+        this.orders = orders;
+    }
 
     public Long getId() {
         return id;
@@ -61,31 +85,32 @@ public class User {
         this.country = country;
     }
 
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof User)) return false;
-        User user = (User) o;
-        return Objects.equals(getId(), user.getId()) &&
-                getUsername().equals(user.getUsername()) &&
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof User)) return false;
+        User user = (User) object;
+        return getUsername().equals(user.getUsername()) &&
                 getPassword().equals(user.getPassword()) &&
-                getEmail().equals(user.getEmail()) &&
-                Objects.equals(getCountry(), user.getCountry());
+                getEmail().equals(user.getEmail());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUsername(), getPassword(), getEmail(), getCountry());
+        return Objects.hash(getUsername(), getPassword(), getEmail());
     }
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", User.class.getSimpleName() + "[", "]")
-                .add("id=" + id)
-                .add("username='" + username + "'")
-                .add("password='" + password + "'")
-                .add("email='" + email + "'")
-                .add("country=" + country)
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("username", username)
+                .add("password", password)
+                .add("email", email)
+                .add("person", person)
+                .add("country", country)
+                .add("orders", orders)
                 .toString();
     }
 }

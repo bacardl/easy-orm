@@ -27,7 +27,7 @@ public class InternalMetaField extends AbstractMetaField {
     }
 
     public String getDbFieldFullName() {
-        return metaData.getEntityDbName() + "." + dbFieldName;
+        return metaData.getEntityDbName() + "_" + dbFieldName;
     }
 
     @Override

@@ -145,7 +145,7 @@ public class SqlManagerImpl implements SqlManager {
 
         Map<DbColumn, Serializable> dbColumnObjectMap = collectParameters(
                 entityMetaData.getInternalMetaField(),
-                entityMetaData.getExternalMetaField(),
+                entityMetaData.getExternalMetaField(ForeignKeyType.SELF),
                 object);
 
         if (Objects.isNull(primaryKeyValue)) {
@@ -172,7 +172,7 @@ public class SqlManagerImpl implements SqlManager {
                         if (Objects.isNull(value)) {
                             dbColumnObjectMap.put(metaField.getExternalDbColumn(), null);
                         } else {
-                            MetaData valueEntityMetaData = metaContext.getMetaDataMap().get(value.getClass());
+                            MetaData valueEntityMetaData = metaContext.getMetaDataMap().get(metaField.getFieldType());
                             Serializable externalObjectsPkValue = valueEntityMetaData.getPrimaryKey().retrieveValue(value);
                             if (Objects.isNull(externalObjectsPkValue)) {
                                 LOG.error("The field {} of the external entity {} should be defined.",

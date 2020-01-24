@@ -24,6 +24,12 @@ public class SinglePrimaryKey extends AbstractMetaPrimaryKey {
     }
 
     @Override
+    public Serializable parseIdValueByNameColumn(ResultSet resultSet) throws SQLException {
+        return (Serializable) resultSet.getObject(primaryKey.getDbFieldName());
+    }
+
+
+    @Override
     public int getNumberOfPrimaryKeys() {
         return 1;
     }

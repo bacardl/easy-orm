@@ -4,10 +4,14 @@ import com.healthmarketscience.sqlbuilder.InsertQuery;
 import com.softserve.easy.action.ActionQueue;
 import com.softserve.easy.bind.EntityBinder;
 import com.softserve.easy.bind.EntityBinderImpl;
+import com.softserve.easy.constant.PrimaryKeyType;
 import com.softserve.easy.exception.OrmException;
 import com.softserve.easy.meta.MetaContext;
 import com.softserve.easy.meta.MetaData;
+import com.softserve.easy.meta.field.InternalMetaField;
 import com.softserve.easy.meta.primarykey.AbstractMetaPrimaryKey;
+import com.softserve.easy.meta.primarykey.EmbeddedPrimaryKey;
+import com.softserve.easy.meta.primarykey.SinglePrimaryKey;
 import com.softserve.easy.sql.SqlManager;
 import com.softserve.easy.sql.SqlManagerImpl;
 import org.slf4j.Logger;
@@ -47,17 +51,13 @@ public class JDBCPersister implements Persister {
             // check if it's one row
             if (resultSet.next()) {
                 entity = entityBinder.buildEntity(entityType, resultSet).orElseGet(() -> null);
-                if (!resultSet.isLast()) {
-                    throw new OrmException("Entity at database has a few primary keys." +
-                            "Use @EmbeddedId or change the database schema.");
-                }
             } else {
                 LOG.info("Entity {} by id {} doesn't exist.", entityType.getSimpleName(), id);
                 return null;
             }
         } catch (Exception e) {
             LOG.error("There was an exception {}, during select {} by {}", e, entityType.getSimpleName(), id);
-            throw new OrmException(e);
+            throw new OrmException(e.getMessage(),e);
         }
 
         return entity;
@@ -155,13 +155,16 @@ public class JDBCPersister implements Persister {
                         " cannot be inserted without pk value.");
             }
             insertQuery = sqlManager.buildInsertQuery(entityMetaData, object);
-            try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery.toString(),
-                    Statement.RETURN_GENERATED_KEYS)) {
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(
+                    insertQuery.toString(),
+                    getGeneratedColumnNames(primaryKey))
+            ) {
                 int affectedRow = preparedStatement.executeUpdate();
                 if (affectedRow == 1) {
                     try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
                         if (generatedKeys.next()) {
-                            Serializable generatedId = primaryKey.parseIdValue(generatedKeys);
+                            Serializable generatedId = primaryKey.parseIdValueByNameColumn(generatedKeys);
                             primaryKey.injectValue(generatedId, object);
                             LOG.info("Entity {} has been inserted successfully to the database with generated id {}.",
                                     entityType.getSimpleName(), generatedId);
@@ -195,5 +198,18 @@ public class JDBCPersister implements Persister {
             throw new OrmException(e);
         }
     }
+
+    private String[] getGeneratedColumnNames(AbstractMetaPrimaryKey primaryKey) {
+        PrimaryKeyType primaryKeyType = primaryKey.getPrimaryKeyType();
+        switch (primaryKeyType) {
+            case SINGLE:
+                return new String[]{((SinglePrimaryKey)primaryKey).getPrimaryKey().getDbFieldName()};
+            case COMPLEX:
+                return ((EmbeddedPrimaryKey)primaryKey).getPrimaryKeys()
+                        .stream().map(InternalMetaField::getDbFieldName).toArray(String[]::new);
+        }
+        throw new OrmException("There is another primary key type that isn't provided by Orm.");
+    }
+
 
 }

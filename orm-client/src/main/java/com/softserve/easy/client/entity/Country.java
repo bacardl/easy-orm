@@ -1,9 +1,6 @@
 package com.softserve.easy.client.entity;
 
-import com.softserve.easy.annotation.Column;
-import com.softserve.easy.annotation.Entity;
-import com.softserve.easy.annotation.Id;
-import com.softserve.easy.annotation.Table;
+import com.softserve.easy.annotation.*;
 
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -12,8 +9,7 @@ import java.util.StringJoiner;
 @Table(name = "countries")
 public class Country {
 
-    @Id
-    // @GeneratedValue
+    @Id @GeneratedValue
     @Column(name = "code")
     private Integer id;
     private String name;
@@ -35,17 +31,16 @@ public class Country {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Country)) return false;
-        Country country = (Country) o;
-        return Objects.equals(getId(), country.getId()) &&
-                getName().equals(country.getName());
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Country)) return false;
+        Country country = (Country) object;
+        return Objects.equals(getName(), country.getName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName());
+        return Objects.hash(getName());
     }
 
     @Override

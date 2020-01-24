@@ -10,8 +10,6 @@ import com.softserve.easy.meta.MetaData;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class ExternalMetaField extends AbstractMetaField {
     private final String foreignKeyFieldName;
@@ -37,7 +35,7 @@ public class ExternalMetaField extends AbstractMetaField {
     }
 
     public String getForeignKeyFieldFullName() {
-        return metaData.getEntityDbName() + "." + foreignKeyFieldName;
+        return metaData.getEntityDbName() + "_" + foreignKeyFieldName;
     }
 
     @Override
@@ -99,13 +97,10 @@ public class ExternalMetaField extends AbstractMetaField {
         if (init.foreignKeyType.equals(ForeignKeyType.SELF)) {
             this.externalDbColumn = getMetaData().getDbTable().addColumn(foreignKeyFieldName);
         } else {
-            List<DbColumn> refPkColumn = getMetaData().getDbTable().getColumns().stream()
+            this.externalDbColumn = getMetaData().getDbTable().getColumns().stream()
                     .filter(dbColumn -> dbColumn.getColumnNameSQL().equals(foreignKeyFieldName))
-                    .collect(Collectors.toList());
-            if (refPkColumn.size() != 1) {
-                throw new OrmException("Some primary key column has same name.");
-            }
-            this.externalDbColumn = refPkColumn.get(0);
+                    .findFirst()
+                    .orElseThrow(() -> new OrmException("Some primary key column has same name."));
         }
     }
 

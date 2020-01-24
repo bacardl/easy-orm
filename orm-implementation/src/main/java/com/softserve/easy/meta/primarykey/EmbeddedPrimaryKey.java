@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class EmbeddedPrimaryKey extends AbstractMetaPrimaryKey {
+    // TODO: make Set<>
     private final List<InternalMetaField> primaryKeys;
     private final EmbeddableMetaData embeddableMetaData;
 
@@ -41,13 +42,18 @@ public class EmbeddedPrimaryKey extends AbstractMetaPrimaryKey {
         try {
             embeddableId = embeddableEntityClass.newInstance();
             for (InternalMetaField primaryKey : primaryKeys) {
-                Serializable value = (Serializable) resultSet.getObject(primaryKey.getDbFieldFullName());
+                Serializable value = (Serializable) resultSet.getObject(primaryKey.getDbFieldName());
                 primaryKey.injectValue(value, embeddableId);
             }
         } catch (IllegalAccessException | InstantiationException e) {
             throw new OrmException("Couldn't instantiate embedded id.", e);
         }
         return (Serializable) embeddableId;
+    }
+
+    @Override
+    public Serializable parseIdValueByNameColumn(ResultSet resultSet) throws SQLException {
+        return parseIdValue(resultSet);
     }
 
     @Override
