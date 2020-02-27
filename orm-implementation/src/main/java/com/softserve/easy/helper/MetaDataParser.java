@@ -20,6 +20,47 @@ public class MetaDataParser {
         return Objects.nonNull(annotation);
     }
 
+    public static boolean isTransientField(Field field) {
+        return Objects.nonNull(field.getAnnotation(Transient.class));
+    }
+
+    public static boolean isPrimaryKeyField(Field field) {
+        return Objects.nonNull(field.getAnnotation(Id.class)) ||
+                Objects.nonNull(field.getAnnotation(EmbeddedId.class));
+    }
+
+    public static boolean isGeneratedPk(Field pkField) {
+        return Objects.nonNull(pkField.getAnnotation(GeneratedValue.class));
+    }
+
+    public static boolean hasOneToManyAnnotation(Field field) {
+        return Objects.nonNull(field.getAnnotation(OneToMany.class));
+    }
+
+    public static boolean hasManyToOneAnnotation(Field field) {
+        return Objects.nonNull(field.getAnnotation(ManyToOne.class));
+    }
+
+    public static boolean hasOneToOneAnnotation(Field field) {
+        return Objects.nonNull(field.getAnnotation(OneToOne.class));
+    }
+
+    public static boolean hasManyToManyAnnotation(Field field) {
+        return Objects.nonNull(field.getAnnotation(ManyToMany.class));
+    }
+
+    public static boolean hasJoinColumnAnnotation(Field field) {
+        return Objects.nonNull(field.getAnnotation(JoinColumn.class));
+    }
+
+    public static boolean hasPrimaryKeyJoinColumnAnnotation(Field field) {
+        return Objects.nonNull(field.getAnnotation(PrimaryKeyJoinColumn.class));
+    }
+
+    public static boolean hasMapsIdAnnotation(Field field) {
+        return Objects.nonNull(field.getAnnotation(MapsId.class));
+    }
+
     public static Optional<Field> getPrimaryKeyField(Class<?> clazz) {
         for (Field declaredField : clazz.getDeclaredFields()) {
             if (isPrimaryKeyField(declaredField)) {
@@ -67,16 +108,6 @@ public class MetaDataParser {
         return Optional.empty();
     }
 
-
-    public static boolean isTransientField(Field field) {
-        return Objects.nonNull(field.getAnnotation(Transient.class));
-    }
-
-    public static boolean isPrimaryKeyField(Field field) {
-        return Objects.nonNull(field.getAnnotation(Id.class)) ||
-                Objects.nonNull(field.getAnnotation(EmbeddedId.class));
-    }
-
     public static Optional<PrimaryKeyType> getPrimaryKeyType(Field field) {
         if (Objects.nonNull(field.getAnnotation(Id.class))) {
             return Optional.of(PrimaryKeyType.SINGLE);
@@ -85,31 +116,6 @@ public class MetaDataParser {
             return Optional.of(PrimaryKeyType.COMPLEX);
         }
         return Optional.empty();
-    }
-
-    public static boolean isGeneratedPk(Field pkField) {
-        return Objects.nonNull(pkField.getAnnotation(GeneratedValue.class));
-    }
-
-
-    public static boolean hasOneToManyAnnotation(Field field) {
-        return Objects.nonNull(field.getAnnotation(OneToMany.class));
-    }
-
-    public static boolean hasManyToOneAnnotation(Field field) {
-        return Objects.nonNull(field.getAnnotation(ManyToOne.class));
-    }
-
-    public static boolean hasOneToOneAnnotation(Field field) {
-        return Objects.nonNull(field.getAnnotation(OneToOne.class));
-    }
-
-    public static boolean hasManyToManyAnnotation(Field field) {
-        return Objects.nonNull(field.getAnnotation(ManyToMany.class));
-    }
-
-    public static boolean hasJoinColumnAnnotation(Field field) {
-        return Objects.nonNull(field.getAnnotation(JoinColumn.class));
     }
 
     public static Optional<String> getJoinColumnName(Field field) {
@@ -140,13 +146,6 @@ public class MetaDataParser {
             }
         }
         return Optional.empty();
-    }
-
-    public static boolean hasPrimaryKeyJoinColumnAnnotation(Field field) {
-        return Objects.nonNull(field.getAnnotation(PrimaryKeyJoinColumn.class));
-    }
-    public static boolean hasMapsIdAnnotation(Field field) {
-        return Objects.nonNull(field.getAnnotation(MapsId.class));
     }
 
     public static Optional<Class<?>> getGenericType(Field field) {

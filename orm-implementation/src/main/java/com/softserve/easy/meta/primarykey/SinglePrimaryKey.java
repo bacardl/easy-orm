@@ -17,6 +17,9 @@ public class SinglePrimaryKey extends AbstractMetaPrimaryKey {
         this.primaryKey = primaryKey;
     }
 
+    public InternalMetaField getPrimaryKey() {
+        return primaryKey;
+    }
 
     @Override
     public Serializable parseIdValue(ResultSet resultSet) throws SQLException {
@@ -32,10 +35,6 @@ public class SinglePrimaryKey extends AbstractMetaPrimaryKey {
     @Override
     public int getNumberOfPrimaryKeys() {
         return 1;
-    }
-
-    public InternalMetaField getPrimaryKey() {
-        return primaryKey;
     }
 
 }

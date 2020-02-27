@@ -25,7 +25,7 @@ public class SessionImpl implements Session {
     public SessionImpl(Connection connection, MetaContext metaContext) {
         this.connection = connection;
         this.metaContext = metaContext;
-        this.persister = new JDBCPersister(connection, metaContext);
+        this.persister = new JDBCPersister(this.connection, metaContext);
     }
 
     @Override

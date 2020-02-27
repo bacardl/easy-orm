@@ -107,12 +107,6 @@ public class EntityBinderImpl implements EntityBinder {
         }
         return (T) entityType.newInstance();
     }
-
-    private boolean hasLazyExternalFields(List<ExternalMetaField> externalMetaFields) {
-        return externalMetaFields.stream()
-                .anyMatch(externalMetaField -> externalMetaField.getEntityFetchType().equals(FetchType.LAZY));
-    }
-
     @SuppressWarnings(value = "unchecked")
     private <T> T getLazyInstance(final MetaData entityMetaData, ResultSet resultSet) throws IllegalAccessException, InstantiationException {
         Class<?> entityType = entityMetaData.getEntityClass();
@@ -137,5 +131,10 @@ public class EntityBinderImpl implements EntityBinder {
         }
         Class<?> proxyClass = subclass.make().load(getClass().getClassLoader()).getLoaded();
         return (T) proxyClass.newInstance();
+    }
+
+    private boolean hasLazyExternalFields(List<ExternalMetaField> externalMetaFields) {
+        return externalMetaFields.stream()
+                .anyMatch(externalMetaField -> externalMetaField.getEntityFetchType().equals(FetchType.LAZY));
     }
 }
